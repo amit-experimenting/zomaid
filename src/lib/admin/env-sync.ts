@@ -10,15 +10,13 @@ export async function syncAdminFlags(opts: {
   const ids = opts.clerkUserIds.map((s) => s.trim()).filter(Boolean);
 
   if (opts.pgClient) {
-    // Test path: direct SQL with a regular client.
-    // The profiles trigger blocks is_admin changes for non-admins; bypass it with
-    // session_replication_role so the boot-task SQL runs without a JWT in scope.
-    await opts.pgClient.query("SET LOCAL session_replication_role = replica");
+    // Test path: direct SQL with a regular client. With the corrected trigger
+    // (migration 20260515_001), the is_admin block only fires for authenticated
+    // end-users — direct postgres connections without a JWT skip it cleanly.
     await opts.pgClient.query(
       `update profiles set is_admin = (clerk_user_id = any($1))`,
       [ids],
     );
-    await opts.pgClient.query("SET LOCAL session_replication_role = origin");
     return;
   }
 
