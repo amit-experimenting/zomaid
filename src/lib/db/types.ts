@@ -26,8 +26,12 @@ export type Database = {
           email: string;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;
+        Relationships: [];
       };
       // households, household_memberships, invites — added in later tasks.
+    };
+    Views: {
+      // No views yet.
     };
     Functions: {
       // redeem_invite — added in Task 8.
