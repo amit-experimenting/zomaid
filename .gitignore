@@ -49,3 +49,7 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# supabase local stack
+/supabase/.branches
+/supabase/.temp

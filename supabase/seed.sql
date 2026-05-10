@@ -1,0 +1,2 @@
+-- Seed data for local development
+-- This file is intentionally empty. Add seed data here as needed.
