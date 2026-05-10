@@ -40,3 +40,31 @@ export async function insertProfile(
   );
   return row;
 }
+
+export type HouseholdRow = {
+  id: string;
+  name: string;
+  address_line: string | null;
+  postal_code: string | null;
+  created_by_profile_id: string;
+};
+
+export async function insertHousehold(
+  client: Client,
+  overrides: Partial<HouseholdRow> & { created_by_profile_id: string },
+): Promise<HouseholdRow> {
+  const row = {
+    id: overrides.id ?? randomUUID(),
+    name: overrides.name ?? "Test Household",
+    address_line: overrides.address_line ?? null,
+    postal_code: overrides.postal_code ?? null,
+    created_by_profile_id: overrides.created_by_profile_id,
+  };
+  await client.query(
+    `insert into households
+      (id, name, address_line, postal_code, created_by_profile_id)
+     values ($1,$2,$3,$4,$5)`,
+    [row.id, row.name, row.address_line, row.postal_code, row.created_by_profile_id],
+  );
+  return row;
+}
