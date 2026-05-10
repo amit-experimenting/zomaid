@@ -6,14 +6,14 @@ const TEST_DB_URL =
   process.env.SUPABASE_DB_URL ??
   "postgres://postgres:postgres@127.0.0.1:54322/postgres";
 
-let pool: Client | null = null;
+let singleton: Client | null = null;
 
 export async function getClient(): Promise<Client> {
-  if (!pool) {
-    pool = new Client({ connectionString: TEST_DB_URL });
-    await pool.connect();
+  if (!singleton) {
+    singleton = new Client({ connectionString: TEST_DB_URL });
+    await singleton.connect();
   }
-  return pool;
+  return singleton;
 }
 
 /**
@@ -47,6 +47,11 @@ export async function setJwtClaims(
   );
 }
 
+/**
+ * Drops the JWT claims and switches to the anon role for the rest of the
+ * current transaction. Use inside a transaction; effect is local to that
+ * transaction.
+ */
 export async function asAnon(client: Client): Promise<void> {
   await client.query(
     `select set_config('request.jwt.claims', '', true),
@@ -59,9 +64,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  if (pool) {
-    await pool.end();
-    pool = null;
+  if (singleton) {
+    await singleton.end();
+    singleton = null;
   }
 });
 
