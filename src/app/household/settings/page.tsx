@@ -1,0 +1,162 @@
+import { requireHousehold } from "@/lib/auth/require";
+import { createServiceClient } from "@/lib/supabase/server";
+import {
+  createInvite, removeMembership, updateMembershipPrivilege,
+} from "@/app/household/settings/actions";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import type { Privilege } from "@/lib/db/types";
+
+export default async function HouseholdSettingsPage() {
+  const ctx = await requireHousehold();
+  const svc = createServiceClient();
+
+  const [members, invites] = await Promise.all([
+    svc
+      .from("household_memberships")
+      .select("id, role, privilege, status, profile:profiles(id, display_name, email)")
+      .eq("household_id", ctx.household.id)
+      .eq("status", "active"),
+    svc
+      .from("invites")
+      .select("id, intended_role, intended_privilege, code, token, expires_at, consumed_at")
+      .eq("household_id", ctx.household.id)
+      .is("consumed_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false }),
+  ]);
+  if (members.error) throw new Error(members.error.message);
+  if (invites.error) throw new Error(invites.error.message);
+
+  const isOwner = ctx.membership.role === "owner";
+  const isMaid  = ctx.membership.role === "maid";
+
+  async function inviteFamily(formData: FormData) {
+    "use server";
+    await createInvite({
+      role: "family_member",
+      privilege: (formData.get("privilege") ?? "view_only") as Privilege,
+    });
+  }
+  async function inviteMaid() {
+    "use server";
+    await createInvite({ role: "maid" });
+  }
+  async function inviteOwner() {
+    "use server";
+    await createInvite({ role: "owner" });
+  }
+  async function remove(formData: FormData) {
+    "use server";
+    await removeMembership({ membershipId: String(formData.get("membershipId")) });
+  }
+  async function changePriv(formData: FormData) {
+    "use server";
+    await updateMembershipPrivilege({
+      membershipId: String(formData.get("membershipId")),
+      privilege: String(formData.get("privilege")) as Privilege,
+    });
+  }
+
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-8 space-y-8">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">{ctx.household.name}</h1>
+        <p className="text-sm text-muted-foreground">Household settings</p>
+      </header>
+
+      <Card>
+        <CardHeader><CardTitle>Members</CardTitle></CardHeader>
+        <CardContent>
+          <ul className="divide-y">
+            {members.data!.map((m) => {
+              const p = (m as unknown as { profile: { id: string; display_name: string; email: string } }).profile;
+              const canRemove =
+                isOwner ? m.role !== "owner" || p.id !== ctx.profile.id
+                        : p.id === ctx.profile.id && m.role !== "owner";
+              return (
+                <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <div>
+                    <p className="font-medium">{p.display_name || p.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {m.role}
+                      {m.role === "family_member" ? ` · ${m.privilege}` : ""}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isOwner && m.role === "family_member" ? (
+                      <form action={changePriv} className="flex items-center gap-2">
+                        <input type="hidden" name="membershipId" value={m.id} />
+                        <select name="privilege" defaultValue={m.privilege} className="rounded-md border bg-background px-2 py-1 text-sm">
+                          <option value="meal_modify">meal_modify</option>
+                          <option value="view_only">view_only</option>
+                        </select>
+                        <Button type="submit" size="sm" variant="outline">Update</Button>
+                      </form>
+                    ) : null}
+                    {canRemove ? (
+                      <form action={remove}>
+                        <input type="hidden" name="membershipId" value={m.id} />
+                        <Button type="submit" size="sm" variant="destructive">
+                          {p.id === ctx.profile.id ? "Leave" : "Remove"}
+                        </Button>
+                      </form>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Invites</CardTitle></CardHeader>
+        <CardContent className="space-y-6">
+          {isOwner ? (
+            <form action={inviteFamily} className="flex flex-wrap items-end gap-3">
+              <div className="grow space-y-1.5">
+                <Label htmlFor="privilege">Family member privilege</Label>
+                <select name="privilege" id="privilege" defaultValue="view_only"
+                        className="block w-full rounded-md border bg-background px-2 py-1 text-sm">
+                  <option value="view_only">view_only ($5)</option>
+                  <option value="meal_modify">meal_modify ($9)</option>
+                </select>
+              </div>
+              <Button type="submit">Invite family member</Button>
+            </form>
+          ) : null}
+          {isOwner ? (
+            <form action={inviteMaid}>
+              <Button type="submit" variant="outline">Invite maid</Button>
+            </form>
+          ) : null}
+          {isMaid ? (
+            <form action={inviteOwner}>
+              <Button type="submit" variant="outline">Invite owner</Button>
+            </form>
+          ) : null}
+
+          {invites.data!.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No active invites.</p>
+          ) : (
+            <ul className="divide-y">
+              {invites.data!.map((i) => (
+                <li key={i.id} className="space-y-1 py-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{i.intended_role}</span>
+                    <span className="text-xs text-muted-foreground">code: <code>{i.code}</code></span>
+                  </div>
+                  <code className="block break-all rounded bg-muted px-2 py-1 text-xs">
+                    {`/join/${i.token}`}
+                  </code>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </main>
+  );
+}
