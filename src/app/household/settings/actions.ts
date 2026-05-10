@@ -1,0 +1,189 @@
+"use server";
+
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { randomBytes } from "node:crypto";
+import { getCurrentHousehold } from "@/lib/auth/current-household";
+import { createServiceClient } from "@/lib/supabase/server";
+import type { Privilege, Role } from "@/lib/db/types";
+
+const createInviteSchema = z.object({
+  role: z.enum(["owner", "family_member", "maid"]),
+  privilege: z.enum(["full", "meal_modify", "view_only"]).optional(),
+});
+
+export async function createInvite(input: unknown) {
+  const data = createInviteSchema.parse(input);
+  const ctx = await getCurrentHousehold();
+  if (!ctx) throw new Error("no active household");
+  const { household, membership, profile } = ctx;
+
+  // Spec §5.3 invariants
+  if (data.role === "owner" && membership.role !== "maid") {
+    throw new Error("only the maid can invite the owner");
+  }
+  if (data.role !== "owner" && membership.role !== "owner") {
+    throw new Error("only an owner can invite this role");
+  }
+
+  const svc = createServiceClient();
+
+  if (data.role === "maid") {
+    const has = await svc
+      .from("household_memberships")
+      .select("id")
+      .eq("household_id", household.id)
+      .eq("role", "maid")
+      .eq("status", "active")
+      .limit(1);
+    if (has.error) throw new Error(has.error.message);
+    if (has.data?.length) throw new Error("household already has an active maid");
+  }
+  if (data.role === "owner") {
+    const has = await svc
+      .from("household_memberships")
+      .select("id")
+      .eq("household_id", household.id)
+      .eq("role", "owner")
+      .eq("status", "active")
+      .limit(1);
+    if (has.error) throw new Error(has.error.message);
+    if (has.data?.length) throw new Error("household already has an active owner");
+  }
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const token = randomBytes(32).toString("base64url");
+
+  const inv = await svc
+    .from("invites")
+    .insert({
+      household_id: household.id,
+      invited_by_profile_id: profile.id,
+      intended_role: data.role as Role,
+      intended_privilege:
+        data.role === "family_member" ? (data.privilege ?? "view_only") : ("full" as Privilege),
+      code,
+      token,
+    })
+    .select("code, token")
+    .single();
+  if (inv.error) throw new Error(inv.error.message);
+
+  revalidatePath("/household/settings");
+  return { code: inv.data.code, token: inv.data.token };
+}
+
+const revokeSchema = z.object({ inviteId: z.uuid() });
+export async function revokeInvite(input: unknown) {
+  const data = revokeSchema.parse(input);
+  const ctx = await getCurrentHousehold();
+  if (!ctx) throw new Error("no active household");
+  const svc = createServiceClient();
+  const { error } = await svc
+    .from("invites")
+    .update({ expires_at: new Date().toISOString() })
+    .eq("id", data.inviteId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/household/settings");
+}
+
+const redeemSchema = z.object({
+  tokenOrCode: z.string().min(1).max(200),
+});
+export async function redeemInvite(input: unknown) {
+  const data = redeemSchema.parse(input);
+  const ctx = await getCurrentHousehold();
+  if (ctx) redirect("/dashboard"); // already in a household; can't accept another in v1
+
+  const svc = createServiceClient();
+
+  // Resolve a code to a token if needed
+  let token = data.tokenOrCode.trim();
+  if (/^\d{6}$/.test(token)) {
+    const r = await svc
+      .from("invites")
+      .select("token")
+      .eq("code", token)
+      .is("consumed_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (r.error) throw new Error(r.error.message);
+    const found = r.data?.[0]?.token;
+    if (!found) throw new Error("invite not found or expired");
+    token = found;
+  }
+
+  const rpc = await svc.rpc("redeem_invite", { p_token: token });
+  if (rpc.error) throw new Error(rpc.error.message);
+
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
+}
+
+const removeSchema = z.object({ membershipId: z.uuid() });
+export async function removeMembership(input: unknown) {
+  const data = removeSchema.parse(input);
+  const ctx = await getCurrentHousehold();
+  if (!ctx) throw new Error("no active household");
+
+  const svc = createServiceClient();
+  const target = await svc
+    .from("household_memberships")
+    .select("*")
+    .eq("id", data.membershipId)
+    .single();
+  if (target.error) throw new Error(target.error.message);
+
+  const targetRow = target.data;
+  if (targetRow.household_id !== ctx.household.id) throw new Error("forbidden");
+
+  const isSelfLeave = targetRow.profile_id === ctx.profile.id;
+  const isOwnerAction = ctx.membership.role === "owner";
+  if (!isSelfLeave && !isOwnerAction) throw new Error("forbidden");
+
+  if (targetRow.role === "owner" && isSelfLeave) {
+    // Spec §5.6 — disallowed in v1
+    throw new Error("an owner cannot self-leave; transfer ownership first (not in v1)");
+  }
+
+  const { error } = await svc
+    .from("household_memberships")
+    .update({ status: "removed", removed_at: new Date().toISOString() })
+    .eq("id", data.membershipId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/household/settings");
+  revalidatePath("/dashboard");
+}
+
+const updatePrivSchema = z.object({
+  membershipId: z.uuid(),
+  privilege: z.enum(["full", "meal_modify", "view_only"]),
+});
+export async function updateMembershipPrivilege(input: unknown) {
+  const data = updatePrivSchema.parse(input);
+  const ctx = await getCurrentHousehold();
+  if (!ctx) throw new Error("no active household");
+  if (ctx.membership.role !== "owner") throw new Error("only the owner can change privileges");
+
+  const svc = createServiceClient();
+  const target = await svc
+    .from("household_memberships")
+    .select("household_id, role")
+    .eq("id", data.membershipId)
+    .single();
+  if (target.error) throw new Error(target.error.message);
+  if (target.data.household_id !== ctx.household.id) throw new Error("forbidden");
+  if (target.data.role !== "family_member")
+    throw new Error("privilege only applies to family members");
+
+  const { error } = await svc
+    .from("household_memberships")
+    .update({ privilege: data.privilege })
+    .eq("id", data.membershipId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/household/settings");
+}
