@@ -28,7 +28,49 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;
         Relationships: [];
       };
-      // households, household_memberships, invites — added in later tasks.
+      households: {
+        Row: {
+          id: string;
+          name: string;
+          address_line: string | null;
+          postal_code: string | null;
+          created_by_profile_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          name: string;
+          created_by_profile_id: string;
+          address_line?: string | null;
+          postal_code?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["households"]["Row"]>;
+        Relationships: [];
+      };
+      household_memberships: {
+        Row: {
+          id: string;
+          household_id: string;
+          profile_id: string;
+          role: Role;
+          privilege: Privilege;
+          status: MembershipStatus;
+          joined_at: string;
+          removed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          household_id: string;
+          profile_id: string;
+          role: Role;
+          privilege?: Privilege;
+          status?: MembershipStatus;
+        };
+        Update: Partial<Database["public"]["Tables"]["household_memberships"]["Row"]>;
+        Relationships: [];
+      };
+      // invites — added in later tasks.
     };
     Views: {
       // No views yet.

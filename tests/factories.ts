@@ -68,3 +68,37 @@ export async function insertHousehold(
   );
   return row;
 }
+
+export type MembershipRow = {
+  id: string;
+  household_id: string;
+  profile_id: string;
+  role: "owner" | "family_member" | "maid";
+  privilege: "full" | "meal_modify" | "view_only";
+  status: "active" | "pending" | "removed";
+};
+
+export async function insertMembership(
+  client: Client,
+  overrides: Partial<MembershipRow> & {
+    household_id: string;
+    profile_id: string;
+    role: MembershipRow["role"];
+  },
+): Promise<MembershipRow> {
+  const row = {
+    id: overrides.id ?? randomUUID(),
+    household_id: overrides.household_id,
+    profile_id: overrides.profile_id,
+    role: overrides.role,
+    privilege: overrides.privilege ?? "full",
+    status: overrides.status ?? "active",
+  };
+  await client.query(
+    `insert into household_memberships
+      (id, household_id, profile_id, role, privilege, status)
+     values ($1,$2,$3,$4,$5,$6)`,
+    [row.id, row.household_id, row.profile_id, row.role, row.privilege, row.status],
+  );
+  return row;
+}
