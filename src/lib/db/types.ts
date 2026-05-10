@@ -70,13 +70,41 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["household_memberships"]["Row"]>;
         Relationships: [];
       };
-      // invites — added in later tasks.
+      invites: {
+        Row: {
+          id: string;
+          household_id: string;
+          invited_by_profile_id: string;
+          intended_role: Role;
+          intended_privilege: Privilege | null;
+          code: string;
+          token: string;
+          expires_at: string;
+          consumed_at: string | null;
+          consumed_by_profile_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          household_id: string;
+          invited_by_profile_id: string;
+          intended_role: Role;
+          intended_privilege?: Privilege | null;
+          code: string;
+          token: string;
+          expires_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["invites"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {
       // No views yet.
     };
     Functions: {
-      // redeem_invite — added in Task 8.
+      redeem_invite: {
+        Args: { p_token: string };
+        Returns: Database["public"]["Tables"]["household_memberships"]["Row"];
+      };
     };
   };
 };
