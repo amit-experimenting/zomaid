@@ -37,7 +37,21 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className={cn("font-sans", geist.variable)}>
-        <body className="min-h-dvh antialiased">{children}</body>
+        <body className="min-h-dvh antialiased">
+          {process.env.NODE_ENV === "development" && (
+            // TEMP DIAGNOSTIC: react-server-dom-turbopack's flushComponentPerformance
+            // can call performance.measure(name, { start: 0, end: -Infinity }) when an
+            // RSC chunk's status is 'rejected', which Chrome rejects with a TypeError
+            // whose stack only shows "measure [native code]" — masking the real error.
+            // Remove once the upstream React 19 RSC perf-track bug is patched.
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `(function(){if(typeof performance==="undefined"||window.__measureFixApplied)return;window.__measureFixApplied=true;var orig=performance.measure.bind(performance);performance.measure=function(name,a,b){try{if(a&&typeof a==="object"){var s=a.start,e=a.end;if(typeof s==="number"&&typeof e==="number"&&(!isFinite(s)||!isFinite(e)||s>e)){console.warn("[dev] swallowed perf.measure TypeError",{name:name,start:s,end:e});return undefined;}}return orig(name,a,b);}catch(err){console.warn("[dev] swallowed perf.measure error",name,err);return undefined;}};})();`,
+              }}
+            />
+          )}
+          {children}
+        </body>
       </html>
     </ClerkProvider>
   );
