@@ -234,12 +234,81 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["shopping_list_items"]["Insert"]>;
         Relationships: [];
       };
+      bills: {
+        Row: {
+          id: string;
+          household_id: string;
+          uploaded_by_profile_id: string | null;
+          status: "pending" | "processing" | "processed" | "failed";
+          status_reason: string | null;
+          bill_date: string | null;
+          store_name: string | null;
+          total_amount: number | null;
+          currency: string;
+          image_storage_path: string;
+          github_issue_number: number | null;
+          github_issue_url: string | null;
+          created_at: string;
+          updated_at: string;
+          processed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          uploaded_by_profile_id?: string | null;
+          status?: "pending" | "processing" | "processed" | "failed";
+          status_reason?: string | null;
+          bill_date?: string | null;
+          store_name?: string | null;
+          total_amount?: number | null;
+          currency?: string;
+          image_storage_path: string;
+          github_issue_number?: number | null;
+          github_issue_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          processed_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["bills"]["Insert"]>;
+        Relationships: [];
+      };
+      bill_line_items: {
+        Row: {
+          id: string;
+          bill_id: string;
+          position: number;
+          item_name: string;
+          quantity: number | null;
+          unit: string | null;
+          unit_price: number | null;
+          line_total: number | null;
+          matched_shopping_item_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          bill_id: string;
+          position: number;
+          item_name: string;
+          quantity?: number | null;
+          unit?: string | null;
+          unit_price?: number | null;
+          line_total?: number | null;
+          matched_shopping_item_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["bill_line_items"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: {
       // No views yet.
     };
     Enums: {
       meal_slot: "breakfast" | "lunch" | "snacks" | "dinner";
+      bill_status: "pending" | "processing" | "processed" | "failed";
     };
     Functions: {
       redeem_invite: {
@@ -265,6 +334,10 @@ export type Database = {
       shopping_auto_add_from_plans: {
         Args: Record<string, never>;
         Returns: Database["public"]["Tables"]["shopping_list_items"]["Row"][];
+      };
+      ingest_bill_ocr: {
+        Args: { p_bill_id: string; p_payload: Record<string, unknown> };
+        Returns: Database["public"]["Tables"]["bills"]["Row"];
       };
     };
   };
