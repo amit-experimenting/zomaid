@@ -7,6 +7,7 @@ const isPublic = createRouteMatcher([
   "/sign-up(.*)",
   "/join/(.*)",
   "/api/webhooks/(.*)",
+  "/api/cron/(.*)",
 ]);
 
 const isAuthGated = createRouteMatcher([
@@ -17,6 +18,7 @@ const isAuthGated = createRouteMatcher([
   "/recipes(.*)",
   "/shopping(.*)",
   "/bills(.*)",
+  "/tasks(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
