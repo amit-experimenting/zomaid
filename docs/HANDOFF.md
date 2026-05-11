@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-05-11 (slice 2a complete)
 **Current head:** `333acc4` on `main` (~30 commits ahead of last-pushed `48990e1`)
-**Test state:** foundations verification gate ran on this machine — `pnpm db:reset && pnpm typecheck && pnpm test tests/db` all green (18 foundations DB tests pass + 9 slice 2a migrations apply cleanly). Slice 2a tests were intentionally skipped per the user's "we'll come back to tests" instruction; implementations stand on `db:reset` + `typecheck` only. **`pnpm test:e2e` was not run — `.env.local` is missing (Clerk dev keys required).** Manual walkthrough also still pending the same env setup.
+**Test state:** verification gate ran on this machine — `pnpm db:reset && pnpm typecheck && pnpm test tests/db && pnpm test:e2e` all green: 18 foundations DB tests pass, 9 slice 2a migrations apply cleanly, typecheck clean, **10 Playwright tests pass + 2 expected auth-required skips** (chromium + WebKit/iPhone-13 projects). Slice 2a vitest unit/action tests were intentionally skipped per the user's "we'll come back to tests" instruction. Manual walkthrough (6-step checklist in the plan) is still owed — that's interactive in the browser, requires the user.
 
 This doc is the single source of truth for "what's done, what's next, what to ignore in the plan because reality diverged."
 
@@ -75,11 +75,18 @@ Surfaced by the Task 13 code-quality review. None block normal flows; all are be
 4. **`fieldErrors` type assertion loses Zod's array structure** in `createRecipe` / `updateRecipe`. `parsed.error.flatten().fieldErrors` is `Record<string, string[] | undefined>`; the `as Record<string, string>` cast hides that. Either widen the action's response type or join the arrays before returning.
 5. **No min-length on Zod's `ingredients` / `steps` arrays.** A recipe can be created with zero ingredients or zero steps. Decide product policy and tighten.
 
-### Slice 2a verification still owed (manual walkthrough — needs `.env.local`)
+### Slice 2a — verification status
 
-- The 6-step manual walkthrough from the plan's Task 24 Step 2 (owner adds recipe with photo → maid sees plan → family read-only → cron simulation) was not run on this machine. `.env.local` is missing; Clerk dev keys + the local Supabase keys from `supabase status` need to land before the dev server / Playwright can boot.
-- `pnpm test:e2e` against `tests/e2e/recipes-plan.spec.ts` is the gated-route smoke; runs once the dev server is bootable.
-- For prod cutover, the cloud Supabase project also needs `pg_cron` enabled (Dashboard → Database → Extensions). Pre-flight B in the plan documents this gate.
+- ✅ `pnpm db:reset` — all 16 migrations apply (7 foundations + 9 slice 2a).
+- ✅ `pnpm typecheck` — clean.
+- ✅ `pnpm test tests/db` — 18 foundations DB tests pass (no slice 2a tests added per user's "skip tests" instruction).
+- ✅ `pnpm test:e2e` — 10 pass (foundations 6 + slice 2a 4), 2 expected skips for the auth-required manual cases.
+- ⏳ **Manual 6-step walkthrough** from the plan's Task 24 Step 2 (owner adds recipe → maid sees plan → family read-only → cron simulation `select mealplan_suggest_for_date(current_date + 1)`) — interactive, requires user.
+- ⏳ **For prod cutover**: cloud Supabase needs `pg_cron` extension enabled (Dashboard → Database → Extensions). Pre-flight B in the plan documents this gate.
+
+### Late slice 2a fix worth knowing about (commit `c0d3c3f`)
+
+`/plan` and `/recipes` were initially missing from `proxy.ts`'s `isAuthGated` matcher. Unauthenticated visits fell through middleware and only hit the page-level `requireHousehold()` (which throws / redirects internally). The E2E smoke caught this; the matcher was updated to include `/plan(.*)` and `/recipes(.*)` alongside the foundations routes. Both gated routes now redirect to `/` for unauthenticated callers, matching the foundations pattern.
 
 ### Deferred from review (next session — foundations residue)
 
