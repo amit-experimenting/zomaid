@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/dispatch-task-pushes",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
