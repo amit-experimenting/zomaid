@@ -1,8 +1,8 @@
 # Zomaid — Foundations Slice Handoff
 
 **Last updated:** 2026-05-11
-**Current head:** `3eaa6d7` on `main` (4 commits ahead of last-pushed `48990e1`)
-**Test state:** `pnpm test` → **28 passing** across 9 files as of `48990e1`. Commits `7024cca`, `9b777a3`, `3eaa6d7` are **unverified** — Node/pnpm are not installed on this checkout, so `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, and `pnpm db:reset` against local Supabase could not run. Each commit body discloses the gap. **Run verification on a node-capable host before pushing.**
+**Current head:** `ffd565f` on `main` (5 commits ahead of last-pushed `48990e1`)
+**Test state:** `pnpm test` → **28 passing** across 9 files as of `48990e1`. Commits `7024cca`, `9b777a3`, `3eaa6d7`, `ffd565f` are **unverified** — Node/pnpm are not installed on this checkout, so `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, and `pnpm db:reset` against local Supabase could not run. Each commit body discloses the gap. **Run verification on a node-capable host before pushing.**
 
 This doc is the single source of truth for "what's done, what's next, what to ignore in the plan because reality diverged."
 
@@ -57,10 +57,16 @@ If `pnpm test` shows fewer than 28 or any failures, **stop** — the local Supab
 
 Surfaced by the final code review but intentionally not fixed this loop. None affect non-deployment code paths.
 
-1. **Server-action test coverage gap (review's Important #9).** `tests/actions/*.ts` test DB invariants the actions rely on, not the actions themselves. Four real action functions (`redeemInvite`, `createInvite`, `revokeInvite`, `removeMembership`) have zero automated coverage. The manual checklist in plan Task 18 Step 3 is currently the only safety net. **Adding these tests is the right first task once Node is installed**, since the Critical #1 fix (`redeemInvite` JWT-client) is exactly what such a test would have caught.
-2. **`.env.local.example` is missing two env vars the code reads** — `CLERK_WEBHOOK_SIGNING_SECRET` (`src/app/api/webhooks/clerk/route.ts`) and `ZOMAID_ADMIN_CLERK_USER_IDS` (`src/lib/admin/env-sync.ts`). Fold into Pre-flight E.
-3. **Clerk `Show` API verification** (`src/app/page.tsx:1-3`). Plan and code use `Show when="signed-in|signed-out"`; confirm this exists in `@clerk/nextjs` v7.3.3 on first `pnpm dev`. Fallback is `SignedIn` / `SignedOut` components.
-4. **`/join/[token]` `redirect_url`-via-Clerk-sign-in** — manual smoke during Pre-flight to confirm Clerk honors the redirect param against the configured JWT template.
+1. **Server-action test coverage (review's Important #9) — infrastructure landed; tests still to write.** Commit `ffd565f` added `tests/helpers/{clerk,next,supabase-test-client}.ts` plus env defaults in `tests/setup.ts` — Clerk auth/currentUser mocks (with a real HS256 JWT signed by the local Supabase secret so Clerk → Supabase → RLS flows end-to-end), Next stubs for redirect/revalidatePath/cookies, and service-role HTTP factories that produce committed seed data the action can read. Tests themselves were drafted but not committed — the planned spec is ~15 cases across three new files:
+   - `tests/actions/invites-actions.test.ts` — `createInvite` (4 cases), `revokeInvite` (5 cases covering C2 + I4), `redeemInvite` (5 cases covering C1 end-to-end via Clerk-JWT path).
+   - `tests/actions/memberships-actions.test.ts` — `removeMembership` (4-5 cases), `updateMembershipPrivilege` (3-4 cases).
+   - `tests/actions/onboarding-actions.test.ts` — `createHouseholdAsOwner` (3 cases), `createHouseholdAsMaid` (3 cases covering I7 + I8).
+   Required envs to run: `SUPABASE_SERVICE_ROLE_KEY` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from `pnpm db:start` / `supabase status`. Per-test pattern is in the helpers' header comments. Existing `tests/actions/*.ts` files are DB-invariant tests; consider moving them under `tests/db/` once the new action-level files land.
+2. **SQL test for the P0007 duplicate-membership pre-check** added in migration `20260516_001`. `tests/db/invites.test.ts` has a passing `not found / already consumed / expired / capacity-maid` set but doesn't yet exercise P0007 (caller already a non-removed member of the household). Small (~20 lines).
+3. **SQL test for revoke-via-consumed_at semantics** — verify that after `revokeInvite` runs, the partial unique index on `invites.code where consumed_at is null` releases the slot (i.e. a new invite can reuse the same code). Small (~30 lines).
+4. **`.env.local.example` is missing two env vars the code reads** — `CLERK_WEBHOOK_SIGNING_SECRET` (`src/app/api/webhooks/clerk/route.ts`) and `ZOMAID_ADMIN_CLERK_USER_IDS` (`src/lib/admin/env-sync.ts`). Fold into Pre-flight E.
+5. **Clerk `Show` API verification** (`src/app/page.tsx:1-3`). Plan and code use `Show when="signed-in|signed-out"`; confirm this exists in `@clerk/nextjs` v7.3.3 on first `pnpm dev`. Fallback is `SignedIn` / `SignedOut` components.
+6. **`/join/[token]` `redirect_url`-via-Clerk-sign-in** — manual smoke during Pre-flight to confirm Clerk honors the redirect param against the configured JWT template.
 
 ### Cosmetic (left as-is)
 
