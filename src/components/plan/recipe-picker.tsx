@@ -7,14 +7,21 @@ import { Button } from "@/components/ui/button";
 export type Recipe = { id: string; name: string; slot: string; photo_url: string | null };
 
 export function RecipePicker({
-  slot, recipes, onPick, trigger,
-}: { slot: string; recipes: Recipe[]; onPick: (recipeId: string) => void; trigger: React.ReactNode }) {
+  slot, recipes, onPick, trigger, open, onOpenChange,
+}: {
+  slot: string;
+  recipes: Recipe[];
+  onPick: (recipeId: string) => void;
+  trigger: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const [q, setQ] = useState("");
   const filtered = recipes
     .filter((r) => r.slot === slot)
     .filter((r) => r.name.toLowerCase().includes(q.toLowerCase()));
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger render={trigger as React.ReactElement} />
       <DialogContent>
         <DialogHeader><DialogTitle>Pick a {slot} recipe</DialogTitle></DialogHeader>

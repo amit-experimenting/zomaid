@@ -8,7 +8,7 @@ const ORDER: Slot[] = ["breakfast", "lunch", "snacks", "dinner"];
 
 export type TodayListProps = {
   planDate: string;
-  rows: Record<Slot, { recipeId: string | null; recipeName: string | null; photoUrl: string | null; setBySystem: boolean }>;
+  rows: Record<Slot, { recipeId: string | null; recipeName: string | null; photoUrl: string | null; setBySystem: boolean; rowExists: boolean }>;
   recipes: Recipe[];
   readOnly: boolean;
 };
@@ -34,7 +34,7 @@ export function TodayList({ planDate, rows, recipes, readOnly }: TodayListProps)
                 recipeName={row.recipeName}
                 photoUrl={row.photoUrl}
                 setBySystem={row.setBySystem}
-                onTap={() => {}}
+                rowExists={row.rowExists}
                 readOnly={readOnly}
               />
             }

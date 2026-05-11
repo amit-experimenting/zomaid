@@ -1,30 +1,47 @@
 "use client";
+import * as React from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-export type SlotRowProps = {
+export type SlotRowOwnProps = {
   slot: "breakfast" | "lunch" | "snacks" | "dinner";
   recipeId: string | null;
   recipeName: string | null;
   photoUrl: string | null;
   setBySystem: boolean;          // true if set_by_profile_id was NULL
-  onTap: () => void;
+  rowExists: boolean;            // false → no meal_plans row yet (vs explicit clear)
   readOnly: boolean;
 };
 
-const SLOT_LABEL: Record<SlotRowProps["slot"], string> = {
+export type SlotRowProps = SlotRowOwnProps &
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof SlotRowOwnProps>;
+
+const SLOT_LABEL: Record<SlotRowOwnProps["slot"], string> = {
   breakfast: "Breakfast", lunch: "Lunch", snacks: "Snacks", dinner: "Dinner",
 };
 
-export function SlotRow({ slot, recipeId, recipeName, photoUrl, setBySystem, onTap, readOnly }: SlotRowProps) {
+function emptyCopy(rowExists: boolean, setBySystem: boolean): string {
+  if (!rowExists) return "Not planned";
+  if (setBySystem) return "No suggestion (library empty)";
+  return "Cleared";
+}
+
+// Forward ref + spread `rest` so base-ui's <SheetTrigger render={<SlotRow…/>}>
+// can attach its click handler, aria-*, and ref onto the underlying <button>.
+export const SlotRow = React.forwardRef<HTMLButtonElement, SlotRowProps>(function SlotRow(
+  { slot, recipeId, recipeName, photoUrl, setBySystem, rowExists, readOnly, className, ...rest },
+  ref,
+) {
   return (
     <button
+      ref={ref}
       type="button"
-      onClick={onTap}
+      {...rest}
       className={cn(
         "flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left",
         "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         readOnly && "cursor-default hover:bg-transparent",
+        className,
       )}
     >
       <div className="size-12 shrink-0 overflow-hidden rounded-md bg-muted">
@@ -37,13 +54,11 @@ export function SlotRow({ slot, recipeId, recipeName, photoUrl, setBySystem, onT
       <div className="min-w-0 flex-1">
         <div className="text-xs uppercase tracking-wide text-muted-foreground">{SLOT_LABEL[slot]}</div>
         {recipeId === null ? (
-          <div className="italic text-muted-foreground">
-            {setBySystem ? "No suggestion (library empty)" : "Cleared"}
-          </div>
+          <div className="italic text-muted-foreground">{emptyCopy(rowExists, setBySystem)}</div>
         ) : (
           <div className="truncate font-medium">{recipeName}</div>
         )}
       </div>
     </button>
   );
-}
+});

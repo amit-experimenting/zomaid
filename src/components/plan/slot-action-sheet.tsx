@@ -1,5 +1,5 @@
 "use client";
-import React, { useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { RecipePicker, type Recipe } from "./recipe-picker";
@@ -17,18 +17,31 @@ export type SlotActionSheetProps = {
 
 export function SlotActionSheet(props: SlotActionSheetProps) {
   const [pending, start] = useTransition();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   const onPick = (recipeId: string) => {
-    start(async () => { await setMealPlanSlot({ planDate: props.planDate, slot: props.slot, recipeId }); });
+    start(async () => {
+      await setMealPlanSlot({ planDate: props.planDate, slot: props.slot, recipeId });
+      setPickerOpen(false);
+      setSheetOpen(false);
+    });
   };
   const onRegenerate = () => {
-    start(async () => { await regenerateMealPlanSlot({ planDate: props.planDate, slot: props.slot }); });
+    start(async () => {
+      await regenerateMealPlanSlot({ planDate: props.planDate, slot: props.slot });
+      setSheetOpen(false);
+    });
   };
   const onClear = () => {
-    start(async () => { await setMealPlanSlot({ planDate: props.planDate, slot: props.slot, recipeId: null }); });
+    start(async () => {
+      await setMealPlanSlot({ planDate: props.planDate, slot: props.slot, recipeId: null });
+      setSheetOpen(false);
+    });
   };
 
   return (
-    <Sheet>
+    <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
       <SheetTrigger render={props.trigger as React.ReactElement} />
       <SheetContent side="bottom">
         <SheetHeader>
@@ -36,7 +49,7 @@ export function SlotActionSheet(props: SlotActionSheetProps) {
         </SheetHeader>
         <div className="flex flex-col gap-2 py-4">
           {props.currentRecipeId && (
-            <Button variant="outline" render={<a href={`/recipes/${props.currentRecipeId}`} />}>
+            <Button variant="outline" nativeButton={false} render={<a href={`/recipes/${props.currentRecipeId}`} />}>
               View recipe
             </Button>
           )}
@@ -46,6 +59,8 @@ export function SlotActionSheet(props: SlotActionSheetProps) {
                 slot={props.slot}
                 recipes={props.recipes}
                 onPick={onPick}
+                open={pickerOpen}
+                onOpenChange={setPickerOpen}
                 trigger={<Button variant="outline" disabled={pending}>Pick different</Button>}
               />
               <Button variant="outline" disabled={pending} onClick={onRegenerate}>Regenerate</Button>

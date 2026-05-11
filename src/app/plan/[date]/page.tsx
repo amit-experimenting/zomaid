@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
 import { TodayList } from "@/components/plan/today-list";
 import { WeekStrip } from "@/components/plan/week-strip";
+import { MissingPlanCTA } from "@/components/plan/missing-plan-cta";
+import { Button } from "@/components/ui/button";
 import type { Recipe } from "@/components/plan/recipe-picker";
 import { MainNav } from "@/components/site/main-nav";
 
@@ -15,7 +18,10 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
   }
   const ctx = await requireHousehold();
   const supabase = await createClient();
-  const readOnly = ctx.membership.role === "family_member";
+  // Owner/maid have privilege 'full' by default; family_member is gated by privilege.
+  // Mirrors the can_modify_meal_plan() DB helper used by meal_plans RLS.
+  const readOnly =
+    ctx.membership.role === "family_member" && ctx.membership.privilege === "view_only";
 
   const { data: rawRows } = await supabase
     .from("meal_plans")
@@ -42,7 +48,8 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
       recipeId: r?.recipe_id ?? null,
       recipeName: recipe?.name ?? null,
       photoUrl,
-      setBySystem: r?.set_by_profile_id === null,
+      setBySystem: r != null && r.set_by_profile_id === null,
+      rowExists: r != null,
     };
   }
 
@@ -52,13 +59,28 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
     id: r.id, name: r.name, slot: r.slot, photo_url: null,
   }));
 
+  const hasAnyPlanRow = (rawRows?.length ?? 0) > 0;
+  const libraryEmpty = recipes.length === 0;
+
   return (
     <main className="mx-auto max-w-md">
       <MainNav active="plan" />
       <header className="px-4 py-3">
         <h1 className="text-lg font-semibold">{date === new Date().toISOString().slice(0, 10) ? "Today" : "Plan"} · {date}</h1>
       </header>
-      <TodayList planDate={date} rows={rows} recipes={recipes} readOnly={readOnly} />
+      {libraryEmpty ? (
+        <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+          <p className="text-sm text-muted-foreground">Your recipe library is empty.</p>
+          {!readOnly && (
+            <Button nativeButton={false} render={<Link href="/recipes/new" />}>Add your first recipe →</Button>
+          )}
+        </div>
+      ) : (
+        <>
+          <TodayList planDate={date} rows={rows} recipes={recipes} readOnly={readOnly} />
+          {!hasAnyPlanRow && !readOnly && <MissingPlanCTA planDate={date} />}
+        </>
+      )}
       <WeekStrip activeDate={date} />
     </main>
   );
