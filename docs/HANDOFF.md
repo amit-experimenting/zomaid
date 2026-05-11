@@ -1,8 +1,8 @@
-# Zomaid — Foundations + Slice 2a Handoff
+# Zomaid — Foundations + Slice 2a + Slice 2b Handoff
 
-**Last updated:** 2026-05-11 (slice 2a complete)
-**Current head:** `333acc4` on `main` (~30 commits ahead of last-pushed `48990e1`)
-**Test state:** verification gate ran on this machine — `pnpm db:reset && pnpm typecheck && pnpm test tests/db && pnpm test:e2e` all green: 18 foundations DB tests pass, 9 slice 2a migrations apply cleanly, typecheck clean, **10 Playwright tests pass + 2 expected auth-required skips** (chromium + WebKit/iPhone-13 projects). Slice 2a vitest unit/action tests were intentionally skipped per the user's "we'll come back to tests" instruction. Manual walkthrough (6-step checklist in the plan) is still owed — that's interactive in the browser, requires the user.
+**Last updated:** 2026-05-11 (slice 2b complete)
+**Current head:** `fe5ec79` on `main` (~9 commits ahead of last-pushed `2c5d182`; slice 2a was pushed previously)
+**Test state:** verification gate green on this machine — `pnpm db:reset && pnpm typecheck && pnpm test tests/db && pnpm test:e2e` all pass: 18 foundations DB tests, all 18 migrations apply cleanly (7 foundations + 9 slice 2a + 2 slice 2b), typecheck clean, **12 Playwright tests pass + 2 expected auth-required skips** (chromium + WebKit/iPhone-13 projects). Slice 2a and 2b vitest unit/action tests were intentionally skipped per the user's "we'll come back to tests" instruction. Manual walkthrough for slice 2b (10-step checklist in the plan) is still owed — interactive in the browser, requires the user.
 
 This doc is the single source of truth for "what's done, what's next, what to ignore in the plan because reality diverged."
 
@@ -83,6 +83,23 @@ Surfaced by the Task 13 code-quality review. None block normal flows; all are be
 - ✅ `pnpm test:e2e` — 10 pass (foundations 6 + slice 2a 4), 2 expected skips for the auth-required manual cases.
 - ⏳ **Manual 6-step walkthrough** from the plan's Task 24 Step 2 (owner adds recipe → maid sees plan → family read-only → cron simulation `select mealplan_suggest_for_date(current_date + 1)`) — interactive, requires user.
 - ⏳ **For prod cutover**: cloud Supabase needs `pg_cron` extension enabled (Dashboard → Database → Extensions). Pre-flight B in the plan documents this gate.
+
+### Done — Slice 2b (Shopping list)
+
+Spec: [`docs/specs/2026-05-11-slice-2b-shopping-list-design.md`](specs/2026-05-11-slice-2b-shopping-list-design.md). Plan: [`docs/plans/2026-05-11-slice-2b-shopping-list.md`](plans/2026-05-11-slice-2b-shopping-list.md). 8 tasks executed via `superpowers:subagent-driven-development`.
+
+- **Migrations (2):** `20260526_001_shopping_list_items.sql` (table + 2 partial indexes + CHECK + RLS), `20260527_001_shopping_auto_add_fn.sql` (the RPC).
+- **Server actions:** `src/app/shopping/actions.ts` — `addShoppingItem`, `updateShoppingItem` (bought rows immutable via `SHOPPING_ITEM_BOUGHT_IMMUTABLE`), `markShoppingItemBought`, `unmarkShoppingItemBought`, `deleteShoppingItem` (also allowed on bought rows for history cleanup), `autoAddFromPlans` (wraps the RPC).
+- **UI:** `/shopping` page (client component) with `QuickAdd` + `AutoAddButton` + `ItemRow` + `EditItemSheet` + `BoughtHistory`. New `MainNav` component (Plan · Recipes · Shopping) rendered atop `/plan/[date]`, `/recipes`, and `/shopping`.
+- **`proxy.ts`:** `/shopping(.*)` added to the gated matcher.
+- **Family is read-only.** Auto-add, quick-add, checkboxes, edit sheet are hidden for `family_member` role.
+- **Plan deviation worth knowing:** the plan's Task 6 example used `import { createClient } from "@/lib/supabase/client"`. The actual client-side helper in foundations is the hook `useSupabaseClient`. The implementer caught this and used the hook correctly; the plan was wrong here.
+
+### Deferred from slice 2b
+
+- **All vitest tests** (DB + action coverage) — per the ongoing "skip tests" instruction. Action file follows the same patterns as `recipes/actions.ts`; tests will follow `tests/helpers/` from foundations.
+- **Manual walkthrough** — interactive 10-step checklist in Task 8 Step 2 of the plan; requires the user with a working browser session.
+- **Dashboard "Shopping" card** — spec opted to surface shopping via the header nav only in v1.
 
 ### Late slice 2a fix worth knowing about (commit `c0d3c3f`)
 
