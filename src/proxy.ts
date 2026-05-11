@@ -19,6 +19,7 @@ const isAuthGated = createRouteMatcher([
   "/shopping(.*)",
   "/bills(.*)",
   "/tasks(.*)",
+  "/admin(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

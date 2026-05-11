@@ -182,3 +182,56 @@ export async function markOccurrenceSkipped(input: { occurrenceId: string }): Pr
   revalidatePath("/tasks");
   return { ok: true, data: { occurrenceId: parsed.data.occurrenceId } };
 }
+
+/**
+ * Mark a standard task as not applicable for the caller's household.
+ * Adds a row to household_task_hides; the next generation cycle skips it
+ * for this household. Any *existing* unresolved occurrences for this household
+ * × task are also deleted so they disappear from /tasks immediately.
+ */
+export async function hideStandardTask(input: { taskId: string }): Promise<TaskActionResult<{ taskId: string }>> {
+  const parsed = z.object({ taskId: z.string().uuid() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: { code: "TASK_INVALID", message: "Invalid input" } };
+  const ctx = await requireHousehold();
+  const supabase = await createClient();
+
+  const { error: hideErr } = await supabase.from("household_task_hides").insert({
+    household_id: ctx.household.id,
+    task_id: parsed.data.taskId,
+    hidden_by_profile_id: ctx.profile.id,
+  });
+  if (hideErr) return { ok: false, error: { code: "TASK_FORBIDDEN", message: hideErr.message } };
+
+  // Drop existing pending occurrences for this household × task.
+  await supabase
+    .from("task_occurrences")
+    .delete()
+    .eq("household_id", ctx.household.id)
+    .eq("task_id", parsed.data.taskId)
+    .eq("status", "pending");
+
+  revalidatePath("/tasks");
+  return { ok: true, data: { taskId: parsed.data.taskId } };
+}
+
+export async function unhideStandardTask(input: { taskId: string }): Promise<TaskActionResult<{ taskId: string }>> {
+  const parsed = z.object({ taskId: z.string().uuid() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: { code: "TASK_INVALID", message: "Invalid input" } };
+  const ctx = await requireHousehold();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("household_task_hides")
+    .delete()
+    .eq("household_id", ctx.household.id)
+    .eq("task_id", parsed.data.taskId);
+  if (error) return { ok: false, error: { code: "TASK_FORBIDDEN", message: error.message } };
+
+  // Re-materialise the next 7 days of occurrences so it shows up immediately.
+  const horizon = new Date();
+  horizon.setDate(horizon.getDate() + 7);
+  await supabase.rpc("tasks_generate_occurrences", { p_horizon_date: horizon.toISOString().slice(0, 10) });
+
+  revalidatePath("/tasks");
+  return { ok: true, data: { taskId: parsed.data.taskId } };
+}

@@ -8,6 +8,8 @@ export type OccurrenceRowItem = {
   dueAt: string;
   assigneeName: string | null;
   status: "pending" | "done" | "skipped";
+  /** True when the underlying task is a system-wide standard task. */
+  isStandard: boolean;
 };
 
 export function OccurrenceRow({

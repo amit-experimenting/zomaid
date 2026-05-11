@@ -305,7 +305,7 @@ export type Database = {
       tasks: {
         Row: {
           id: string;
-          household_id: string;
+          household_id: string | null;
           title: string;
           notes: string | null;
           assigned_to_profile_id: string | null;
@@ -323,7 +323,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          household_id: string;
+          household_id?: string | null;
           title: string;
           notes?: string | null;
           assigned_to_profile_id?: string | null;
@@ -342,10 +342,27 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["tasks"]["Insert"]>;
         Relationships: [];
       };
+      household_task_hides: {
+        Row: {
+          household_id: string;
+          task_id: string;
+          hidden_at: string;
+          hidden_by_profile_id: string | null;
+        };
+        Insert: {
+          household_id: string;
+          task_id: string;
+          hidden_at?: string;
+          hidden_by_profile_id?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["household_task_hides"]["Insert"]>;
+        Relationships: [];
+      };
       task_occurrences: {
         Row: {
           id: string;
           task_id: string;
+          household_id: string;
           due_at: string;
           status: "pending" | "done" | "skipped";
           completed_by_profile_id: string | null;
@@ -357,6 +374,7 @@ export type Database = {
         Insert: {
           id?: string;
           task_id: string;
+          household_id: string;
           due_at: string;
           status?: "pending" | "done" | "skipped";
           completed_by_profile_id?: string | null;

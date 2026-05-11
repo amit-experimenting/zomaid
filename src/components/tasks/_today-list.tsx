@@ -20,6 +20,7 @@ export function TodayList({ items, readOnly }: { items: OccurrenceRowItem[]; rea
           occurrenceId={target.occurrenceId}
           taskId={target.taskId}
           title={target.title}
+          isStandard={target.isStandard}
           open={target !== null}
           onOpenChange={(open) => { if (!open) setTarget(null); }}
         />
