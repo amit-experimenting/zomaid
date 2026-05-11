@@ -53,3 +53,6 @@ next-env.d.ts
 # supabase local stack
 /supabase/.branches
 /supabase/.temp
+
+# superpowers brainstorming companion (mockups, session state)
+/.superpowers/
