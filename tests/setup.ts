@@ -1,6 +1,16 @@
 import { afterAll, beforeAll, vi } from "vitest";
 import { Client } from "pg";
 
+// Env defaults for the test process. Action tests additionally require
+// NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY to be set in
+// the environment (via .env.local or shell); those are not defaulted here
+// because they change per Supabase CLI version. The service-role test
+// client in tests/helpers/supabase-test-client.ts throws a helpful error
+// the moment a test tries to use them, so pure-pg tests still run without.
+process.env.NEXT_PUBLIC_SUPABASE_URL ??= "http://127.0.0.1:54321";
+process.env.SUPABASE_JWT_SECRET ??=
+  "super-secret-jwt-token-with-at-least-32-characters-long";
+
 // Local Supabase defaults; overridden by env when running against staging.
 const TEST_DB_URL =
   process.env.SUPABASE_DB_URL ??
