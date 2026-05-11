@@ -302,6 +302,98 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["bill_line_items"]["Insert"]>;
         Relationships: [];
       };
+      tasks: {
+        Row: {
+          id: string;
+          household_id: string;
+          title: string;
+          notes: string | null;
+          assigned_to_profile_id: string | null;
+          recurrence_frequency: "daily" | "weekly" | "monthly";
+          recurrence_interval: number;
+          recurrence_byweekday: number[] | null;
+          recurrence_bymonthday: number | null;
+          recurrence_starts_on: string;
+          recurrence_ends_on: string | null;
+          due_time: string;
+          created_by_profile_id: string | null;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          title: string;
+          notes?: string | null;
+          assigned_to_profile_id?: string | null;
+          recurrence_frequency: "daily" | "weekly" | "monthly";
+          recurrence_interval?: number;
+          recurrence_byweekday?: number[] | null;
+          recurrence_bymonthday?: number | null;
+          recurrence_starts_on?: string;
+          recurrence_ends_on?: string | null;
+          due_time?: string;
+          created_by_profile_id?: string | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["tasks"]["Insert"]>;
+        Relationships: [];
+      };
+      task_occurrences: {
+        Row: {
+          id: string;
+          task_id: string;
+          due_at: string;
+          status: "pending" | "done" | "skipped";
+          completed_by_profile_id: string | null;
+          completed_at: string | null;
+          notified_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          task_id: string;
+          due_at: string;
+          status?: "pending" | "done" | "skipped";
+          completed_by_profile_id?: string | null;
+          completed_at?: string | null;
+          notified_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["task_occurrences"]["Insert"]>;
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: {
+          id: string;
+          profile_id: string;
+          endpoint: string;
+          p256dh_key: string;
+          auth_key: string;
+          user_agent: string | null;
+          created_at: string;
+          last_used_at: string | null;
+          revoked_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          endpoint: string;
+          p256dh_key: string;
+          auth_key: string;
+          user_agent?: string | null;
+          created_at?: string;
+          last_used_at?: string | null;
+          revoked_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["push_subscriptions"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: {
       // No views yet.
@@ -309,6 +401,8 @@ export type Database = {
     Enums: {
       meal_slot: "breakfast" | "lunch" | "snacks" | "dinner";
       bill_status: "pending" | "processing" | "processed" | "failed";
+      recurrence_frequency: "daily" | "weekly" | "monthly";
+      task_occurrence_status: "pending" | "done" | "skipped";
     };
     Functions: {
       redeem_invite: {
@@ -338,6 +432,14 @@ export type Database = {
       ingest_bill_ocr: {
         Args: { p_bill_id: string; p_payload: Record<string, unknown> };
         Returns: Database["public"]["Tables"]["bills"]["Row"];
+      };
+      tasks_generate_occurrences: {
+        Args: { p_horizon_date: string };
+        Returns: number;
+      };
+      tasks_prune_old: {
+        Args: { p_days?: number };
+        Returns: number;
       };
     };
   };
