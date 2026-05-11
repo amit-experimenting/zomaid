@@ -1,8 +1,8 @@
-# Zomaid — Foundations Slice Handoff
+# Zomaid — Foundations + Slice 2a Handoff
 
-**Last updated:** 2026-05-11
-**Current head:** `ffd565f` on `main` (5 commits ahead of last-pushed `48990e1`)
-**Test state:** `pnpm test` → **28 passing** across 9 files as of `48990e1`. Commits `7024cca`, `9b777a3`, `3eaa6d7`, `ffd565f` are **unverified** — Node/pnpm are not installed on this checkout, so `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, and `pnpm db:reset` against local Supabase could not run. Each commit body discloses the gap. **Run verification on a node-capable host before pushing.**
+**Last updated:** 2026-05-11 (slice 2a complete)
+**Current head:** `333acc4` on `main` (~30 commits ahead of last-pushed `48990e1`)
+**Test state:** foundations verification gate ran on this machine — `pnpm db:reset && pnpm typecheck && pnpm test tests/db` all green (18 foundations DB tests pass + 9 slice 2a migrations apply cleanly). Slice 2a tests were intentionally skipped per the user's "we'll come back to tests" instruction; implementations stand on `db:reset` + `typecheck` only. **`pnpm test:e2e` was not run — `.env.local` is missing (Clerk dev keys required).** Manual walkthrough also still pending the same env setup.
 
 This doc is the single source of truth for "what's done, what's next, what to ignore in the plan because reality diverged."
 
@@ -53,7 +53,35 @@ If `pnpm test` shows fewer than 28 or any failures, **stop** — the local Supab
   - `9b777a3` — 7 TypeScript fixes: `redeemInvite` swapped to Clerk-JWT client for the RPC (was always rejecting `28000 not authenticated`); `revokeInvite` added ownership check + sets `consumed_at` not `expires_at` to release the partial-index code slot; dropped unused `ownerEmail` capture in maid onboarding; stopped leaking `?ownerInvite=<token>` in the dashboard URL (server-queries pending owner-invite via RLS instead); `getCurrentProfile` lazy-upsert now uses `.upsert + refetch` to be race-safe vs the webhook; `env-sync` replaces PostgREST string-concat with safer `.neq` sentinel pattern; Playwright redirect assertions tightened from `toMatch(/\/$/)` to `toHaveURL("http://localhost:3000/")`.
   - `3eaa6d7` — migration `20260516_001_redeem_invite_duplicate_check.sql`: adds explicit P0007 `caller already a member of this household` pre-check between P0006 and the membership insert, mirroring the partial index `hm_unique_active_pair` so the user sees a clean error instead of `23505 unique_violation`. Predicate `status <> 'removed'` allows a removed member to re-join via a fresh invite.
 
-### Deferred from review (next session)
+### Done — Slice 2a (Recipes & meal plan)
+
+Spec: [`docs/specs/2026-05-11-slice-2a-recipes-meal-plan-design.md`](specs/2026-05-11-slice-2a-recipes-meal-plan-design.md). Plan: [`docs/plans/2026-05-11-slice-2a-recipes-meal-plan.md`](plans/2026-05-11-slice-2a-recipes-meal-plan.md). 24 tasks executed via `superpowers:subagent-driven-development`.
+
+- **Migrations (9):** `20260517_001_recipes.sql` (with `is_active_owner_or_maid` helper at the bottom — order-of-application fix), `20260518_001_recipe_subtables.sql`, `20260519_001_household_recipe_hides.sql`, `20260520_001_meal_plans.sql`, `20260521_001_effective_recipes.sql`, `20260522_001_meal_plan_rpcs.sql`, `20260523_001_meal_plan_cron.sql` (nightly 22:00 SGT job `mealplan-suggest-tomorrow`), `20260524_001_recipe_storage.sql` (two buckets + RLS), `20260525_001_starter_pack_seed.sql` (30 SG recipes: 8 breakfast / 8 lunch / 6 snacks / 8 dinner; names only).
+- **Server actions:** `src/app/recipes/actions.ts` (createRecipe, updateRecipe with fork-on-edit, archive/unarchive, hide/unhide starter); `src/app/plan/actions.ts` (setMealPlanSlot, regenerateMealPlanSlot).
+- **UI (8 files):** `/plan`, `/plan/[date]`, `/recipes`, `/recipes/new`, `/recipes/[id]`, `/recipes/[id]/edit`; `today-list`, `slot-row`, `week-strip`, `slot-action-sheet`, `recipe-picker`, `recipe-card`, `recipe-detail`, `recipe-form` (client-side photo compression via `browser-image-compression`).
+- **Dashboard:** "Recipes & meal plan" card now active, routes to `/plan`. Other three cards still "Soon".
+- **shadcn primitives added:** `sheet`, `textarea`, `dropdown-menu`, `dialog` (base-ui preset; `asChild` is `render={...}` here).
+- **Database types** extended with all 5 new tables, the `meal_slot` enum, and 4 RPCs.
+- **Family is read-only in v1.** `meal_modify` privilege from foundations is parked; deferred to a later slice when billing wires it.
+
+### Deferred from slice 2a (code-review findings, not blocking)
+
+Surfaced by the Task 13 code-quality review. None block normal flows; all are belt-and-braces improvements that the user opted to defer along with the test-writing.
+
+1. **Photo update error not checked** in `src/app/recipes/actions.ts` (create flow after upload; update flow after upload). Spec §7.4 already tolerates orphan blobs, but the user gets back a misleading success if the row update fails after a successful upload. Add `if (error) return …` + a comment citing §7.4.
+2. **Ingredient/step delete errors not checked** before re-inserting in `updateRecipe`. Transient delete failure would silently corrupt data on a subsequent successful insert. Add error checks on the two `delete().eq("recipe_id", …)` calls.
+3. **No DB transaction wrapping** of recipes + ingredients + steps inserts. Spec language ("all in one transaction") is aspirational — Supabase JS has no cross-table transaction API. Either accept the partial-state risk explicitly in the code comments, or refactor to a Postgres function that wraps the three inserts in a single statement.
+4. **`fieldErrors` type assertion loses Zod's array structure** in `createRecipe` / `updateRecipe`. `parsed.error.flatten().fieldErrors` is `Record<string, string[] | undefined>`; the `as Record<string, string>` cast hides that. Either widen the action's response type or join the arrays before returning.
+5. **No min-length on Zod's `ingredients` / `steps` arrays.** A recipe can be created with zero ingredients or zero steps. Decide product policy and tighten.
+
+### Slice 2a verification still owed (manual walkthrough — needs `.env.local`)
+
+- The 6-step manual walkthrough from the plan's Task 24 Step 2 (owner adds recipe with photo → maid sees plan → family read-only → cron simulation) was not run on this machine. `.env.local` is missing; Clerk dev keys + the local Supabase keys from `supabase status` need to land before the dev server / Playwright can boot.
+- `pnpm test:e2e` against `tests/e2e/recipes-plan.spec.ts` is the gated-route smoke; runs once the dev server is bootable.
+- For prod cutover, the cloud Supabase project also needs `pg_cron` enabled (Dashboard → Database → Extensions). Pre-flight B in the plan documents this gate.
+
+### Deferred from review (next session — foundations residue)
 
 Surfaced by the final code review but intentionally not fixed this loop. None affect non-deployment code paths.
 
