@@ -1,8 +1,8 @@
-# Zomaid — Foundations + Slice 2a + Slice 2b Handoff
+# Zomaid — Foundations + Slice 2a + Slice 2b + Slice 3 Handoff
 
-**Last updated:** 2026-05-11 (slice 2b complete)
-**Current head:** `fe5ec79` on `main` (~9 commits ahead of last-pushed `2c5d182`; slice 2a was pushed previously)
-**Test state:** verification gate green on this machine — `pnpm db:reset && pnpm typecheck && pnpm test tests/db && pnpm test:e2e` all pass: 18 foundations DB tests, all 18 migrations apply cleanly (7 foundations + 9 slice 2a + 2 slice 2b), typecheck clean, **12 Playwright tests pass + 2 expected auth-required skips** (chromium + WebKit/iPhone-13 projects). Slice 2a and 2b vitest unit/action tests were intentionally skipped per the user's "we'll come back to tests" instruction. Manual walkthrough for slice 2b (10-step checklist in the plan) is still owed — interactive in the browser, requires the user.
+**Last updated:** 2026-05-11 (slice 3 code complete; pre-flight + manual walkthrough still owed)
+**Current head:** `6544974` on `main` (~24 commits ahead of last-pushed `2c5d182`)
+**Test state:** verification gate green on this machine — `pnpm db:reset && pnpm typecheck && pnpm test tests/db && pnpm test:e2e` all pass: 18 foundations DB tests, all 21 migrations apply cleanly (7 foundations + 9 slice 2a + 2 slice 2b + 3 slice 3), typecheck clean, **14 Playwright tests pass + 2 expected auth-required skips** (chromium + WebKit projects). Slice 2a/2b/3 vitest unit/action/webhook tests were intentionally skipped per the user's "we'll come back to tests" instruction. **Slice 3 pre-flight A–F (manual GitHub setup) and the manual walkthrough are still owed — see the slice 3 sections below.**
 
 This doc is the single source of truth for "what's done, what's next, what to ignore in the plan because reality diverged."
 
@@ -100,6 +100,37 @@ Spec: [`docs/specs/2026-05-11-slice-2b-shopping-list-design.md`](specs/2026-05-1
 - **All vitest tests** (DB + action coverage) — per the ongoing "skip tests" instruction. Action file follows the same patterns as `recipes/actions.ts`; tests will follow `tests/helpers/` from foundations.
 - **Manual walkthrough** — interactive 10-step checklist in Task 8 Step 2 of the plan; requires the user with a working browser session.
 - **Dashboard "Shopping" card** — spec opted to surface shopping via the header nav only in v1.
+
+### Done — Slice 3 (Bill scanning via GitHub-mediated Claude OCR)
+
+Spec: [`docs/specs/2026-05-11-slice-3-bill-scanning-ocr-design.md`](specs/2026-05-11-slice-3-bill-scanning-ocr-design.md). Plan: [`docs/plans/2026-05-11-slice-3-bill-scanning-ocr.md`](plans/2026-05-11-slice-3-bill-scanning-ocr.md). 13 tasks executed via `superpowers:subagent-driven-development`.
+
+- **Architecture:** bill image → Supabase Storage → app creates GitHub Issue with the image + `@claude` prompt → Claude Code Action (subscription-billed) reads the receipt and posts JSON in an issue comment → Next.js webhook ingests, writes line items, fuzzy-matches against unbought `shopping_list_items` (marking matches bought), closes the issue.
+- **Migrations (3):** `20260528_001_bills_and_line_items.sql` (tables + `bill_status` enum + RLS + indexes), `20260529_001_bill_images_storage.sql` (Storage bucket + RLS), `20260530_001_ingest_bill_ocr_fn.sql` (security-definer atomic ingest function with fuzzy-match-and-link).
+- **Libs:** `src/lib/github/issues.ts` (REST client; `createBillIssue` + `closeBillIssue`); `src/lib/supabase/service.ts` (service-role client for the webhook handler).
+- **Server actions:** `src/app/bills/actions.ts` — `uploadBill`, `updateBillLineItem`, `deleteBill`, `retryBill`, `markBillManuallyProcessed`.
+- **Webhook:** `src/app/api/webhooks/github/route.ts` — HMAC-verified `issue_comment.created` handler; sentinel-filters to `<!-- zomaid-bill -->` issues; extracts JSON code block; validates with Zod; calls `ingest_bill_ocr` atomically; closes the issue on success.
+- **UI:** `/bills` (list), `/bills/new` (upload), `/bills/[id]` (detail with header, image preview, line items, per-row edit, failed-state retry + manual-entry fallback). MainNav now 4 links: Plan · Recipes · Shopping · Bills.
+- **Proxy:** `/bills(.*)` added to gated routes; `/api/webhooks/(.*)` already public (from foundations).
+- **Family is read-only.** Upload, retry, manual-entry, line-item edit/delete are all hidden for `family_member` role.
+
+### Slice 3 — verification status
+
+- ✅ `pnpm db:reset` — all 21 migrations apply cleanly.
+- ✅ `pnpm typecheck` — clean.
+- ✅ `pnpm test tests/db` — 18 foundations DB tests pass.
+- ✅ `pnpm test:e2e` — 14 pass + 2 expected skips.
+- ⏳ **Pre-flight A–F** (manual GitHub setup) — required before the manual walkthrough. See the slice 3 plan §Pre-flight: install the Claude Code GitHub Action, create `GITHUB_TOKEN` PAT, generate `GITHUB_WEBHOOK_SECRET`, register the webhook on the repo (`issue_comment` events), set up ngrok (dev) or rely on Vercel (prod).
+- ⏳ **Manual walkthrough** — 9-step interactive checklist in Task 13 Step 2 of the plan. Requires pre-flight A–F + a real shopping receipt photo.
+
+### Deferred from slice 3
+
+- **All vitest tests** (DB + action + webhook coverage) — same "skip tests" instruction as prior slices.
+- **Long-stuck bills auto-flip to failed**: v1 relies on user retry.
+- **Bill image deletion / retention policy**: bills persist indefinitely on GitHub + Storage.
+- **Manual link/unlink** of bill_line_items ↔ shopping_list_items beyond editing names.
+- **Dedupe of same-bill duplicates** — each upload becomes its own bill row.
+- **GitHub App + installation token** (instead of long-lived PAT) → v2.
 
 ### Late slice 2a fix worth knowing about (commit `c0d3c3f`)
 
