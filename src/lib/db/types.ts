@@ -204,6 +204,36 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["meal_plans"]["Insert"]>;
         Relationships: [];
       };
+      shopping_list_items: {
+        Row: {
+          id: string;
+          household_id: string;
+          item_name: string;
+          quantity: number | null;
+          unit: string | null;
+          notes: string | null;
+          bought_at: string | null;
+          bought_by_profile_id: string | null;
+          created_by_profile_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          item_name: string;
+          quantity?: number | null;
+          unit?: string | null;
+          notes?: string | null;
+          bought_at?: string | null;
+          bought_by_profile_id?: string | null;
+          created_by_profile_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["shopping_list_items"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: {
       // No views yet.
@@ -231,6 +261,10 @@ export type Database = {
       is_active_owner_or_maid: {
         Args: { p_household: string };
         Returns: boolean;
+      };
+      shopping_auto_add_from_plans: {
+        Args: Record<string, never>;
+        Returns: Database["public"]["Tables"]["shopping_list_items"]["Row"][];
       };
     };
   };
