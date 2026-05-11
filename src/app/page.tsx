@@ -1,14 +1,14 @@
-import {
-  Show, SignInButton, SignUpButton, UserButton,
-} from "@clerk/nextjs";
-import Link from "next/link";
+import { Show, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { getCurrentHousehold } from "@/lib/auth/current-household";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export default async function Home() {
+  // Server-side: signed-in users are redirected away before this page renders.
+  // Clerk's <Show when="signed-out"> additionally guards the SignInButton's
+  // modal from mounting if the client briefly sees the signed-in state during
+  // a Clerk session refresh (e.g., right after a successful modal close).
   const { userId } = await auth();
   if (userId) {
     const ctx = await getCurrentHousehold();
@@ -23,12 +23,17 @@ export default async function Home() {
       </p>
       <div className="flex flex-wrap items-center justify-center gap-3">
         <Show when="signed-out">
-          <SignInButton mode="modal"><Button>Sign in</Button></SignInButton>
-          <SignUpButton mode="modal"><Button variant="outline">Sign up</Button></SignUpButton>
+          {/* Redirect mode (default). Buttons navigate to /sign-in and
+              /sign-up — Clerk catch-all routes under
+              src/app/sign-in/[[...sign-in]] and
+              src/app/sign-up/[[...sign-up]] render <SignIn /> / <SignUp />
+              there. After auth, Clerk redirects to /dashboard per the
+              CLERK_SIGN_IN_FALLBACK_REDIRECT_URL env var. */}
+          <SignInButton><Button>Sign in</Button></SignInButton>
+          <SignUpButton><Button variant="outline">Sign up</Button></SignUpButton>
         </Show>
         <Show when="signed-in">
-          <Link href="/dashboard" className={cn(buttonVariants())}>Go to app</Link>
-          <UserButton />
+          <p className="text-xs text-muted-foreground">Redirecting…</p>
         </Show>
       </div>
     </main>

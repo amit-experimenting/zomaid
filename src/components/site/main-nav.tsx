@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 
 type Route = "home" | "plan" | "recipes" | "shopping" | "bills" | "tasks";
@@ -13,19 +14,22 @@ export function MainNav({ active }: { active: Route }) {
     { route: "tasks",    href: "/tasks",     label: "Tasks" },
   ];
   return (
-    <nav aria-label="Main" className="flex gap-4 border-b border-border px-4 py-2 text-sm">
-      {links.map((l) => (
-        <Link
-          key={l.route}
-          href={l.href}
-          className={cn(
-            "hover:underline",
-            active === l.route ? "font-semibold text-foreground" : "text-muted-foreground",
-          )}
-        >
-          {l.label}
-        </Link>
-      ))}
+    <nav aria-label="Main" className="flex items-center justify-between gap-4 border-b border-border px-4 py-2 text-sm">
+      <div className="flex flex-wrap gap-4">
+        {links.map((l) => (
+          <Link
+            key={l.route}
+            href={l.href}
+            className={cn(
+              "hover:underline",
+              active === l.route ? "font-semibold text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {l.label}
+          </Link>
+        ))}
+      </div>
+      <UserButton />
     </nav>
   );
 }
