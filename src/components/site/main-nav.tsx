@@ -8,6 +8,7 @@ export function MainNav({ active }: { active: Route }) {
     { route: "plan",     href: "/plan",     label: "Plan" },
     { route: "recipes",  href: "/recipes",  label: "Recipes" },
     { route: "shopping", href: "/shopping", label: "Shopping" },
+    { route: "bills",    href: "/bills",    label: "Bills" },
   ];
   return (
     <nav aria-label="Main" className="flex gap-4 border-b border-border px-4 py-2 text-sm">
