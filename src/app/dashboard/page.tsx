@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { requireHousehold } from "@/lib/auth/require";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
 import { MainNav } from "@/components/site/main-nav";
+import { OwnerInviteMaidCard } from "@/components/site/owner-invite-maid-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+type OwnerCardProps =
+  | { state: "empty" }
+  | { state: "pending"; origin: string; code: string; token: string; inviteId: string }
+  | { state: "joined"; maidName: string };
 
 export default async function DashboardPage() {
   const ctx = await requireHousehold();
@@ -25,6 +31,48 @@ export default async function DashboardPage() {
       .limit(1);
     if (r.error) throw new Error(r.error.message);
     pendingOwnerInviteToken = r.data?.[0]?.token ?? null;
+  }
+
+  let ownerCard: OwnerCardProps | null = null;
+  if (ctx.membership.role === "owner") {
+    // Profile-join requires service client because profiles RLS only allows
+    // self-read; mirrors the pattern in /household/settings.
+    const svc = createServiceClient();
+    const supabase = await createClient();
+    const [maidRes, inviteRes] = await Promise.all([
+      svc
+        .from("household_memberships")
+        .select("id, profile:profiles(display_name, email)")
+        .eq("household_id", ctx.household.id)
+        .eq("role", "maid")
+        .eq("status", "active")
+        .limit(1),
+      supabase
+        .from("invites")
+        .select("id, code, token")
+        .eq("household_id", ctx.household.id)
+        .eq("intended_role", "maid")
+        .is("consumed_at", null)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1),
+    ]);
+    if (maidRes.error) throw new Error(maidRes.error.message);
+    if (inviteRes.error) throw new Error(inviteRes.error.message);
+
+    // Database types are hand-curated and don't declare the household_memberships
+    // → profiles FK embed; mirrors the cast in /household/settings.
+    const maidRow = (maidRes.data?.[0] as unknown as
+      | { id: string; profile: { display_name: string; email: string } | null }
+      | undefined);
+    if (maidRow?.profile) {
+      ownerCard = { state: "joined", maidName: maidRow.profile.display_name || maidRow.profile.email };
+    } else if (inviteRes.data?.length) {
+      const inv = inviteRes.data[0];
+      ownerCard = { state: "pending", origin, code: inv.code, token: inv.token, inviteId: inv.id };
+    } else {
+      ownerCard = { state: "empty" };
+    }
   }
 
   return (
@@ -56,6 +104,8 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         ) : null}
+
+        {ownerCard ? <OwnerInviteMaidCard {...ownerCard} /> : null}
       </div>
     </main>
   );

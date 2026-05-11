@@ -71,6 +71,7 @@ export async function createInvite(input: unknown) {
   if (inv.error) throw new Error(inv.error.message);
 
   revalidatePath("/household/settings");
+  revalidatePath("/dashboard");
   return { code: inv.data.code, token: inv.data.token };
 }
 
@@ -103,6 +104,7 @@ export async function revokeInvite(input: unknown) {
     .eq("id", data.inviteId);
   if (error) throw new Error(error.message);
   revalidatePath("/household/settings");
+  revalidatePath("/dashboard");
 }
 
 const redeemSchema = z.object({
