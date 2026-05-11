@@ -15,7 +15,6 @@ const ownerSchema = z.object({
 
 const maidSchema = z.object({
   ownerName: z.string().min(1).max(100),
-  ownerEmail: z.email().max(200),
 });
 
 export async function createHouseholdAsOwner(input: unknown) {
@@ -106,5 +105,5 @@ export async function createHouseholdAsMaid(input: unknown) {
   if (inv.error) throw new Error(inv.error.message);
 
   revalidatePath("/dashboard");
-  redirect(`/dashboard?ownerInvite=${encodeURIComponent(token)}`);
+  redirect("/dashboard");
 }

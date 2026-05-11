@@ -12,7 +12,6 @@ export default async function MaidOnboardingPage() {
     "use server";
     await createHouseholdAsMaid({
       ownerName: String(formData.get("ownerName") ?? "").trim(),
-      ownerEmail: String(formData.get("ownerEmail") ?? "").trim(),
     });
   }
 
@@ -20,16 +19,12 @@ export default async function MaidOnboardingPage() {
     <main className="mx-auto max-w-md px-4 py-10">
       <h1 className="text-xl font-semibold sm:text-2xl">Tell us about your owner</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        We'll create your household and send a join invite to your owner.
+        We'll create your household and give you a link to share with your owner.
       </p>
       <form action={action} className="mt-6 space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="ownerName">Owner's name</Label>
           <Input id="ownerName" name="ownerName" required maxLength={100} />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="ownerEmail">Owner's email</Label>
-          <Input id="ownerEmail" name="ownerEmail" type="email" required maxLength={200} />
         </div>
         <Button type="submit" className="w-full">Continue</Button>
       </form>

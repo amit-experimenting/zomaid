@@ -21,16 +21,20 @@ export async function syncAdminFlags(opts: {
   }
 
   const svc = createServiceClient();
-  const flag = await svc
-    .from("profiles")
-    .update({ is_admin: true })
-    .in("clerk_user_id", ids.length ? ids : ["__none__"]);
-  if (flag.error) throw new Error(flag.error.message);
+  // PostgREST requires a WHERE clause on updates; .neq against an impossible
+  // sentinel matches every row without string-concatenating ids into a filter.
   const unflag = await svc
     .from("profiles")
     .update({ is_admin: false })
-    .not("clerk_user_id", "in", `(${ids.length ? ids.map((id) => `"${id}"`).join(",") : '""'})`);
+    .neq("clerk_user_id", "__never_admin_sentinel__");
   if (unflag.error) throw new Error(unflag.error.message);
+  if (ids.length) {
+    const flag = await svc
+      .from("profiles")
+      .update({ is_admin: true })
+      .in("clerk_user_id", ids);
+    if (flag.error) throw new Error(flag.error.message);
+  }
 }
 
 export function readAdminEnv(): string[] {

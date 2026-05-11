@@ -8,12 +8,12 @@ test.describe("foundations — unauthenticated UI", () => {
   });
 
   test("/dashboard redirects unauthenticated users to /", async ({ page }) => {
-    const resp = await page.goto("/dashboard");
-    expect(resp?.url()).toMatch(/\/$/);
+    await page.goto("/dashboard");
+    await expect(page).toHaveURL("http://localhost:3000/");
   });
 
   test("/onboarding redirects unauthenticated users to /", async ({ page }) => {
-    const resp = await page.goto("/onboarding");
-    expect(resp?.url()).toMatch(/\/$/);
+    await page.goto("/onboarding");
+    await expect(page).toHaveURL("http://localhost:3000/");
   });
 });

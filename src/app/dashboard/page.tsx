@@ -1,16 +1,28 @@
 import Link from "next/link";
 import { requireHousehold } from "@/lib/auth/require";
+import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type SearchParams = Promise<{ ownerInvite?: string }>;
-
-export default async function DashboardPage({
-  searchParams,
-}: { searchParams: SearchParams }) {
+export default async function DashboardPage() {
   const ctx = await requireHousehold();
-  const sp = await searchParams;
+
+  let pendingOwnerInviteToken: string | null = null;
+  if (ctx.membership.role === "maid") {
+    const supabase = await createClient();
+    const r = await supabase
+      .from("invites")
+      .select("token")
+      .eq("household_id", ctx.household.id)
+      .eq("intended_role", "owner")
+      .is("consumed_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (r.error) throw new Error(r.error.message);
+    pendingOwnerInviteToken = r.data?.[0]?.token ?? null;
+  }
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -26,7 +38,7 @@ export default async function DashboardPage({
         </Link>
       </div>
 
-      {sp.ownerInvite ? (
+      {pendingOwnerInviteToken ? (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>Share this link with your owner</CardTitle>
@@ -34,7 +46,7 @@ export default async function DashboardPage({
           </CardHeader>
           <CardContent>
             <code className="block break-all rounded-md bg-muted p-3 text-xs">
-              {`/join/${sp.ownerInvite}`}
+              {`/join/${pendingOwnerInviteToken}`}
             </code>
           </CardContent>
         </Card>

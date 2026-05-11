@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomBytes } from "node:crypto";
 import { getCurrentHousehold } from "@/lib/auth/current-household";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import type { Privilege, Role } from "@/lib/db/types";
 
 const createInviteSchema = z.object({
@@ -80,9 +80,26 @@ export async function revokeInvite(input: unknown) {
   const ctx = await getCurrentHousehold();
   if (!ctx) throw new Error("no active household");
   const svc = createServiceClient();
+
+  const found = await svc
+    .from("invites")
+    .select("household_id, invited_by_profile_id, consumed_at")
+    .eq("id", data.inviteId)
+    .maybeSingle();
+  if (found.error) throw new Error(found.error.message);
+  const invite = found.data;
+  if (!invite) throw new Error("invite not found");
+  if (invite.consumed_at !== null) throw new Error("invite already consumed");
+  if (invite.household_id !== ctx.household.id) throw new Error("forbidden");
+  const isOwner = ctx.membership.role === "owner";
+  const isInviter = invite.invited_by_profile_id === ctx.profile.id;
+  if (!isOwner && !isInviter) throw new Error("forbidden");
+
+  // Mark consumed (not expired) so the partial unique index on (code) where
+  // consumed_at is null releases the slot for reuse.
   const { error } = await svc
     .from("invites")
-    .update({ expires_at: new Date().toISOString() })
+    .update({ consumed_at: new Date().toISOString() })
     .eq("id", data.inviteId);
   if (error) throw new Error(error.message);
   revalidatePath("/household/settings");
@@ -115,7 +132,10 @@ export async function redeemInvite(input: unknown) {
     token = found;
   }
 
-  const rpc = await svc.rpc("redeem_invite", { p_token: token });
+  // The redeem_invite RPC requires the caller's Clerk JWT (auth.jwt()->>'sub');
+  // the service-role client carries no JWT, so call it via the Clerk-bearing client.
+  const supabase = await createClient();
+  const rpc = await supabase.rpc("redeem_invite", { p_token: token });
   if (rpc.error) throw new Error(rpc.error.message);
 
   revalidatePath("/dashboard");

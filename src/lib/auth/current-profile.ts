@@ -30,15 +30,21 @@ export async function getCurrentProfile(): Promise<Profile> {
     "";
   const display = [u?.firstName, u?.lastName].filter(Boolean).join(" ").trim();
 
-  const inserted = await svc
+  // Upsert + refetch to survive a race with the user.created webhook, which
+  // upserts the same row. ignoreDuplicates keeps the webhook's email/display_name
+  // authoritative if it landed first.
+  const upserted = await svc
     .from("profiles")
-    .insert({
-      clerk_user_id: userId,
-      email,
-      display_name: display || email.split("@")[0] || "User",
-    })
+    .upsert(
+      { clerk_user_id: userId, email, display_name: display || email.split("@")[0] || "User" },
+      { onConflict: "clerk_user_id", ignoreDuplicates: true },
+    );
+  if (upserted.error) throw new Error(upserted.error.message);
+  const after = await svc
+    .from("profiles")
     .select("*")
+    .eq("clerk_user_id", userId)
     .single();
-  if (inserted.error) throw new Error(inserted.error.message);
-  return inserted.data;
+  if (after.error) throw new Error(after.error.message);
+  return after.data;
 }
