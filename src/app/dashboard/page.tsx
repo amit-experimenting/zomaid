@@ -53,10 +53,18 @@ export default async function DashboardPage() {
       ) : null}
 
       <section className="mt-8">
-        <h2 className="text-lg font-medium">Coming soon</h2>
+        <h2 className="text-lg font-medium">What's next</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recipes &amp; meal plan</CardTitle>
+              <CardDescription>Plan today's breakfast, lunch, snacks, dinner.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/plan" className={cn(buttonVariants({ variant: "default" }), "w-full")}>Open plan</Link>
+            </CardContent>
+          </Card>
           {[
-            ["Recipes & meal plan", "Plan today's breakfast, lunch, dinner."],
             ["Inventory & bills", "Scan grocery bills, track items."],
             ["Fridge", "Track what's inside, when it expires."],
             ["Tasks", "Recurring household tasks with reminders."],
