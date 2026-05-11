@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-type Route = "plan" | "recipes" | "shopping" | "bills";
+type Route = "plan" | "recipes" | "shopping" | "bills" | "tasks";
 
 export function MainNav({ active }: { active: Route }) {
   const links: { route: Route; href: string; label: string }[] = [
