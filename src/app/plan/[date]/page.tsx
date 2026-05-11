@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TodayList } from "@/components/plan/today-list";
 import { WeekStrip } from "@/components/plan/week-strip";
 import type { Recipe } from "@/components/plan/recipe-picker";
+import { MainNav } from "@/components/site/main-nav";
 
 type Slot = "breakfast" | "lunch" | "snacks" | "dinner";
 const ALL_SLOTS: Slot[] = ["breakfast", "lunch", "snacks", "dinner"];
@@ -53,6 +54,7 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
 
   return (
     <main className="mx-auto max-w-md">
+      <MainNav active="plan" />
       <header className="px-4 py-3">
         <h1 className="text-lg font-semibold">{date === new Date().toISOString().slice(0, 10) ? "Today" : "Plan"} · {date}</h1>
       </header>

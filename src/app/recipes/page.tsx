@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RecipeCard } from "@/components/recipes/recipe-card";
+import { MainNav } from "@/components/site/main-nav";
 
 type Slot = "breakfast" | "lunch" | "snacks" | "dinner";
 const ALL_SLOTS: Slot[] = ["breakfast", "lunch", "snacks", "dinner"];
@@ -38,6 +39,7 @@ export default async function RecipesIndex({ searchParams }: { searchParams: Pro
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-4">
+      <MainNav active="recipes" />
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">Recipes</h1>
         <Link href="/recipes/new"><Button>+ Add</Button></Link>
