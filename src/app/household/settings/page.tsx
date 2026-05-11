@@ -1,5 +1,7 @@
 import { requireHousehold } from "@/lib/auth/require";
 import { createServiceClient } from "@/lib/supabase/server";
+import { siteUrl } from "@/lib/site-url";
+import { MainNav } from "@/components/site/main-nav";
 import {
   createInvite, removeMembership, updateMembershipPrivilege,
 } from "@/app/household/settings/actions";
@@ -11,6 +13,7 @@ import type { Privilege } from "@/lib/db/types";
 export default async function HouseholdSettingsPage() {
   const ctx = await requireHousehold();
   const svc = createServiceClient();
+  const origin = await siteUrl();
 
   const [members, invites] = await Promise.all([
     svc
@@ -60,7 +63,9 @@ export default async function HouseholdSettingsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 space-y-8">
+    <main className="mx-auto max-w-md">
+      <MainNav active="home" />
+      <div className="px-4 py-6 space-y-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{ctx.household.name}</h1>
         <p className="text-sm text-muted-foreground">Household settings</p>
@@ -149,7 +154,7 @@ export default async function HouseholdSettingsPage() {
                     <span className="text-xs text-muted-foreground">code: <code>{i.code}</code></span>
                   </div>
                   <code className="block break-all rounded bg-muted px-2 py-1 text-xs">
-                    {`/join/${i.token}`}
+                    {`${origin}/join/${i.token}`}
                   </code>
                 </li>
               ))}
@@ -157,6 +162,7 @@ export default async function HouseholdSettingsPage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </main>
   );
 }

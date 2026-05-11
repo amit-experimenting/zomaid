@@ -60,7 +60,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
   }
 
   return (
-    <form className="mx-auto max-w-md space-y-4 p-4" onSubmit={onSubmit}>
+    <form className="space-y-4 p-4" onSubmit={onSubmit}>
       <div>
         <Label htmlFor="photo">Photo</Label>
         <input id="photo" type="file" accept="image/jpeg,image/png,image/webp"

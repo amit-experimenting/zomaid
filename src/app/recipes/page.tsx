@@ -38,8 +38,9 @@ export default async function RecipesIndex({ searchParams }: { searchParams: Pro
   }));
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-4">
+    <main className="mx-auto max-w-md">
       <MainNav active="recipes" />
+      <div className="px-4 py-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">Recipes</h1>
         <Link href="/recipes/new"><Button>+ Add</Button></Link>
@@ -55,6 +56,7 @@ export default async function RecipesIndex({ searchParams }: { searchParams: Pro
       <div className="mt-4 grid gap-2">
         {cards.length === 0 && <p className="py-8 text-center text-muted-foreground">No recipes match.</p>}
         {cards.map((c) => <RecipeCard key={c.id} {...c} />)}
+      </div>
       </div>
     </main>
   );

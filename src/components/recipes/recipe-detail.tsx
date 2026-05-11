@@ -16,7 +16,7 @@ const SLOT: Record<RecipeDetailProps["slot"], string> = {
 
 export function RecipeDetail(p: RecipeDetailProps) {
   return (
-    <article className="mx-auto max-w-2xl">
+    <article>
       {p.photoUrl && (
         <div className="aspect-video w-full overflow-hidden bg-muted">
           <Image src={p.photoUrl} alt={p.name} width={1280} height={720} className="size-full object-cover" />

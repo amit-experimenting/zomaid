@@ -28,17 +28,15 @@ export function TodayList({ planDate, rows, recipes, readOnly }: TodayListProps)
             recipes={recipes}
             readOnly={readOnly}
             trigger={
-              <div role="button">
-                <SlotRow
-                  slot={s}
-                  recipeId={row.recipeId}
-                  recipeName={row.recipeName}
-                  photoUrl={row.photoUrl}
-                  setBySystem={row.setBySystem}
-                  onTap={() => {}}
-                  readOnly={readOnly}
-                />
-              </div>
+              <SlotRow
+                slot={s}
+                recipeId={row.recipeId}
+                recipeName={row.recipeName}
+                photoUrl={row.photoUrl}
+                setBySystem={row.setBySystem}
+                onTap={() => {}}
+                readOnly={readOnly}
+              />
             }
           />
         );

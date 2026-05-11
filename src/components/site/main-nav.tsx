@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-type Route = "plan" | "recipes" | "shopping" | "bills" | "tasks";
+type Route = "home" | "plan" | "recipes" | "shopping" | "bills" | "tasks";
 
 export function MainNav({ active }: { active: Route }) {
   const links: { route: Route; href: string; label: string }[] = [
-    { route: "plan",     href: "/plan",     label: "Plan" },
-    { route: "recipes",  href: "/recipes",  label: "Recipes" },
-    { route: "shopping", href: "/shopping", label: "Shopping" },
-    { route: "bills",    href: "/bills",    label: "Bills" },
-    { route: "tasks",    href: "/tasks",    label: "Tasks" },
+    { route: "home",     href: "/dashboard", label: "Home" },
+    { route: "plan",     href: "/plan",      label: "Plan" },
+    { route: "recipes",  href: "/recipes",   label: "Recipes" },
+    { route: "shopping", href: "/shopping",  label: "Shopping" },
+    { route: "bills",    href: "/bills",     label: "Bills" },
+    { route: "tasks",    href: "/tasks",     label: "Tasks" },
   ];
   return (
     <nav aria-label="Main" className="flex gap-4 border-b border-border px-4 py-2 text-sm">

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
+import { MainNav } from "@/components/site/main-nav";
 import { RecipeForm } from "@/components/recipes/recipe-form";
 
 export default async function EditRecipePage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,14 +17,20 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
     .select("instruction").eq("recipe_id", id).order("position");
 
   return (
-    <RecipeForm
-      mode="edit"
-      recipeId={id}
-      initial={{
-        name: r.name, slot: r.slot as any, prepTimeMinutes: r.prep_time_minutes, notes: r.notes,
-        ingredients: (ingredients ?? []).map((i: any) => ({ item_name: i.item_name, quantity: i.quantity ?? null, unit: i.unit ?? null })),
-        steps: (steps ?? []).map((s: any) => ({ instruction: s.instruction })),
-      }}
-    />
+    <main className="mx-auto max-w-md">
+      <MainNav active="recipes" />
+      <header className="border-b border-border px-4 py-3">
+        <h1 className="text-lg font-semibold">Edit recipe</h1>
+      </header>
+      <RecipeForm
+        mode="edit"
+        recipeId={id}
+        initial={{
+          name: r.name, slot: r.slot as any, prepTimeMinutes: r.prep_time_minutes, notes: r.notes,
+          ingredients: (ingredients ?? []).map((i: any) => ({ item_name: i.item_name, quantity: i.quantity ?? null, unit: i.unit ?? null })),
+          steps: (steps ?? []).map((s: any) => ({ instruction: s.instruction })),
+        }}
+      />
+    </main>
   );
 }

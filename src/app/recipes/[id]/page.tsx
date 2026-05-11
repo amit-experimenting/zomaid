@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { MainNav } from "@/components/site/main-nav";
 import { RecipeDetail } from "@/components/recipes/recipe-detail";
 import { cn } from "@/lib/utils";
 
@@ -32,13 +33,13 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
   const canEdit = ctx.membership.role === "owner" || ctx.membership.role === "maid";
 
   return (
-    <>
-      <header className="flex items-center justify-between border-b border-border px-4 py-2">
-        <Link href="/recipes" className="text-sm">← Back</Link>
+    <main className="mx-auto max-w-md">
+      <MainNav active="recipes" />
+      <div className="flex items-center justify-end border-b border-border px-4 py-2">
         {canEdit && (
           <Link href={`/recipes/${id}/edit`} className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>Edit</Link>
         )}
-      </header>
+      </div>
       <RecipeDetail
         name={recipe.name}
         slot={recipe.slot as any}
@@ -48,6 +49,6 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
         ingredients={(ingredients ?? []).map((i: any) => ({ ...i, quantity: i.quantity?.toString() ?? null }))}
         steps={steps ?? []}
       />
-    </>
+    </main>
   );
 }
