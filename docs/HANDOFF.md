@@ -1,8 +1,8 @@
-# Zomaid — Foundations + Slice 2a + Slice 2b + Slice 3 Handoff
+# Zomaid — Foundations + Slices 2a + 2b + 3 + 5 Handoff
 
-**Last updated:** 2026-05-11 (slice 3 code complete; pre-flight + manual walkthrough still owed)
-**Current head:** `6544974` on `main` (~24 commits ahead of last-pushed `2c5d182`)
-**Test state:** verification gate green on this machine — `pnpm db:reset && pnpm typecheck && pnpm test tests/db && pnpm test:e2e` all pass: 18 foundations DB tests, all 21 migrations apply cleanly (7 foundations + 9 slice 2a + 2 slice 2b + 3 slice 3), typecheck clean, **14 Playwright tests pass + 2 expected auth-required skips** (chromium + WebKit projects). Slice 2a/2b/3 vitest unit/action/webhook tests were intentionally skipped per the user's "we'll come back to tests" instruction. **Slice 3 pre-flight A–F (manual GitHub setup) and the manual walkthrough are still owed — see the slice 3 sections below.**
+**Last updated:** 2026-05-11 (slice 5 code complete; pre-flight + manual walkthrough still owed)
+**Current head:** `62f392e` on `main` (~16 commits ahead of last-pushed `a422093`)
+**Test state:** verification gate green — `pnpm db:reset && pnpm typecheck && pnpm test tests/db && pnpm test:e2e` all pass: 18 foundations DB tests, all 23 migrations apply cleanly (7 foundations + 9 slice 2a + 2 slice 2b + 3 slice 3 + 2 slice 5), typecheck clean, **16 Playwright tests pass + 2 expected auth-required skips** (chromium + WebKit). Slice 2a/2b/3/5 vitest unit/action/webhook tests were intentionally skipped per the user's standing "we'll come back to tests" instruction. **Slice 3 pre-flight A–F and slice 5 pre-flight A–B (manual env-var + GitHub/VAPID setup) and the manual walkthroughs are still owed — see the slice 3 and slice 5 sections below.**
 
 This doc is the single source of truth for "what's done, what's next, what to ignore in the plan because reality diverged."
 
@@ -131,6 +131,42 @@ Spec: [`docs/specs/2026-05-11-slice-3-bill-scanning-ocr-design.md`](specs/2026-0
 - **Manual link/unlink** of bill_line_items ↔ shopping_list_items beyond editing names.
 - **Dedupe of same-bill duplicates** — each upload becomes its own bill row.
 - **GitHub App + installation token** (instead of long-lived PAT) → v2.
+
+### Done — Slice 5 (Tasks + reminders + Web Push)
+
+Spec: [`docs/specs/2026-05-11-slice-5-tasks-reminders-push-design.md`](specs/2026-05-11-slice-5-tasks-reminders-push-design.md). Plan: [`docs/plans/2026-05-11-slice-5-tasks-reminders-push.md`](plans/2026-05-11-slice-5-tasks-reminders-push.md). 13 tasks executed via `superpowers:subagent-driven-development`.
+
+- **Architecture:** recurring household tasks (`tasks` table) materialize per-day occurrences (`task_occurrences`) via a nightly pg_cron job. A Vercel Cron route (`/api/cron/dispatch-task-pushes`) every 5 min fans out push notifications to owner+maid `push_subscriptions` via the `web-push` library (VAPID-keyed). Service worker (`src/app/sw.ts`) extended with `push` + `notificationclick` handlers on top of Serwist precache.
+- **Migrations (2):** `20260531_001_tasks_and_occurrences.sql` (3 tables + 2 enums + RLS + CHECK on recurrence shape), `20260601_001_task_generation_cron.sql` (`tasks_generate_occurrences` + `tasks_prune_old` + nightly 22:00 SGT pg_cron schedule).
+- **Libs:** `src/lib/push/webpush.ts` (web-push wrapper with VAPID validation + 410 Gone detection).
+- **Server actions:** `src/app/tasks/actions.ts` (createTask, updateTask with recurrence-change regen, archiveTask, markOccurrenceDone, markOccurrenceSkipped); `src/app/push/actions.ts` (subscribePush, unsubscribePush).
+- **Cron route:** `src/app/api/cron/dispatch-task-pushes/route.ts` — Vercel-Cron-invoked GET; verifies `Authorization: Bearer $CRON_SECRET`; service-role Supabase client; marks 410 Gone subs as revoked.
+- **UI:** `/tasks` (today + upcoming-7d), `/tasks/new`, `/tasks/[id]/edit`. Components: notification-toggle, recurrence-picker (daily/weekly/monthly + interval + day chips / day-of-month + start/end + due time), occurrence-row, occurrence-action-sheet, task-form. MainNav now 5 links: Plan · Recipes · Shopping · Bills · Tasks.
+- **Proxy:** `/tasks(.*)` gated; `/api/cron/(.*)` added to public matcher (route checks its own bearer token).
+- **Family is read-only.** Notification toggle, +New, occurrence action sheet all hidden for `family_member` role.
+- **Notification scope:** owner + maid only (the people who can mark done).
+
+### Slice 5 — verification status
+
+- ✅ `pnpm db:reset` — all 23 migrations apply cleanly.
+- ✅ `pnpm typecheck` — clean.
+- ✅ `pnpm test tests/db` — 18 foundations DB tests pass.
+- ✅ `pnpm test:e2e` — 16 pass + 2 expected skips.
+- ⏳ **Pre-flight A–B** (manual VAPID + CRON_SECRET setup) — required before the manual walkthrough. Generate VAPID via `pnpm dlx web-push generate-vapid-keys`; generate CRON_SECRET via `openssl rand -hex 32`; set 4 env vars in `.env.local` (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`).
+- ⏳ **Manual walkthrough** — 10-step interactive checklist in Task 13 Step 2 of the plan, including a curl-triggered push dispatch.
+- ⚠ **Vercel Pro required for prod.** The 5-min cron interval needs Pro tier. Hobby plan only supports daily minimum. On Hobby, slice 5 ships as a list-only task tracker (notifications silent).
+
+### Deferred from slice 5
+
+- **All vitest tests** (DB + actions + cron route).
+- **Snooze** (intentional per design).
+- **Calendar / week view.**
+- **Per-task lead-time reminder** (notify N minutes before due).
+- **Notification action buttons** (Done/Skip inline in OS notification).
+- **History view** (last 30 days of completions).
+- **Archive UI** (currently only reachable via DB).
+- **iOS PWA install hint tooltip** on the notifications chip (Spec §12.D).
+- **VAPID key rotation tool** (v2 admin).
 
 ### Late slice 2a fix worth knowing about (commit `c0d3c3f`)
 
