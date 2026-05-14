@@ -4,6 +4,26 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireHousehold } from "@/lib/auth/require";
+import { redirect } from "next/navigation";
+import { parseOnboardingFormData } from "@/app/inventory/_onboarding-parse";
+
+export const STARTER_ITEMS = [
+  { name: "basmati rice",       defaultUnit: "kg" },
+  { name: "toor dal",           defaultUnit: "kg" },
+  { name: "urad dal",           defaultUnit: "kg" },
+  { name: "whole wheat flour",  defaultUnit: "kg" },
+  { name: "cooking oil",        defaultUnit: "l" },
+  { name: "ghee",               defaultUnit: "g" },
+  { name: "salt",               defaultUnit: "kg" },
+  { name: "sugar",              defaultUnit: "kg" },
+  { name: "milk",               defaultUnit: "l" },
+  { name: "eggs",               defaultUnit: "piece" },
+  { name: "onion",              defaultUnit: "kg" },
+  { name: "tomato",             defaultUnit: "kg" },
+  { name: "ginger",             defaultUnit: "g" },
+  { name: "garlic",             defaultUnit: "g" },
+  { name: "turmeric powder",    defaultUnit: "g" },
+] as const satisfies ReadonlyArray<{ name: string; defaultUnit: string }>;
 
 export type InventoryActionResult<T> =
   | { ok: true; data: T }
@@ -116,4 +136,20 @@ export async function dismissInventoryCard(): Promise<InventoryActionResult<null
   if (error) return { ok: false, error: { code: "INV_DB", message: error.message } };
   revalidatePath("/dashboard");
   return { ok: true, data: null };
+}
+
+export async function createInventoryItemsBulk(formData: FormData): Promise<void> {
+  await requireHousehold();
+  const rows = parseOnboardingFormData(
+    formData,
+    STARTER_ITEMS.map((i) => i.name),
+  );
+  for (const row of rows) {
+    await createInventoryItem({
+      item_name: row.name,
+      quantity: row.quantity,
+      unit: row.unit,
+    });
+  }
+  redirect("/dashboard");
 }
