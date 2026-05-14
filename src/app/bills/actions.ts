@@ -264,3 +264,57 @@ export async function markBillManuallyProcessed(input: z.infer<typeof ManualInpu
   revalidatePath(`/bills/${parsed.data.billId}`);
   return { ok: true, data: { billId: parsed.data.billId } };
 }
+
+const BillIngestSchema = z.object({
+  line_item_id: z.string().uuid(),
+  inventory_id: z.string().uuid().nullable(),
+  quantity: z.number().min(0),
+  unit: z.string().min(1).max(24),
+  new_item_name: z.string().min(1).max(120).optional(),
+});
+
+export async function ingestBillLineItem(input: z.infer<typeof BillIngestSchema>) {
+  const parsed = BillIngestSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: { code: "BILL_INVALID", message: "Invalid input" } };
+  await requireHousehold();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("inventory_bill_ingest", {
+    p_line_item_id: parsed.data.line_item_id,
+    p_inventory_id: parsed.data.inventory_id,
+    p_quantity: parsed.data.quantity,
+    p_unit: parsed.data.unit,
+    p_new_item_name: parsed.data.new_item_name ?? null,
+  });
+  if (error) {
+    if (error.message.includes("INV_NO_CONVERSION")) {
+      return { ok: false as const, error: { code: "INV_NO_CONVERSION", message: "Unit can't be reconciled — choose 'new item' or adjust unit." } };
+    }
+    return { ok: false as const, error: { code: "BILL_DB", message: error.message } };
+  }
+  revalidatePath(`/bills`);
+  return { ok: true as const, data: null };
+}
+
+const SkipSchema = z.object({ line_item_id: z.string().uuid() });
+
+export async function skipBillLineItem(input: z.infer<typeof SkipSchema>) {
+  const parsed = SkipSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: { code: "BILL_INVALID", message: "Invalid input" } };
+  await requireHousehold();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("inventory_bill_skip", { p_line_item_id: parsed.data.line_item_id });
+  if (error) return { ok: false as const, error: { code: "BILL_DB", message: error.message } };
+  revalidatePath(`/bills`);
+  return { ok: true as const, data: null };
+}
+
+export async function unskipBillLineItem(input: z.infer<typeof SkipSchema>) {
+  const parsed = SkipSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: { code: "BILL_INVALID", message: "Invalid input" } };
+  await requireHousehold();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("inventory_bill_unskip", { p_line_item_id: parsed.data.line_item_id });
+  if (error) return { ok: false as const, error: { code: "BILL_DB", message: error.message } };
+  revalidatePath(`/bills`);
+  return { ok: true as const, data: null };
+}
