@@ -28,7 +28,12 @@ export async function setMealPlanSlot(input: z.infer<typeof SetSchema>): Promise
     p_slot: parsed.data.slot,
     p_recipe_id: parsed.data.recipeId,
   });
-  if (error) return { ok: false, error: { code: "PLAN_FORBIDDEN", message: error.message } };
+  if (error) {
+    if (error.message.includes("cannot_modify_after_lock")) {
+      return { ok: false, error: { code: "PLAN_LOCKED", message: "Meal locked (within 1 hour of start)" } };
+    }
+    return { ok: false, error: { code: "PLAN_FORBIDDEN", message: error.message } };
+  }
   revalidatePath("/plan");
   revalidatePath(`/plan/${parsed.data.planDate}`);
   return { ok: true, data: { recipeId: data?.recipe_id ?? null } };
@@ -50,7 +55,12 @@ export async function generatePlanForDate(
       p_date: parsed.data.planDate,
       p_slot: slot,
     });
-    if (error) return { ok: false, error: { code: "PLAN_FORBIDDEN", message: error.message } };
+    if (error) {
+      if (error.message.includes("cannot_modify_after_lock")) {
+        return { ok: false, error: { code: "PLAN_LOCKED", message: "Meal locked (within 1 hour of start)" } };
+      }
+      return { ok: false, error: { code: "PLAN_FORBIDDEN", message: error.message } };
+    }
     if (data?.recipe_id) filled += 1;
   }
   revalidatePath("/plan");
@@ -72,11 +82,44 @@ export async function regenerateMealPlanSlot(input: z.infer<typeof RegenerateSch
     p_date: parsed.data.planDate,
     p_slot: parsed.data.slot,
   });
-  if (error) return { ok: false, error: { code: "PLAN_FORBIDDEN", message: error.message } };
+  if (error) {
+    if (error.message.includes("cannot_modify_after_lock")) {
+      return { ok: false, error: { code: "PLAN_LOCKED", message: "Meal locked (within 1 hour of start)" } };
+    }
+    return { ok: false, error: { code: "PLAN_FORBIDDEN", message: error.message } };
+  }
   if (!data?.recipe_id) {
     return { ok: false, error: { code: "MEAL_PLAN_NO_ELIGIBLE_RECIPE", message: "No recipes available for this slot." } };
   }
   revalidatePath("/plan");
   revalidatePath(`/plan/${parsed.data.planDate}`);
   return { ok: true, data: { recipeId: data.recipe_id } };
+}
+
+const PeopleEatingSchema = z.object({
+  planDate: DateString,
+  slot: SlotEnum,
+  people: z.number().int().min(1).max(50),
+});
+
+export async function setPeopleEating(
+  input: z.infer<typeof PeopleEatingSchema>,
+): Promise<PlanActionResult<{ recipeId: string | null; peopleEating: number }>> {
+  const parsed = PeopleEatingSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: { code: "PLAN_INVALID", message: "Invalid input" } };
+  await requireHousehold();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("mealplan_set_people_eating", {
+    p_date: parsed.data.planDate,
+    p_slot: parsed.data.slot,
+    p_people: parsed.data.people,
+  });
+  if (error) {
+    if (error.message.includes("cannot_modify_after_lock")) {
+      return { ok: false, error: { code: "PLAN_LOCKED", message: "Meal locked (within 1 hour of start)" } };
+    }
+    return { ok: false, error: { code: "PLAN_FORBIDDEN", message: error.message } };
+  }
+  revalidatePath(`/plan/${parsed.data.planDate}`);
+  return { ok: true, data: { recipeId: data?.recipe_id ?? null, peopleEating: data?.people_eating ?? parsed.data.people } };
 }
