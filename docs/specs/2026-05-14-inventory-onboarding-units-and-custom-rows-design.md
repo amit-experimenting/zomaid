@@ -61,12 +61,32 @@ Add `createInventoryItemsBulk(formData: FormData)`:
 
 - Marked `"use server"` (file is already a server-actions module).
 - Calls `requireHousehold()`.
-- Iterates the known starter-item names: reads `qty_${name}` and `unit_${name}` keys; for each row with `qty > 0` and a non-empty unit, calls `createInventoryItem({ item_name: name, quantity, unit })`.
-- Iterates FormData entries: for each key matching `custom_name_<n>` where `n` is a non-negative integer, reads the paired `custom_qty_<n>` and `custom_unit_<n>`. If `name.trim() !== ""` and `qty > 0` and `unit !== ""`, calls `createInventoryItem(...)`.
+- Calls `parseOnboardingFormData(formData, STARTER_ITEMS.map(i => i.name))` (see 4.4) to get the list of `{ name, quantity, unit }` rows.
+- For each parsed row, calls `createInventoryItem({ item_name: name, quantity, unit })`. Failures are silently dropped (matches today's silent-skip posture on `q <= 0`).
 - Calls `redirect("/dashboard")` on completion (mirrors today's behavior).
 - Returns nothing (server action form submission).
 
 The starter-item list (name + default unit) is exported from `actions.ts` as `STARTER_ITEMS` so the page, the client component, and this action share one source of truth. The action only needs the names; the page and client component need the defaults.
+
+### 4.4 New: [src/app/inventory/_onboarding-parse.ts](../../src/app/inventory/_onboarding-parse.ts)
+
+Pure helper with no React, no DB, no auth dependencies — exists so the FormData parsing logic is unit-testable in isolation.
+
+```ts
+export type OnboardingRow = { name: string; quantity: number; unit: string };
+
+export function parseOnboardingFormData(
+  formData: FormData,
+  starterNames: readonly string[],
+): OnboardingRow[];
+```
+
+Behavior:
+
+- For each `name` in `starterNames`: read `qty_${name}` and `unit_${name}`. Coerce qty via `Number(...)`. If `Number.isFinite(qty) && qty > 0 && typeof unit === "string" && unit.length > 0`, emit `{ name, quantity: qty, unit }`.
+- Then scan all FormData keys: for each key matching `/^custom_name_(\d+)$/`, capture the index, read paired `custom_qty_<n>` and `custom_unit_<n>`. If `name.trim() !== ""`, `Number.isFinite(qty) && qty > 0`, and `unit.length > 0`, emit `{ name: name.trim(), quantity: qty, unit }`.
+- Order: all surviving starter rows first (in `starterNames` order), then custom rows (in ascending index order).
+- Sparse indices are fine — the scan keys off `custom_name_*` presence, not contiguity.
 
 ### 4.3 New: [src/app/inventory/new/_onboarding-form.tsx](../../src/app/inventory/new/_onboarding-form.tsx)
 
@@ -90,18 +110,17 @@ No `aria-live`, no toasts, no client-side validation. The native HTML `min="0"` 
 
 ## 5. Tests
 
-- **Existing:** [tests/e2e/inventory.spec.ts](../../tests/e2e/inventory.spec.ts) and the `tests/db/inventory-*.test.ts` suite must remain green.
-- **New e2e:** at `tests/e2e/inventory.spec.ts` (extend the file, don't make a new one):
-  1. Sign in as an owner whose household has zero inventory items.
-  2. Navigate to `/inventory/new?onboarding=1`.
-  3. Assert the `cooking oil` row's unit `<select>` shows `l` selected, and the `eggs` row shows `piece`.
-  4. Click `+ Add another item`.
-  5. Fill the custom row: name = `paneer`, qty = `0.25`, unit = `kg`.
-  6. Fill a starter row: `milk` qty = `2` (unit pre-defaults to `l`).
-  7. Click `Save inventory`; assert redirect to `/dashboard`.
-  8. Navigate to `/inventory`; assert both `paneer` (0.25 kg) and `milk` (2 l) appear.
+The project has no authenticated e2e harness (existing `tests/e2e/inventory.spec.ts` only tests unauthenticated redirects), and a UI-level test for default `<select>` values is brittle. So testing is split:
 
-No DB-level unit tests needed; the action is a thin loop over `createInventoryItem`, which already has DB coverage.
+- **Pure FormData parser, unit-tested.** Extract `parseOnboardingFormData(formData, starterNames)` returning `Array<{ name: string; quantity: number; unit: string }>` as a pure helper (no DB, no auth) in [src/app/inventory/_onboarding-parse.ts](../../src/app/inventory/_onboarding-parse.ts). The server action calls it. Unit tests at [tests/unit/inventory-onboarding-parse.test.ts](../../tests/unit/inventory-onboarding-parse.test.ts) cover: starter rows with `qty > 0` parsed correctly; starter rows with `qty = 0` skipped; starter rows with `qty < 0` or non-numeric skipped; custom rows with non-empty name + `qty > 0` + unit parsed; custom rows missing any of those skipped; sparse indices (e.g. `custom_name_0` and `custom_name_3` with 1/2 removed) handled.
+- **Existing e2e:** [tests/e2e/inventory.spec.ts](../../tests/e2e/inventory.spec.ts) must remain green — `/inventory/new` still redirects when unauthenticated. No new e2e added.
+- **Existing db tests:** `tests/db/inventory-*.test.ts` continue to cover `createInventoryItem`'s DB behavior; the bulk action is a thin loop over it.
+
+Manual verification (UI defaults aren't asserted in tests):
+
+1. `pnpm dev`, sign in as owner of a household with no inventory items, visit `/inventory/new?onboarding=1`.
+2. Confirm cooking oil and milk show `l`; eggs shows `piece`; ghee, ginger, garlic, turmeric powder show `g`; everything else shows `kg`.
+3. Click `+ Add another item`, fill name=`paneer` qty=`0.25` unit=`kg`. Save. Confirm `/dashboard` redirect and `paneer` visible in `/inventory`.
 
 ## 6. Out of scope
 
