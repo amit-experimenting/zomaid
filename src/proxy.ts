@@ -13,6 +13,7 @@ const isPublic = createRouteMatcher([
 const isAuthGated = createRouteMatcher([
   "/dashboard(.*)",
   "/household(.*)",
+  "/inventory(.*)",
   "/onboarding(.*)",
   "/plan(.*)",
   "/recipes(.*)",
