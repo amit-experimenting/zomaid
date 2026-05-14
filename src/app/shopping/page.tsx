@@ -96,7 +96,7 @@ export default function ShoppingPage() {
         <h1 className="text-lg font-semibold">Shopping</h1>
         {!readOnly && <AutoAddButton />}
       </header>
-      {!readOnly && <QuickAdd />}
+      {!readOnly && <QuickAdd onChanged={refresh} />}
       {unbought.length === 0 && bought.length === 0 && (
         <p className="px-4 py-12 text-center text-muted-foreground">
           Nothing on the list. {readOnly ? "Wait for an owner or maid to add something." : "Add an item or pull from this week's plans."}
@@ -114,9 +114,10 @@ export default function ShoppingPage() {
           boughtAt={null}
           readOnly={readOnly}
           onEdit={readOnly ? undefined : () => setEditTarget(it)}
+          onChanged={refresh}
         />
       ))}
-      <BoughtHistory items={bHistory} readOnly={readOnly} />
+      <BoughtHistory items={bHistory} readOnly={readOnly} onChanged={refresh} />
       {editTarget && (
         <EditItemSheet
           itemId={editTarget.id}

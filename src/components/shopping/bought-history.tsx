@@ -11,7 +11,7 @@ export type BoughtItem = {
   boughtAt: string;
 };
 
-export function BoughtHistory({ items, readOnly }: { items: BoughtItem[]; readOnly: boolean }) {
+export function BoughtHistory({ items, readOnly, onChanged }: { items: BoughtItem[]; readOnly: boolean; onChanged?: () => void }) {
   const [open, setOpen] = useState(false);
   if (items.length === 0) return null;
   return (
@@ -37,6 +37,7 @@ export function BoughtHistory({ items, readOnly }: { items: BoughtItem[]; readOn
               bought
               boughtAt={it.boughtAt}
               readOnly={readOnly}
+              onChanged={onChanged}
             />
           ))}
         </div>

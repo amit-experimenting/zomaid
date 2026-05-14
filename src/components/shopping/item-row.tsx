@@ -13,6 +13,7 @@ export type ItemRowProps = {
   boughtAt: string | null;
   readOnly: boolean;
   onEdit?: () => void;
+  onChanged?: () => void;
 };
 
 function metaLine(quantity: number | null, unit: string | null, notes: string | null, boughtAt: string | null): string {
@@ -30,8 +31,10 @@ export function ItemRow(p: ItemRowProps) {
   const onToggle = () => {
     if (p.readOnly) return;
     start(async () => {
-      if (p.bought) await unmarkShoppingItemBought({ itemId: p.itemId });
-      else          await markShoppingItemBought({ itemId: p.itemId });
+      const res = p.bought
+        ? await unmarkShoppingItemBought({ itemId: p.itemId })
+        : await markShoppingItemBought({ itemId: p.itemId });
+      if (res.ok) p.onChanged?.();
     });
   };
   return (
