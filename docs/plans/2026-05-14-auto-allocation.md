@@ -18,13 +18,13 @@
 
 ## Pre-flight checks (manual, one-time)
 
-- [ ] **A. Local Supabase is running.** Run `pnpm db:start`. Expected: `API URL: http://127.0.0.1:54321`.
+- [x] **A. Local Supabase is running.** Run `pnpm db:start`. Expected: `API URL: http://127.0.0.1:54321`.
 
-- [ ] **B. Branch is up to date with the spec commit.** Run `git log --oneline -n 3`. Expected: top commit is `523838a Spec: meal-plan auto-allocation (slice 3 of 3)` (or later). If not, `git pull`.
+- [x] **B. Branch is up to date with the spec commit.** Run `git log --oneline -n 3`. Expected: top commit is `523838a Spec: meal-plan auto-allocation (slice 3 of 3)` (or later). If not, `git pull`.
 
-- [ ] **C. Existing tests pass.** Run `pnpm vitest run tests/db/`. Expected: all 48 DB tests pass.
+- [x] **C. Existing tests pass.** Run `pnpm vitest run tests/db/`. Expected: all 48 DB tests pass.
 
-- [ ] **D. Create feature branch.**
+- [x] **D. Create feature branch.**
   ```bash
   git checkout -b slice-3-auto-allocation
   git branch --show-current
@@ -63,7 +63,7 @@ Note: tasks 2-5 all add functions to the same migration file `20260620_001_mealp
 - Create: `supabase/migrations/20260619_001_meal_plan_null_recipe_cleanup.sql`
 - Create: `tests/db/mealplan-null-recipe-cleanup.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
   Create `tests/db/mealplan-null-recipe-cleanup.test.ts`:
 
@@ -129,14 +129,14 @@ Note: tasks 2-5 all add functions to the same migration file `20260620_001_mealp
   });
   ```
 
-- [ ] **Step 2: Run test (should pass even without the migration, because the test re-runs the DELETE itself)**
+- [x] **Step 2: Run test (should pass even without the migration, because the test re-runs the DELETE itself)**
 
   Run: `pnpm vitest run tests/db/mealplan-null-recipe-cleanup.test.ts`
   Expected: 1 test passes. The test exercises the DELETE statement directly inside a transaction.
 
   (The test is a regression guard: it verifies the DELETE's WHERE clause is correct. The actual one-time migration is created in Step 3.)
 
-- [ ] **Step 3: Create the migration**
+- [x] **Step 3: Create the migration**
 
   Create `supabase/migrations/20260619_001_meal_plan_null_recipe_cleanup.sql`:
 
@@ -157,17 +157,17 @@ Note: tasks 2-5 all add functions to the same migration file `20260620_001_mealp
     and deduction_status = 'pending';
   ```
 
-- [ ] **Step 4: Apply**
+- [x] **Step 4: Apply**
 
   Run: `pnpm db:reset`
   Expected: clean apply. The DELETE deletes zero rows in dev (no fixtures exist), which is fine.
 
-- [ ] **Step 5: Re-run the test to confirm no regression**
+- [x] **Step 5: Re-run the test to confirm no regression**
 
   Run: `pnpm vitest run tests/db/mealplan-null-recipe-cleanup.test.ts`
   Expected: 1 test passes.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
   ```bash
   git add supabase/migrations/20260619_001_meal_plan_null_recipe_cleanup.sql tests/db/mealplan-null-recipe-cleanup.test.ts
@@ -184,7 +184,7 @@ Note: tasks 2-5 all add functions to the same migration file `20260620_001_mealp
 
 This task creates the migration file (initially with just one function) and the test. Tasks 3, 4, 5 will append more functions to the same migration.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
   Create `tests/db/inventory-stock-score.test.ts`:
 
@@ -320,12 +320,12 @@ This task creates the migration file (initially with just one function) and the 
   });
   ```
 
-- [ ] **Step 2: Run test (should fail — function doesn't exist)**
+- [x] **Step 2: Run test (should fail — function doesn't exist)**
 
   Run: `pnpm vitest run tests/db/inventory-stock-score.test.ts`
   Expected: 6 failures, complaining about `mealplan_recipe_stock_score` not existing.
 
-- [ ] **Step 3: Create the migration with the helper function**
+- [x] **Step 3: Create the migration with the helper function**
 
   Create `supabase/migrations/20260620_001_mealplan_autofill.sql`:
 
@@ -406,13 +406,13 @@ This task creates the migration file (initially with just one function) and the 
   grant execute on function public.mealplan_recipe_stock_score(uuid, uuid, int) to authenticated;
   ```
 
-- [ ] **Step 4: Apply and re-run tests**
+- [x] **Step 4: Apply and re-run tests**
 
   Run: `pnpm db:reset`
   Run: `pnpm vitest run tests/db/inventory-stock-score.test.ts`
   Expected: 6 tests pass.
 
-- [ ] **Step 5: Do NOT commit yet**
+- [x] **Step 5: Do NOT commit yet**
 
   Tasks 3, 4, 5 will append more SQL to this migration file. Commit happens at the end of Task 5.
 
@@ -426,7 +426,7 @@ This task creates the migration file (initially with just one function) and the 
 
 The cron path needs to fill plans for arbitrary households (running as `postgres`). The user-facing path needs to fill for the caller's own household (via `current_household_id_for_caller`). We use a worker function that takes the household explicitly, and a thin wrapper for the user-facing call.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
   Create `tests/db/mealplan-autofill.test.ts`:
 
@@ -671,12 +671,12 @@ The cron path needs to fill plans for arbitrary households (running as `postgres
   });
   ```
 
-- [ ] **Step 2: Run tests (should fail)**
+- [x] **Step 2: Run tests (should fail)**
 
   Run: `pnpm vitest run tests/db/mealplan-autofill.test.ts`
   Expected: 7 failures (function doesn't exist yet).
 
-- [ ] **Step 3: Append the autofill RPC + worker to the migration**
+- [x] **Step 3: Append the autofill RPC + worker to the migration**
 
   Open `supabase/migrations/20260620_001_mealplan_autofill.sql` (created in Task 2) and append:
 
@@ -797,13 +797,13 @@ The cron path needs to fill plans for arbitrary households (running as `postgres
   grant execute on function public.mealplan_autofill_date(date) to authenticated;
   ```
 
-- [ ] **Step 4: Apply and re-run tests**
+- [x] **Step 4: Apply and re-run tests**
 
   Run: `pnpm db:reset`
   Run: `pnpm vitest run tests/db/mealplan-autofill.test.ts`
   Expected: 7 tests pass.
 
-- [ ] **Step 5: Do NOT commit yet** — Tasks 4 and 5 append more to the same migration.
+- [x] **Step 5: Do NOT commit yet** — Tasks 4 and 5 append more to the same migration.
 
 ---
 
@@ -815,7 +815,7 @@ The cron path needs to fill plans for arbitrary households (running as `postgres
 
 The existing `mealplan_regenerate_slot` (from slice 2's `20260618_001_meal_plan_inventory_rpcs.sql`) picks a random non-repeat eligible recipe with a fallback to any random eligible. We replace that inner logic with score-based selection. The lock check, permission rules, and upsert behavior are unchanged.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
   Create `tests/db/mealplan-regenerate-scoring.test.ts`:
 
@@ -879,12 +879,12 @@ The existing `mealplan_regenerate_slot` (from slice 2's `20260618_001_meal_plan_
   });
   ```
 
-- [ ] **Step 2: Run the test (should fail because the existing RPC may not pick the high-scoring one deterministically)**
+- [x] **Step 2: Run the test (should fail because the existing RPC may not pick the high-scoring one deterministically)**
 
   Run: `pnpm vitest run tests/db/mealplan-regenerate-scoring.test.ts`
   Expected: 1 failure. The existing implementation picks randomly among eligible — it will sometimes pick `recipeLow`.
 
-- [ ] **Step 3: Append the upgrade to the migration**
+- [x] **Step 3: Append the upgrade to the migration**
 
   Open `supabase/migrations/20260620_001_mealplan_autofill.sql` and append:
 
@@ -964,13 +964,13 @@ The existing `mealplan_regenerate_slot` (from slice 2's `20260618_001_meal_plan_
   grant execute on function public.mealplan_regenerate_slot(date, public.meal_slot) to authenticated;
   ```
 
-- [ ] **Step 4: Apply and re-run the test**
+- [x] **Step 4: Apply and re-run the test**
 
   Run: `pnpm db:reset`
   Run: `pnpm vitest run tests/db/mealplan-regenerate-scoring.test.ts`
   Expected: 1 test passes. Re-run a few times to confirm determinism — `recipeHigh` should win every time.
 
-- [ ] **Step 5: Do NOT commit yet** — Task 5 appends the cron upgrade.
+- [x] **Step 5: Do NOT commit yet** — Task 5 appends the cron upgrade.
 
 ---
 
@@ -981,7 +981,7 @@ The existing `mealplan_regenerate_slot` (from slice 2's `20260618_001_meal_plan_
 
 The cron entrypoint becomes a thin wrapper that loops active households and calls `mealplan_autofill_date_for_household`. The existing cron schedule (`0 22 * * *` SGT for `mealplan-suggest-tomorrow`) is unchanged — only the function body changes.
 
-- [ ] **Step 1: Append the cron upgrade to the migration**
+- [x] **Step 1: Append the cron upgrade to the migration**
 
   Open `supabase/migrations/20260620_001_mealplan_autofill.sql` and append:
 
@@ -1010,7 +1010,7 @@ The cron entrypoint becomes a thin wrapper that loops active households and call
   grant  execute on function public.mealplan_suggest_for_date(date) to postgres;
   ```
 
-- [ ] **Step 2: Apply the full migration and run ALL DB tests**
+- [x] **Step 2: Apply the full migration and run ALL DB tests**
 
   Run: `pnpm db:reset`
   Expected: clean apply.
@@ -1018,7 +1018,7 @@ The cron entrypoint becomes a thin wrapper that loops active households and call
   Run: `pnpm vitest run tests/db/`
   Expected: all DB tests pass (the 48 from earlier slices + the new 6 + 7 + 1 + 1 = 14 new tests = 62 total, give or take exact counts).
 
-- [ ] **Step 3: Commit the full migration + all new test files**
+- [x] **Step 3: Commit the full migration + all new test files**
 
   ```bash
   git add supabase/migrations/20260620_001_mealplan_autofill.sql \
@@ -1035,11 +1035,11 @@ The cron entrypoint becomes a thin wrapper that loops active households and call
 **Files:**
 - Modify: `src/lib/db/types.ts`
 
-- [ ] **Step 1: Find the Functions block in the types file**
+- [x] **Step 1: Find the Functions block in the types file**
 
   Open `src/lib/db/types.ts`. Locate the `Functions:` block inside `Database["public"]`. Find an existing RPC entry (e.g. `inventory_manual_adjust` or `mealplan_set_people_eating`) to use as a style reference.
 
-- [ ] **Step 2: Add the three new function signatures**
+- [x] **Step 2: Add the three new function signatures**
 
   Add the following entries inside `Functions:` (alphabetical order is fine; placement next to other `mealplan_*` entries is preferable):
 
@@ -1060,12 +1060,12 @@ The cron entrypoint becomes a thin wrapper that loops active households and call
 
   Note: `mealplan_autofill_date_for_household` is not callable from `authenticated` (it's granted only to `postgres`), but we still type it so internal code paths can reference it if needed.
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
   Run: `pnpm typecheck`
   Expected: exit 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
   ```bash
   git add src/lib/db/types.ts
@@ -1081,7 +1081,7 @@ The cron entrypoint becomes a thin wrapper that loops active households and call
 
 The current strip renders 7 days (`for (let i = -3; i <= 3; i++)`). Slice 3 caps it to today + 3 forward (4 days, no past dates).
 
-- [ ] **Step 1: Replace the loop range**
+- [x] **Step 1: Replace the loop range**
 
   Open `src/components/plan/week-strip.tsx`. Change the loop:
 
@@ -1109,12 +1109,12 @@ The current strip renders 7 days (`for (let i = -3; i <= 3; i++)`). Slice 3 caps
 
   Note the iteration now anchors on **today**, not on the active date. That way, navigating to a future date doesn't shift the strip away from "today" — the visible window always shows today + the next 3 days regardless of which one is currently active.
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
   Run: `pnpm typecheck`
   Expected: exit 0.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
   ```bash
   git add src/components/plan/week-strip.tsx
@@ -1130,7 +1130,7 @@ The current strip renders 7 days (`for (let i = -3; i <= 3; i++)`). Slice 3 caps
 
 The page currently shows the `MissingPlanCTA` when `!hasAnyPlanRow && !readOnly`. Slice 3 replaces that with a server-side auto-fill call before the meal-plan query, then deletes the CTA render.
 
-- [ ] **Step 1: Add the auto-fill RPC call before the meal_plans select**
+- [x] **Step 1: Add the auto-fill RPC call before the meal_plans select**
 
   Open `src/app/plan/[date]/page.tsx`.
 
@@ -1151,7 +1151,7 @@ The page currently shows the `MissingPlanCTA` when `!hasAnyPlanRow && !readOnly`
 
   This must run before the existing `rawRows` select so that the rest of the page sees the freshly-filled rows.
 
-- [ ] **Step 2: Remove the `MissingPlanCTA` import and render**
+- [x] **Step 2: Remove the `MissingPlanCTA` import and render**
 
   At the top of the file, delete the line:
   ```ts
@@ -1168,12 +1168,12 @@ The page currently shows the `MissingPlanCTA` when `!hasAnyPlanRow && !readOnly`
   const hasAnyPlanRow = (rawRows?.length ?? 0) > 0;
   ```
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
   Run: `pnpm typecheck`
   Expected: exit 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
   ```bash
   git add src/app/plan/[date]/page.tsx
@@ -1188,20 +1188,20 @@ The page currently shows the `MissingPlanCTA` when `!hasAnyPlanRow && !readOnly`
 - Delete: `src/components/plan/missing-plan-cta.tsx`
 - Modify: `src/app/plan/actions.ts`
 
-- [ ] **Step 1: Delete the unused component file**
+- [x] **Step 1: Delete the unused component file**
 
   Run:
   ```bash
   rm src/components/plan/missing-plan-cta.tsx
   ```
 
-- [ ] **Step 2: Remove the now-unused `generatePlanForDate` action**
+- [x] **Step 2: Remove the now-unused `generatePlanForDate` action**
 
   Open `src/app/plan/actions.ts`. Delete the entire block defining `GenerateForDateSchema` and `generatePlanForDate` (approximately lines 42-69 of the current file — the `const GenerateForDateSchema = z.object(...)` declaration and the full `export async function generatePlanForDate(...)` definition).
 
   After deletion, the file should have these exported actions only: `setMealPlanSlot`, `regenerateMealPlanSlot`, `setPeopleEating`.
 
-- [ ] **Step 3: Search for any remaining references**
+- [x] **Step 3: Search for any remaining references**
 
   Run:
   ```bash
@@ -1209,12 +1209,12 @@ The page currently shows the `MissingPlanCTA` when `!hasAnyPlanRow && !readOnly`
   ```
   Expected: no output (or only the just-edited `actions.ts` lines we're cleaning). If anything else still references these, fix that file too.
 
-- [ ] **Step 4: Typecheck**
+- [x] **Step 4: Typecheck**
 
   Run: `pnpm typecheck`
   Expected: exit 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add src/app/plan/actions.ts src/components/plan/missing-plan-cta.tsx
@@ -1230,7 +1230,7 @@ The page currently shows the `MissingPlanCTA` when `!hasAnyPlanRow && !readOnly`
 **Files:**
 - Create: `tests/e2e/plan-autofill.spec.ts`
 
-- [ ] **Step 1: Create the smoke test**
+- [x] **Step 1: Create the smoke test**
 
   ```ts
   import { test, expect } from "@playwright/test";
@@ -1250,12 +1250,12 @@ The page currently shows the `MissingPlanCTA` when `!hasAnyPlanRow && !readOnly`
   });
   ```
 
-- [ ] **Step 2: Run the e2e**
+- [x] **Step 2: Run the e2e**
 
   Run: `pnpm test:e2e -- plan-autofill`
   Expected: 2 tests pass (× 2 browsers).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
   ```bash
   git add tests/e2e/plan-autofill.spec.ts
@@ -1266,7 +1266,7 @@ The page currently shows the `MissingPlanCTA` when `!hasAnyPlanRow && !readOnly`
 
 ## Task 11: Final manual verification
 
-- [ ] **Step 1: Full automated suite**
+- [x] **Step 1: Full automated suite**
 
   Run:
   ```
@@ -1279,42 +1279,42 @@ The page currently shows the `MissingPlanCTA` when `!hasAnyPlanRow && !readOnly`
   - typecheck exits 0.
   - lint shows no NEW errors introduced by slice 3 (pre-existing errors from earlier slices are acceptable; verify by comparing to `main` if uncertain).
 
-- [ ] **Step 2: Start the dev server**
+- [x] **Step 2: Start the dev server**
 
   In a separate terminal: `pnpm dev`. Expected: `Local: http://localhost:3000`.
 
-- [ ] **Step 3: Sign in as an owner**
+- [x] **Step 3: Sign in as an owner**
 
   Open `http://localhost:3000`, sign in.
 
-- [ ] **Step 4: Visit `/plan/<today>` for a household that has NO inventory yet**
+- [x] **Step 4: Visit `/plan/<today>` for a household that has NO inventory yet**
 
   Expected:
   - The "Generate plan for this day" button no longer appears.
   - All four meal slots show recipes auto-filled (random non-repeat, since no inventory means no candidate scores ≥ 0.5).
   - The page renders without any visible delay.
 
-- [ ] **Step 5: Add inventory items to match some recipes**
+- [x] **Step 5: Add inventory items to match some recipes**
 
   Via the `/inventory/new` page, add some staples (e.g. 5 kg basmati rice, 2 kg toor dal, 12 eggs, etc.).
 
-- [ ] **Step 6: Visit `/plan/<tomorrow>`**
+- [x] **Step 6: Visit `/plan/<tomorrow>`**
 
   Expected: all 4 slots auto-fill, and the chosen recipes should bias toward ones using your stocked items (e.g. a rice-based lunch is more likely than a fish-based one if you have rice and not fish).
 
-- [ ] **Step 7: Visit `/plan/<yesterday>`**
+- [x] **Step 7: Visit `/plan/<yesterday>`**
 
   Expected: empty rows (no auto-fill for past dates). The WeekStrip should NOT show yesterday — only today + 3 future days.
 
-- [ ] **Step 8: Verify the WeekStrip is 4 days**
+- [x] **Step 8: Verify the WeekStrip is 4 days**
 
   Count the day pills at the bottom of the plan page. Expected: 4 pills, starting with today.
 
-- [ ] **Step 9: Per-slot regenerate**
+- [x] **Step 9: Per-slot regenerate**
 
   Tap a slot's action sheet → "Regenerate". Expected: a new recipe is chosen (favoring stocked recipes). Repeat 2-3 times; some variety is expected (random tie-break when multiple recipes tie at the top score).
 
-- [ ] **Step 10: Force the cron path manually**
+- [x] **Step 10: Force the cron path manually**
 
   ```bash
   psql "postgres://postgres:postgres@127.0.0.1:54322/postgres" -c \
@@ -1322,7 +1322,7 @@ The page currently shows the `MissingPlanCTA` when `!hasAnyPlanRow && !readOnly`
   ```
   Refresh `/plan/<tomorrow>` — should show the cron-filled rows (or no change, since on-view already filled them).
 
-- [ ] **Step 11: Mark plan complete**
+- [x] **Step 11: Mark plan complete**
 
   ```bash
   # Edit this plan file to check off all task boxes, then:
