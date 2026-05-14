@@ -39,35 +39,6 @@ export async function setMealPlanSlot(input: z.infer<typeof SetSchema>): Promise
   return { ok: true, data: { recipeId: data?.recipe_id ?? null } };
 }
 
-const GenerateForDateSchema = z.object({ planDate: DateString });
-
-export async function generatePlanForDate(
-  input: z.infer<typeof GenerateForDateSchema>,
-): Promise<PlanActionResult<{ filled: number }>> {
-  const parsed = GenerateForDateSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: { code: "PLAN_INVALID", message: "Invalid input" } };
-  await requireHousehold();
-  const supabase = await createClient();
-  const slots: Array<z.infer<typeof SlotEnum>> = ["breakfast", "lunch", "snacks", "dinner"];
-  let filled = 0;
-  for (const slot of slots) {
-    const { data, error } = await supabase.rpc("mealplan_regenerate_slot", {
-      p_date: parsed.data.planDate,
-      p_slot: slot,
-    });
-    if (error) {
-      if (error.message.includes("cannot_modify_after_lock")) {
-        return { ok: false, error: { code: "PLAN_LOCKED", message: "Meal locked (within 1 hour of start)" } };
-      }
-      return { ok: false, error: { code: "PLAN_FORBIDDEN", message: error.message } };
-    }
-    if (data?.recipe_id) filled += 1;
-  }
-  revalidatePath("/plan");
-  revalidatePath(`/plan/${parsed.data.planDate}`);
-  return { ok: true, data: { filled } };
-}
-
 const RegenerateSchema = z.object({
   planDate: DateString,
   slot: SlotEnum,
