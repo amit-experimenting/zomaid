@@ -4,6 +4,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
 import { MainNav } from "@/components/site/main-nav";
 import { OwnerInviteMaidCard } from "@/components/site/owner-invite-maid-card";
+import { InventoryPromptCard } from "@/components/site/inventory-prompt-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -75,6 +76,17 @@ export default async function DashboardPage() {
     }
   }
 
+  let showInventoryCard = false;
+  if (ctx.membership.role === "owner" || ctx.membership.role === "maid") {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from("inventory_items")
+      .select("id", { count: "exact", head: true })
+      .eq("household_id", ctx.household.id);
+    showInventoryCard =
+      ctx.household.inventory_card_dismissed_at == null && (count ?? 0) < 5;
+  }
+
   return (
     <main className="mx-auto max-w-md">
       <MainNav active="home" />
@@ -106,6 +118,8 @@ export default async function DashboardPage() {
         ) : null}
 
         {ownerCard ? <OwnerInviteMaidCard {...ownerCard} /> : null}
+
+        {showInventoryCard && <InventoryPromptCard />}
       </div>
     </main>
   );
