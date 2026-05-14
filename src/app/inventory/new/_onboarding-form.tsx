@@ -1,7 +1,8 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { createInventoryItemsBulk, STARTER_ITEMS } from "@/app/inventory/actions";
+import { createInventoryItemsBulk } from "@/app/inventory/actions";
+import { STARTER_ITEMS } from "@/app/inventory/_starter-items";
 import { Button } from "@/components/ui/button";
 
 const UNIT_OPTIONS = ["kg", "g", "l", "ml", "piece"] as const;

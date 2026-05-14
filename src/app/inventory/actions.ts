@@ -6,24 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireHousehold } from "@/lib/auth/require";
 import { redirect } from "next/navigation";
 import { parseOnboardingFormData } from "@/app/inventory/_onboarding-parse";
-
-export const STARTER_ITEMS = [
-  { name: "basmati rice",       defaultUnit: "kg" },
-  { name: "toor dal",           defaultUnit: "kg" },
-  { name: "urad dal",           defaultUnit: "kg" },
-  { name: "whole wheat flour",  defaultUnit: "kg" },
-  { name: "cooking oil",        defaultUnit: "l" },
-  { name: "ghee",               defaultUnit: "g" },
-  { name: "salt",               defaultUnit: "kg" },
-  { name: "sugar",              defaultUnit: "kg" },
-  { name: "milk",               defaultUnit: "l" },
-  { name: "eggs",               defaultUnit: "piece" },
-  { name: "onion",              defaultUnit: "kg" },
-  { name: "tomato",             defaultUnit: "kg" },
-  { name: "ginger",             defaultUnit: "g" },
-  { name: "garlic",             defaultUnit: "g" },
-  { name: "turmeric powder",    defaultUnit: "g" },
-] as const satisfies ReadonlyArray<{ name: string; defaultUnit: string }>;
+import { STARTER_ITEMS } from "@/app/inventory/_starter-items";
 
 export type InventoryActionResult<T> =
   | { ok: true; data: T }
