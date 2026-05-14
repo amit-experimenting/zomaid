@@ -3,7 +3,6 @@ import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
 import { TodayList } from "@/components/plan/today-list";
 import { WeekStrip } from "@/components/plan/week-strip";
-import { MissingPlanCTA } from "@/components/plan/missing-plan-cta";
 import { Button } from "@/components/ui/button";
 import type { Recipe } from "@/components/plan/recipe-picker";
 import { MainNav } from "@/components/site/main-nav";
@@ -23,6 +22,17 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
   // Mirrors the can_modify_meal_plan() DB helper used by meal_plans RLS.
   const readOnly =
     ctx.membership.role === "family_member" && ctx.membership.privilege === "view_only";
+
+  // Auto-fill empty slots when the date is today or future and the caller can write.
+  // The RPC is idempotent — already-filled slots are not overwritten.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  if (!readOnly && date >= todayIso) {
+    const { error: autofillError } = await supabase.rpc("mealplan_autofill_date", { p_date: date });
+    if (autofillError) {
+      // Non-fatal: log and continue rendering whatever rows do exist.
+      console.error("mealplan_autofill_date failed:", autofillError.message);
+    }
+  }
 
   const { data: rawRows } = await supabase
     .from("meal_plans")
@@ -85,7 +95,6 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
     id: r.id, name: r.name, slot: r.slot, photo_url: null,
   }));
 
-  const hasAnyPlanRow = (rawRows?.length ?? 0) > 0;
   const libraryEmpty = recipes.length === 0;
 
   return (
@@ -104,7 +113,6 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
       ) : (
         <>
           <TodayList planDate={date} rows={rows} recipes={recipes} readOnly={readOnly} rosterSize={rosterSize} />
-          {!hasAnyPlanRow && !readOnly && <MissingPlanCTA planDate={date} />}
         </>
       )}
       <WeekStrip activeDate={date} />
