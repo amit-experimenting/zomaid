@@ -5,11 +5,12 @@ import { cn } from "@/lib/utils";
 function isoDate(d: Date): string { return d.toISOString().slice(0, 10); }
 
 export function WeekStrip({ activeDate }: { activeDate: string }) {
-  const active = new Date(`${activeDate}T00:00:00+08:00`);
   const today = isoDate(new Date());
   const days: { date: string; label: string }[] = [];
-  for (let i = -3; i <= 3; i++) {
-    const d = new Date(active);
+  // Today + the next 3 days. Past dates are not reachable from the strip.
+  const todayDate = new Date(`${today}T00:00:00+08:00`);
+  for (let i = 0; i <= 3; i++) {
+    const d = new Date(todayDate);
     d.setDate(d.getDate() + i);
     const iso = isoDate(d);
     days.push({ date: iso, label: d.toLocaleDateString("en-SG", { weekday: "narrow" }) });
