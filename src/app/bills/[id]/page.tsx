@@ -5,6 +5,7 @@ import { MainNav } from "@/components/site/main-nav";
 import { BillDetailHeader } from "@/components/bills/bill-detail-header";
 import { LineItemRow } from "@/components/bills/line-item-row";
 import { BillDetailActions } from "@/components/bills/_detail-actions";
+import { InventoryReviewQueue, type LineRow, type ExistingInvOption } from "./_inventory-queue";
 
 export default async function BillDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -37,6 +38,29 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
   }));
 
   const readOnly = ctx.membership.role === "family_member";
+
+  const { data: allLines } = await supabase
+    .from("bill_line_items")
+    .select("id,item_name,quantity,unit,inventory_ingested_at,inventory_ingestion_skipped,matched_inventory_item_id")
+    .eq("bill_id", id)
+    .order("position", { ascending: true });
+
+  const pending: LineRow[] = (allLines ?? [])
+    .filter((l) => l.inventory_ingested_at === null && l.inventory_ingestion_skipped === false)
+    .map((l) => ({ ...l, quantity: Number(l.quantity) }));
+  const skipped: LineRow[] = (allLines ?? [])
+    .filter((l) => l.inventory_ingestion_skipped === true)
+    .map((l) => ({ ...l, quantity: Number(l.quantity) }));
+
+  const { data: inv } = await supabase
+    .from("inventory_items")
+    .select("id,item_name,quantity,unit")
+    .eq("household_id", ctx.household.id);
+  const existingByName: Record<string, ExistingInvOption> = Object.fromEntries(
+    (inv ?? []).map((i) => [i.item_name.toLowerCase(), { id: i.id, item_name: i.item_name, quantity: Number(i.quantity), unit: i.unit }]),
+  );
+
+  const canWrite = ctx.membership.role === "owner" || ctx.membership.role === "maid";
 
   let imageUrl: string | null = null;
   const signed = await supabase.storage
@@ -75,6 +99,7 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
           <BillDetailActions billId={bill.id} mode="processed" items={items} readOnly={readOnly} />
         </section>
       )}
+      <InventoryReviewQueue pending={pending} skipped={skipped} existingByName={existingByName} canWrite={canWrite} />
     </main>
   );
 }
