@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
+import { RecipePhoto } from "@/components/recipes/recipe-photo";
 
 export type RecipeCardProps = {
   id: string;
@@ -21,9 +21,7 @@ export function RecipeCard({ id, name, slot, prepTimeMinutes, photoUrl, isFork }
       <Card className="hover:bg-muted/50">
         <CardContent className="flex items-center gap-3 p-3">
           <div className="size-16 shrink-0 overflow-hidden rounded-md bg-muted">
-            {photoUrl ? (
-              <Image src={photoUrl} alt={name} width={64} height={64} className="size-16 object-cover" />
-            ) : null}
+            <RecipePhoto src={photoUrl} alt={name} width={64} height={64} className="size-16 object-cover" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium">{name}</div>
