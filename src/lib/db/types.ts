@@ -110,6 +110,8 @@ export type Database = {
           archived_at: string | null;
           created_at: string;
           updated_at: string;
+          youtube_url: string | null;
+          default_servings: number;
         };
         Insert: {
           id?: string;
@@ -124,6 +126,8 @@ export type Database = {
           archived_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          youtube_url?: string | null;
+          default_servings?: number;
         };
         Update: Partial<Database["public"]["Tables"]["recipes"]["Insert"]>;
         Relationships: [];
