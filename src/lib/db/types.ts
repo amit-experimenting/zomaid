@@ -37,12 +37,14 @@ export type Database = {
           created_by_profile_id: string;
           created_at: string;
           updated_at: string;
+          inventory_card_dismissed_at: string | null;
         };
         Insert: {
           name: string;
           created_by_profile_id: string;
           address_line?: string | null;
           postal_code?: string | null;
+          inventory_card_dismissed_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["households"]["Row"]>;
         Relationships: [];
@@ -194,6 +196,10 @@ export type Database = {
           set_by_profile_id: string | null;
           created_at: string;
           updated_at: string;
+          people_eating: number | null;
+          cooked_at: string | null;
+          deduction_status: "pending" | "deducted" | "skipped" | "partial";
+          deduction_warnings: unknown | null;
         };
         Insert: {
           id?: string;
@@ -204,6 +210,10 @@ export type Database = {
           set_by_profile_id?: string | null;
           created_at?: string;
           updated_at?: string;
+          people_eating?: number | null;
+          cooked_at?: string | null;
+          deduction_status?: "pending" | "deducted" | "skipped" | "partial";
+          deduction_warnings?: unknown | null;
         };
         Update: Partial<Database["public"]["Tables"]["meal_plans"]["Insert"]>;
         Relationships: [];
@@ -289,6 +299,9 @@ export type Database = {
           matched_shopping_item_id: string | null;
           created_at: string;
           updated_at: string;
+          inventory_ingested_at: string | null;
+          inventory_ingestion_skipped: boolean;
+          matched_inventory_item_id: string | null;
         };
         Insert: {
           id?: string;
@@ -302,6 +315,9 @@ export type Database = {
           matched_shopping_item_id?: string | null;
           created_at?: string;
           updated_at?: string;
+          inventory_ingested_at?: string | null;
+          inventory_ingestion_skipped?: boolean;
+          matched_inventory_item_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["bill_line_items"]["Insert"]>;
         Relationships: [];
@@ -414,6 +430,102 @@ export type Database = {
           revoked_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["push_subscriptions"]["Insert"]>;
+        Relationships: [];
+      };
+      inventory_items: {
+        Row: {
+          id: string;
+          household_id: string;
+          item_name: string;
+          quantity: number;
+          unit: string;
+          low_stock_threshold: number | null;
+          notes: string | null;
+          created_by_profile_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          item_name: string;
+          quantity?: number;
+          unit: string;
+          low_stock_threshold?: number | null;
+          notes?: string | null;
+          created_by_profile_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["inventory_items"]["Insert"]>;
+        Relationships: [];
+      };
+      inventory_transactions: {
+        Row: {
+          id: string;
+          household_id: string;
+          inventory_item_id: string;
+          delta: number;
+          unit: string;
+          reason: "onboarding" | "manual_adjust" | "cook_deduct" | "bill_ingest" | "undo";
+          meal_plan_id: string | null;
+          bill_line_item_id: string | null;
+          actor_profile_id: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          inventory_item_id: string;
+          delta: number;
+          unit: string;
+          reason: "onboarding" | "manual_adjust" | "cook_deduct" | "bill_ingest" | "undo";
+          meal_plan_id?: string | null;
+          bill_line_item_id?: string | null;
+          actor_profile_id?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["inventory_transactions"]["Insert"]>;
+        Relationships: [];
+      };
+      household_meal_times: {
+        Row: {
+          household_id: string;
+          slot: "breakfast" | "lunch" | "snacks" | "dinner";
+          meal_time: string;
+          updated_at: string;
+        };
+        Insert: {
+          household_id: string;
+          slot: "breakfast" | "lunch" | "snacks" | "dinner";
+          meal_time: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["household_meal_times"]["Insert"]>;
+        Relationships: [];
+      };
+      unit_conversions: {
+        Row: {
+          id: string;
+          household_id: string | null;
+          item_name: string | null;
+          from_unit: string;
+          to_unit: string;
+          multiplier: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id?: string | null;
+          item_name?: string | null;
+          from_unit: string;
+          to_unit: string;
+          multiplier: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["unit_conversions"]["Insert"]>;
         Relationships: [];
       };
     };
