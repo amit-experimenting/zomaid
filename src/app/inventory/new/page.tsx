@@ -52,7 +52,7 @@ export default async function NewInventoryItemPage({
         <h1 className="text-lg font-semibold">{isOnboarding ? "Set up your inventory" : "Add an item"}</h1>
         {isOnboarding && (
           <p className="mt-1 text-sm text-muted-foreground">
-            Fill in any quantities you have on hand. Skip items you don't track.
+            Fill in any quantities you have on hand. Skip items you don&apos;t track.
           </p>
         )}
       </header>

@@ -72,7 +72,6 @@ describe("inventory_sweep_due_meals", () => {
         [String(future_hour).padStart(2, "0"), h.id],
       );
 
-      const mpId = randomUUID();
       await c.query(
         `insert into meal_plans (household_id, plan_date, slot, recipe_id, set_by_profile_id)
          values ($1, current_date, 'breakfast', null, $2)

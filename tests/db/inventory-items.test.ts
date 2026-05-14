@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import { asAnon, setJwtClaims, withTransaction } from "../setup";
+import { setJwtClaims, withTransaction } from "../setup";
 import { insertHousehold, insertMembership, insertProfile } from "../factories";
 
 describe("inventory_items RLS + manual adjust", () => {

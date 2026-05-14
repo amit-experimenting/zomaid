@@ -26,7 +26,7 @@ export default async function ConversionsPage() {
         <h1 className="text-lg font-semibold">Unit conversions</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Zomaid defaults are used to translate between cooking units (cup, tbsp) and stock units (kg, g, l, ml).
-          Add household-specific overrides below if a default doesn't match how you measure.
+          Add household-specific overrides below if a default doesn&apos;t match how you measure.
         </p>
       </header>
       <section className="px-4 py-2">

@@ -577,15 +577,15 @@ export type Database = {
       };
       inventory_manual_adjust: {
         Args: { p_item_id: string; p_delta: number; p_notes: string };
-        Returns: { id: string; quantity: number };
+        Returns: Database["public"]["Tables"]["inventory_items"]["Row"];
       };
       mealplan_set_people_eating: {
         Args: { p_date: string; p_slot: "breakfast" | "lunch" | "snacks" | "dinner"; p_people: number };
-        Returns: { recipe_id: string | null; people_eating: number };
+        Returns: Database["public"]["Tables"]["meal_plans"]["Row"];
       };
       inventory_bill_ingest: {
         Args: { p_line_item_id: string; p_inventory_id: string | null; p_quantity: number; p_unit: string; p_new_item_name: string | null };
-        Returns: void;
+        Returns: Database["public"]["Tables"]["inventory_items"]["Row"];
       };
       inventory_bill_skip: {
         Args: { p_line_item_id: string };

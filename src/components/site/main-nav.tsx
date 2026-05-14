@@ -9,9 +9,10 @@ export function MainNav({ active }: { active: Route }) {
     { route: "home",     href: "/dashboard", label: "Home" },
     { route: "plan",     href: "/plan",      label: "Plan" },
     { route: "recipes",  href: "/recipes",   label: "Recipes" },
-    { route: "shopping", href: "/shopping",  label: "Shopping" },
-    { route: "bills",    href: "/bills",     label: "Bills" },
-    { route: "tasks",    href: "/tasks",     label: "Tasks" },
+    { route: "shopping",   href: "/shopping",   label: "Shopping" },
+    { route: "inventory",  href: "/inventory",  label: "Inventory" },
+    { route: "bills",      href: "/bills",      label: "Bills" },
+    { route: "tasks",      href: "/tasks",      label: "Tasks" },
   ];
   return (
     <nav aria-label="Main" className="flex items-center justify-between gap-4 border-b border-border px-4 py-2 text-sm">

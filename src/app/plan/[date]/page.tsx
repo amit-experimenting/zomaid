@@ -35,13 +35,14 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
     .select("slot,meal_time")
     .eq("household_id", ctx.household.id);
   const timeBySlot = Object.fromEntries((mealTimes ?? []).map((r) => [r.slot, r.meal_time]));
+  const nowMs = Date.now();
 
   function isLocked(slot: string): boolean {
     const t = timeBySlot[slot];
     if (!t) return false;
     const [hh, mm] = (t as string).split(":").map(Number);
     const slotDt = new Date(`${date}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:00+08:00`);
-    return Date.now() >= slotDt.getTime() - 60 * 60 * 1000;
+    return nowMs >= slotDt.getTime() - 60 * 60 * 1000;
   }
 
   const { count: rosterCount } = await supabase

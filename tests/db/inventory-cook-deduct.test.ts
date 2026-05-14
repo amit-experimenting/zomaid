@@ -45,7 +45,7 @@ async function setupInventoryAndRecipe(c: Client) {
 describe("inventory_cook_deduct", () => {
   it("deducts scaled by default_servings; status='deducted'", async () => {
     await withTransaction(async (c) => {
-      const { householdId, invId, mealPlanId } = await setupInventoryAndRecipe(c);
+      const { invId, mealPlanId } = await setupInventoryAndRecipe(c);
       // Roster size = 1 (just me). Default servings = 4. Scale = 1/4. Need 2 cup * 1/4 = 0.5 cup = 97.5g.
       const { rows } = await c.query<{ inventory_cook_deduct: unknown }>(
         `select public.inventory_cook_deduct($1)`,
@@ -64,7 +64,7 @@ describe("inventory_cook_deduct", () => {
 
   it("clamps to zero and reports 'partial' when out of stock", async () => {
     await withTransaction(async (c) => {
-      const { householdId, invId, mealPlanId } = await setupInventoryAndRecipe(c);
+      const { invId, mealPlanId } = await setupInventoryAndRecipe(c);
       // Drain to 50g so 97.5g needed is short.
       await c.query(`update inventory_items set quantity = 50 where id = $1`, [invId]);
 

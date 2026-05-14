@@ -106,8 +106,6 @@ export async function adjustInventoryItem(
   return { ok: true, data: { id: row.id, quantity: row.quantity } };
 }
 
-const DismissCardSchema = z.object({});
-
 export async function dismissInventoryCard(): Promise<InventoryActionResult<null>> {
   const ctx = await requireHousehold();
   const supabase = await createClient();
