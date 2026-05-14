@@ -575,6 +575,26 @@ export type Database = {
         Args: { p_days?: number };
         Returns: number;
       };
+      inventory_manual_adjust: {
+        Args: { p_item_id: string; p_delta: number; p_notes: string };
+        Returns: { id: string; quantity: number };
+      };
+      mealplan_set_people_eating: {
+        Args: { p_date: string; p_slot: "breakfast" | "lunch" | "snacks" | "dinner"; p_people: number };
+        Returns: { recipe_id: string | null; people_eating: number };
+      };
+      inventory_bill_ingest: {
+        Args: { p_line_item_id: string; p_inventory_id: string | null; p_quantity: number; p_unit: string; p_new_item_name: string | null };
+        Returns: void;
+      };
+      inventory_bill_skip: {
+        Args: { p_line_item_id: string };
+        Returns: void;
+      };
+      inventory_bill_unskip: {
+        Args: { p_line_item_id: string };
+        Returns: void;
+      };
     };
   };
 };
