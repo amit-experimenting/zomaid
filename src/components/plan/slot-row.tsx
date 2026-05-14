@@ -2,6 +2,8 @@
 import * as React from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { PeoplePill } from "@/components/plan/people-pill";
+import { SlotWarningBadge, type Warning } from "@/components/plan/slot-warning-badge";
 
 export type SlotRowOwnProps = {
   slot: "breakfast" | "lunch" | "snacks" | "dinner";
@@ -11,6 +13,11 @@ export type SlotRowOwnProps = {
   setBySystem: boolean;          // true if set_by_profile_id was NULL
   rowExists: boolean;            // false → no meal_plans row yet (vs explicit clear)
   readOnly: boolean;
+  peopleEating: number | null;
+  rosterSize: number;
+  locked: boolean;
+  deductionWarnings: Warning[];
+  planDate: string;
 };
 
 export type SlotRowProps = SlotRowOwnProps &
@@ -29,7 +36,7 @@ function emptyCopy(rowExists: boolean, setBySystem: boolean): string {
 // Forward ref + spread `rest` so base-ui's <SheetTrigger render={<SlotRow…/>}>
 // can attach its click handler, aria-*, and ref onto the underlying <button>.
 export const SlotRow = React.forwardRef<HTMLButtonElement, SlotRowProps>(function SlotRow(
-  { slot, recipeId, recipeName, photoUrl, setBySystem, rowExists, readOnly, className, ...rest },
+  { slot, recipeId, recipeName, photoUrl, setBySystem, rowExists, readOnly, peopleEating, rosterSize, locked, deductionWarnings, planDate, className, ...rest },
   ref,
 ) {
   return (
@@ -52,11 +59,29 @@ export const SlotRow = React.forwardRef<HTMLButtonElement, SlotRowProps>(functio
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">{SLOT_LABEL[slot]}</div>
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">
+          {SLOT_LABEL[slot]}
+          {locked && <span className="ml-1 text-[10px] text-muted-foreground">(locked)</span>}
+        </div>
         {recipeId === null ? (
           <div className="italic text-muted-foreground">{emptyCopy(rowExists, setBySystem)}</div>
         ) : (
-          <div className="truncate font-medium">{recipeName}</div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="truncate font-medium">{recipeName}</span>
+            <SlotWarningBadge warnings={deductionWarnings} />
+          </div>
+        )}
+        {recipeId !== null && (
+          <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+            <PeoplePill
+              planDate={planDate}
+              slot={slot}
+              initialPeople={peopleEating}
+              rosterSize={rosterSize}
+              locked={locked}
+              canEdit={!readOnly}
+            />
+          </div>
         )}
       </div>
     </button>

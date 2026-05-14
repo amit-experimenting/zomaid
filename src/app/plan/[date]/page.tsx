@@ -7,6 +7,7 @@ import { MissingPlanCTA } from "@/components/plan/missing-plan-cta";
 import { Button } from "@/components/ui/button";
 import type { Recipe } from "@/components/plan/recipe-picker";
 import { MainNav } from "@/components/site/main-nav";
+import type { Warning } from "@/components/plan/slot-warning-badge";
 
 type Slot = "breakfast" | "lunch" | "snacks" | "dinner";
 const ALL_SLOTS: Slot[] = ["breakfast", "lunch", "snacks", "dinner"];
@@ -25,9 +26,30 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
 
   const { data: rawRows } = await supabase
     .from("meal_plans")
-    .select("slot, recipe_id, set_by_profile_id, recipes(name, photo_path, household_id)")
+    .select("slot, recipe_id, set_by_profile_id, people_eating, deduction_warnings, recipes(name, photo_path, household_id)")
     .eq("household_id", ctx.household.id)
     .eq("plan_date", date);
+
+  const { data: mealTimes } = await supabase
+    .from("household_meal_times")
+    .select("slot,meal_time")
+    .eq("household_id", ctx.household.id);
+  const timeBySlot = Object.fromEntries((mealTimes ?? []).map((r) => [r.slot, r.meal_time]));
+
+  function isLocked(slot: string): boolean {
+    const t = timeBySlot[slot];
+    if (!t) return false;
+    const [hh, mm] = (t as string).split(":").map(Number);
+    const slotDt = new Date(`${date}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:00+08:00`);
+    return Date.now() >= slotDt.getTime() - 60 * 60 * 1000;
+  }
+
+  const { count: rosterCount } = await supabase
+    .from("household_memberships")
+    .select("id", { count: "exact", head: true })
+    .eq("household_id", ctx.household.id)
+    .eq("status", "active");
+  const rosterSize = rosterCount ?? 1;
 
   // Sequential awaits via for-of because Supabase signed URLs are async.
   const rows = {} as TodayListProps["rows"];
@@ -50,6 +72,9 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
       photoUrl,
       setBySystem: r != null && r.set_by_profile_id === null,
       rowExists: r != null,
+      peopleEating: r?.people_eating ?? null,
+      locked: isLocked(s),
+      deductionWarnings: (r?.deduction_warnings ?? []) as Warning[],
     };
   }
 
@@ -77,7 +102,7 @@ export default async function PlanForDate({ params }: { params: Promise<{ date: 
         </div>
       ) : (
         <>
-          <TodayList planDate={date} rows={rows} recipes={recipes} readOnly={readOnly} />
+          <TodayList planDate={date} rows={rows} recipes={recipes} readOnly={readOnly} rosterSize={rosterSize} />
           {!hasAnyPlanRow && !readOnly && <MissingPlanCTA planDate={date} />}
         </>
       )}
