@@ -27,7 +27,7 @@ export function parseOnboardingFormData(
   }
 
   const customIndices: number[] = [];
-  for (const [key] of (formData as any).entries()) {
+  for (const key of formData.keys()) {
     const m = CUSTOM_NAME_RE.exec(key);
     if (m) customIndices.push(Number(m[1]));
   }
