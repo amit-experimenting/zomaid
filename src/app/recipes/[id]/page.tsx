@@ -12,7 +12,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
   const ctx = await requireHousehold();
   const supabase = await createClient();
   const { data: recipe } = await supabase.from("recipes")
-    .select("id,name,slot,photo_path,prep_time_minutes,notes,household_id,parent_recipe_id,archived_at")
+    .select("id,name,slot,photo_path,prep_time_minutes,notes,household_id,parent_recipe_id,archived_at,youtube_url")
     .eq("id", id).maybeSingle();
   if (!recipe) notFound();
   const { data: ingredients } = await supabase.from("recipe_ingredients")
@@ -46,6 +46,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
         prepTimeMinutes={recipe.prep_time_minutes}
         photoUrl={photoUrl}
         notes={recipe.notes}
+        youtubeUrl={recipe.youtube_url}
         ingredients={(ingredients ?? []).map((i: any) => ({ ...i, quantity: i.quantity?.toString() ?? null }))}
         steps={steps ?? []}
       />
