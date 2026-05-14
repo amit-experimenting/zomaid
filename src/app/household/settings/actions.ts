@@ -140,7 +140,8 @@ export async function redeemInvite(input: unknown) {
   const rpc = await supabase.rpc("redeem_invite", { p_token: token });
   if (rpc.error) throw new Error(rpc.error.message);
 
-  revalidatePath("/dashboard");
+  // Caller is responsible for revalidatePath: this function is invoked from
+  // /join/[token] during page render, where revalidatePath is not allowed.
   redirect("/dashboard");
 }
 

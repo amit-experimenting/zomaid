@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { redeemInvite } from "@/app/household/settings/actions";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,11 @@ export default async function JoinCodePage() {
 
   async function action(formData: FormData) {
     "use server";
-    await redeemInvite({ tokenOrCode: String(formData.get("code") ?? "").trim() });
+    try {
+      await redeemInvite({ tokenOrCode: String(formData.get("code") ?? "").trim() });
+    } finally {
+      revalidatePath("/dashboard");
+    }
   }
 
   return (
