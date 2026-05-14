@@ -2,7 +2,7 @@ import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 
-type Route = "home" | "plan" | "recipes" | "shopping" | "bills" | "tasks";
+type Route = "home" | "plan" | "recipes" | "shopping" | "bills" | "tasks" | "inventory";
 
 export function MainNav({ active }: { active: Route }) {
   const links: { route: Route; href: string; label: string }[] = [
