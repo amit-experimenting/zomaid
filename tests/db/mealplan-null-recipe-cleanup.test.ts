@@ -43,13 +43,13 @@ describe("orphan null-recipe meal_plan cleanup invariant", () => {
            and deduction_status = 'pending'`,
       );
 
-      const { rows } = await c.query(
+      const { rows } = await c.query<{ slot: string; recipe_id: string | null; people_eating: number | null; cooked_at: Date | null }>(
         `select slot, recipe_id, people_eating, cooked_at from meal_plans where household_id = $1 order by slot`,
         [h.id],
       );
       // Expect: breakfast deleted, lunch + snacks preserved.
       expect(rows).toHaveLength(2);
-      const bySlot = Object.fromEntries(rows.map((r: any) => [r.slot, r]));
+      const bySlot = Object.fromEntries(rows.map((r) => [r.slot, r]));
       expect(bySlot.breakfast).toBeUndefined();
       expect(bySlot.lunch.people_eating).toBe(3);
       expect(bySlot.snacks.cooked_at).not.toBeNull();

@@ -46,7 +46,7 @@ describe("mealplan_regenerate_slot — scoring upgrade", () => {
         [h.id],
       );
 
-      const { rows } = await c.query(
+      await c.query(
         `select public.mealplan_regenerate_slot(current_date, 'lunch'::public.meal_slot)`,
       );
       const r = await c.query(

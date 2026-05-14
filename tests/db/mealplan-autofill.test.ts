@@ -61,8 +61,9 @@ describe("mealplan_autofill_date", () => {
         { name: "rice", qty: 2, unit: "cup" },
         { name: "tomato", qty: 3, unit: "piece" },
       ]);
-      // Recipe B: 2 ingredients, one in stock → score 0.5
-      const recipeB = await setupCustomLunchRecipe(c, householdId, profileId, "Recipe B", [
+      // Recipe B: 2 ingredients, one in stock → score 0.5. Exists as the
+      // lower-scoring alternative the picker should reject.
+      await setupCustomLunchRecipe(c, householdId, profileId, "Recipe B", [
         { name: "fish", qty: 500, unit: "g" },
         { name: "tomato", qty: 2, unit: "piece" },
       ]);
@@ -117,11 +118,11 @@ describe("mealplan_autofill_date", () => {
 
       await c.query(`select public.mealplan_autofill_date(current_date)`);
 
-      const rows = await c.query(
+      const rows = await c.query<{ slot: string; recipe_id: string | null }>(
         `select slot, recipe_id from meal_plans where household_id = $1 and plan_date = current_date`,
         [householdId],
       );
-      const bySlot = Object.fromEntries(rows.rows.map((r: any) => [r.slot, r.recipe_id]));
+      const bySlot = Object.fromEntries(rows.rows.map((r) => [r.slot, r.recipe_id]));
       // Lunch is filled; other slots have no row inserted (eligible set was empty, picker returned null).
       expect(bySlot.lunch).not.toBeNull();
       expect(bySlot.breakfast).toBeUndefined();
