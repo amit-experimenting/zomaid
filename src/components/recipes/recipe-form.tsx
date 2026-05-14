@@ -20,6 +20,7 @@ export type RecipeFormProps = {
     notes: string | null;
     ingredients: { item_name: string; quantity: number | null; unit: string | null }[];
     steps: { instruction: string }[];
+    youtubeUrl?: string | null;
   };
 };
 
@@ -34,6 +35,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
   const [ingredients, setIngredients] = useState(initial?.ingredients ?? [{ item_name: "", quantity: null, unit: null }]);
   const [steps, setSteps] = useState(initial?.steps ?? [{ instruction: "" }]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [youtubeUrl, setYoutubeUrl] = useState(initial?.youtubeUrl ?? "");
 
   async function compressAndSet(file: File) {
     const out = await imageCompression(file, { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true });
@@ -52,6 +54,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
       fd.append("notes", notes);
       fd.append("ingredients", JSON.stringify(ingredients.filter((i) => i.item_name.trim().length > 0)));
       fd.append("steps", JSON.stringify(steps.filter((s) => s.instruction.trim().length > 0)));
+      fd.append("youtubeUrl", youtubeUrl.trim());
       if (photoFile) fd.append("photoFile", photoFile);
       const res = await (mode === "create" ? createRecipe(fd) : updateRecipe(fd));
       if (!res.ok) { setError(res.error.message); return; }
@@ -83,6 +86,12 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
       <div>
         <Label htmlFor="prep">Prep time (minutes)</Label>
         <Input id="prep" type="number" min={1} value={prep} onChange={(e) => setPrep(e.target.value)} />
+      </div>
+      <div>
+        <Label htmlFor="youtubeUrl">Video URL</Label>
+        <Input id="youtubeUrl" type="url" value={youtubeUrl}
+          onChange={(e) => setYoutubeUrl(e.target.value)}
+          placeholder="https://www.youtube.com/watch?v=..." />
       </div>
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Ingredients</legend>

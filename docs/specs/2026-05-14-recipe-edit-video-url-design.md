@@ -112,12 +112,20 @@ data-fill migration was authored. The fix migration nulls all 48.
 New file `supabase/migrations/<date>_001_starter_pack_video_url_fixes.sql`
 (date assigned at implementation time, after the last existing migration). It:
 
-- Lists the broken video IDs as a SQL comment so the migration is auditable.
-- Sets `youtube_url = null` for each broken starter recipe, keyed by `name`
-  with `household_id is null`.
-- Idempotent: setting an already-null value to null is a no-op.
-
-If the audit returns zero failures, no migration is created.
+- Lists the original broken video IDs as a SQL comment so the migration is
+  auditable.
+- For each broken recipe, sets `youtube_url` to a **verified working
+  replacement URL** discovered via web search and confirmed via the same
+  oEmbed probe used in the audit (HTTP 200 = embeddable).
+- Replacement criteria:
+  1. Real, public, embeddable YouTube video that returns HTTP 200 from
+     `https://www.youtube.com/oembed?url=...&format=json`.
+  2. Clearly matches the dish (recipe name + cuisine).
+  3. Prefer well-known cooking channels and high view counts when available.
+- Keyed by `name` with `household_id is null`. Idempotent (re-running sets the
+  same value).
+- Replacements are sourced by spawning parallel research agents to keep this
+  tractable for 48 entries.
 
 ## Validation
 

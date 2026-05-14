@@ -43,6 +43,12 @@ async function uploadPhoto(supabase: Awaited<ReturnType<typeof createClient>>, h
   return path;
 }
 
+const YoutubeUrlSchema = z
+  .string()
+  .regex(/^https:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[A-Za-z0-9_-]+/, {
+    message: "Must be a YouTube URL (https://www.youtube.com/watch?v=... or https://youtu.be/...)",
+  });
+
 const CreateRecipeSchema = z.object({
   name: z.string().min(1).max(120),
   slot: SlotEnum,
@@ -50,6 +56,7 @@ const CreateRecipeSchema = z.object({
   notes: z.string().max(2000).optional().nullable(),
   ingredients: z.array(IngredientSchema),
   steps: z.array(StepSchema),
+  youtubeUrl: YoutubeUrlSchema.optional().nullable(),
 });
 
 export async function createRecipe(formData: FormData): Promise<RecipeActionResult<{ recipeId: string }>> {
@@ -59,6 +66,7 @@ export async function createRecipe(formData: FormData): Promise<RecipeActionResu
   const photoCheck = validatePhoto(photoFile);
   if (!photoCheck.ok) return { ok: false, error: { code: photoCheck.code, message: photoCheck.message } };
 
+  const ytRaw = (formData.get("youtubeUrl") as string | null) ?? "";
   const raw = {
     name: formData.get("name"),
     slot: formData.get("slot"),
@@ -66,6 +74,7 @@ export async function createRecipe(formData: FormData): Promise<RecipeActionResu
     notes: formData.get("notes") || null,
     ingredients: JSON.parse((formData.get("ingredients") as string) || "[]"),
     steps: JSON.parse((formData.get("steps") as string) || "[]"),
+    youtubeUrl: ytRaw.trim() === "" ? null : ytRaw.trim(),
   };
   const parsed = CreateRecipeSchema.safeParse(raw);
   if (!parsed.success) {
@@ -80,6 +89,7 @@ export async function createRecipe(formData: FormData): Promise<RecipeActionResu
       slot: parsed.data.slot,
       prep_time_minutes: parsed.data.prepTimeMinutes ?? null,
       notes: parsed.data.notes ?? null,
+      youtube_url: parsed.data.youtubeUrl ?? null,
       created_by_profile_id: ctx.profile.id,
     })
     .select("id")
@@ -123,6 +133,8 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
   const photoCheck = validatePhoto(photoFile);
   if (!photoCheck.ok) return { ok: false, error: { code: photoCheck.code, message: photoCheck.message } };
 
+  const ytRaw = formData.get("youtubeUrl");
+  const youtubeUrl = ytRaw === null ? undefined : ((ytRaw as string).trim() === "" ? null : (ytRaw as string).trim());
   const raw = {
     recipeId: formData.get("recipeId"),
     name: formData.get("name") || undefined,
@@ -131,6 +143,7 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
     notes: formData.get("notes") || undefined,
     ingredients: formData.get("ingredients") ? JSON.parse(formData.get("ingredients") as string) : undefined,
     steps: formData.get("steps") ? JSON.parse(formData.get("steps") as string) : undefined,
+    youtubeUrl,
   };
   const parsed = UpdateRecipeSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: { code: "RECIPE_INVALID", message: "Invalid input", fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string> } };
@@ -176,6 +189,7 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
   if (parsed.data.slot !== undefined) patch.slot = parsed.data.slot;
   if (parsed.data.prepTimeMinutes !== undefined) patch.prep_time_minutes = parsed.data.prepTimeMinutes;
   if (parsed.data.notes !== undefined) patch.notes = parsed.data.notes;
+  if (parsed.data.youtubeUrl !== undefined) patch.youtube_url = parsed.data.youtubeUrl;
   if (Object.keys(patch).length > 0) {
     const { error } = await supabase.from("recipes").update(patch).eq("id", effectiveRecipeId);
     if (error) return { ok: false, error: { code: "RECIPE_FORBIDDEN", message: error.message } };
