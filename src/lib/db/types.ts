@@ -583,6 +583,18 @@ export type Database = {
         Args: { p_date: string; p_slot: "breakfast" | "lunch" | "snacks" | "dinner"; p_people: number };
         Returns: Database["public"]["Tables"]["meal_plans"]["Row"];
       };
+      mealplan_recipe_stock_score: {
+        Args: { p_household: string; p_recipe_id: string; p_people: number };
+        Returns: number;
+      };
+      mealplan_autofill_date: {
+        Args: { p_date: string };
+        Returns: number;
+      };
+      mealplan_autofill_date_for_household: {
+        Args: { p_household: string; p_date: string };
+        Returns: number;
+      };
       inventory_bill_ingest: {
         Args: { p_line_item_id: string; p_inventory_id: string | null; p_quantity: number; p_unit: string; p_new_item_name: string | null };
         Returns: Database["public"]["Tables"]["inventory_items"]["Row"];
