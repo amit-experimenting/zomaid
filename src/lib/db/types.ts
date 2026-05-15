@@ -186,6 +186,20 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["household_recipe_hides"]["Insert"]>;
         Relationships: [];
       };
+      ingredient_aliases: {
+        Row: {
+          processed_name: string;
+          shoppable_name: string;
+          created_at: string;
+        };
+        Insert: {
+          processed_name: string;
+          shoppable_name: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["ingredient_aliases"]["Insert"]>;
+        Relationships: [];
+      };
       meal_plans: {
         Row: {
           id: string;
