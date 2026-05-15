@@ -204,6 +204,51 @@ export async function removeMembership(input: unknown) {
   revalidatePath("/dashboard");
 }
 
+const updateDietSchema = z.object({
+  membershipId: z.uuid(),
+  // Empty string and "none" are accepted as the "clear preference" sentinel.
+  diet: z
+    .union([
+      z.literal(""),
+      z.literal("none"),
+      z.enum(["vegan", "vegetarian", "eggitarian", "non_vegetarian"]),
+    ])
+    .optional(),
+});
+
+export async function updateMembershipDiet(input: unknown) {
+  const data = updateDietSchema.parse(input);
+  const ctx = await getCurrentHousehold();
+  if (!ctx) throw new Error("no active household");
+
+  const svc = createServiceClient();
+  const target = await svc
+    .from("household_memberships")
+    .select("household_id, profile_id, role")
+    .eq("id", data.membershipId)
+    .single();
+  if (target.error) throw new Error(target.error.message);
+  if (target.data.household_id !== ctx.household.id) throw new Error("forbidden");
+
+  const callerRole = ctx.membership.role;
+  const isSelf = target.data.profile_id === ctx.profile.id;
+  if (callerRole !== "owner" && callerRole !== "maid" && !isSelf) {
+    throw new Error("forbidden");
+  }
+
+  const raw = data.diet;
+  const value = raw && raw.length > 0 && raw !== "none" ? raw : null;
+  const { error } = await svc
+    .from("household_memberships")
+    .update({ diet_preference: value })
+    .eq("id", data.membershipId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/household/settings");
+  revalidatePath("/plan");
+  revalidatePath("/recipes");
+}
+
 const updatePrivSchema = z.object({
   membershipId: z.uuid(),
   privilege: z.enum(["full", "meal_modify", "view_only"]),

@@ -5,6 +5,7 @@ export type Role = "owner" | "family_member" | "maid";
 export type Privilege = "full" | "meal_modify" | "view_only";
 export type MembershipStatus = "active" | "pending" | "removed";
 export type IntendedRole = Role;
+export type Diet = "vegan" | "vegetarian" | "eggitarian" | "non_vegetarian";
 
 export type Database = {
   public: {
@@ -57,6 +58,7 @@ export type Database = {
           role: Role;
           privilege: Privilege;
           status: MembershipStatus;
+          diet_preference: Diet | null;
           joined_at: string;
           removed_at: string | null;
           created_at: string;
@@ -68,6 +70,7 @@ export type Database = {
           role: Role;
           privilege?: Privilege;
           status?: MembershipStatus;
+          diet_preference?: Diet | null;
         };
         Update: Partial<Database["public"]["Tables"]["household_memberships"]["Row"]>;
         Relationships: [];
@@ -107,6 +110,7 @@ export type Database = {
           parent_recipe_id: string | null;
           name: string;
           slot: "breakfast" | "lunch" | "snacks" | "dinner";
+          diet: Diet;
           photo_path: string | null;
           prep_time_minutes: number | null;
           notes: string | null;
@@ -123,6 +127,7 @@ export type Database = {
           parent_recipe_id?: string | null;
           name: string;
           slot: "breakfast" | "lunch" | "snacks" | "dinner";
+          diet: Diet;
           photo_path?: string | null;
           prep_time_minutes?: number | null;
           notes?: string | null;

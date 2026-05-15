@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createRecipe, updateRecipe } from "@/app/recipes/actions";
 
 type Slot = "breakfast" | "lunch" | "snacks" | "dinner";
+type Diet = "vegan" | "vegetarian" | "eggitarian" | "non_vegetarian";
 
 export type RecipeFormProps = {
   mode: "create" | "edit";
@@ -16,6 +17,7 @@ export type RecipeFormProps = {
   initial?: {
     name: string;
     slot: Slot;
+    diet: Diet;
     prepTimeMinutes: number | null;
     notes: string | null;
     ingredients: { item_name: string; quantity: number | null; unit: string | null }[];
@@ -30,6 +32,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState(initial?.name ?? "");
   const [slot, setSlot] = useState<Slot>(initial?.slot ?? "lunch");
+  const [diet, setDiet] = useState<Diet>(initial?.diet ?? "non_vegetarian");
   const [prep, setPrep] = useState<string>(initial?.prepTimeMinutes?.toString() ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [ingredients, setIngredients] = useState(initial?.ingredients ?? [{ item_name: "", quantity: null, unit: null }]);
@@ -50,6 +53,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
       if (mode === "edit" && recipeId) fd.append("recipeId", recipeId);
       fd.append("name", name);
       fd.append("slot", slot);
+      fd.append("diet", diet);
       if (prep) fd.append("prepTimeMinutes", prep);
       fd.append("notes", notes);
       fd.append("ingredients", JSON.stringify(ingredients.filter((i) => i.item_name.trim().length > 0)));
@@ -81,6 +85,16 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
           <option value="lunch">Lunch</option>
           <option value="snacks">Snacks</option>
           <option value="dinner">Dinner</option>
+        </select>
+      </div>
+      <div>
+        <Label htmlFor="diet">Diet</Label>
+        <select id="diet" value={diet} onChange={(e) => setDiet(e.target.value as Diet)}
+          className="block w-full rounded-md border bg-background px-3 py-2 text-sm">
+          <option value="vegan">Vegan</option>
+          <option value="vegetarian">Vegetarian</option>
+          <option value="eggitarian">Eggitarian</option>
+          <option value="non_vegetarian">Non-vegetarian</option>
         </select>
       </div>
       <div>

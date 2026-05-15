@@ -7,6 +7,7 @@ import { requireHousehold } from "@/lib/auth/require";
 import type { Database } from "@/lib/db/types";
 
 const SlotEnum = z.enum(["breakfast", "lunch", "snacks", "dinner"]);
+const DietEnum = z.enum(["vegan", "vegetarian", "eggitarian", "non_vegetarian"]);
 const IngredientSchema = z.object({
   item_name: z.string().min(1).max(120),
   quantity: z.number().positive().optional().nullable(),
@@ -52,6 +53,7 @@ const YoutubeUrlSchema = z
 const CreateRecipeSchema = z.object({
   name: z.string().min(1).max(120),
   slot: SlotEnum,
+  diet: DietEnum,
   prepTimeMinutes: z.number().int().positive().optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
   ingredients: z.array(IngredientSchema),
@@ -70,6 +72,7 @@ export async function createRecipe(formData: FormData): Promise<RecipeActionResu
   const raw = {
     name: formData.get("name"),
     slot: formData.get("slot"),
+    diet: formData.get("diet"),
     prepTimeMinutes: formData.get("prepTimeMinutes") ? Number(formData.get("prepTimeMinutes")) : null,
     notes: formData.get("notes") || null,
     ingredients: JSON.parse((formData.get("ingredients") as string) || "[]"),
@@ -87,6 +90,7 @@ export async function createRecipe(formData: FormData): Promise<RecipeActionResu
       household_id: ctx.household.id,
       name: parsed.data.name,
       slot: parsed.data.slot,
+      diet: parsed.data.diet,
       prep_time_minutes: parsed.data.prepTimeMinutes ?? null,
       notes: parsed.data.notes ?? null,
       youtube_url: parsed.data.youtubeUrl ?? null,
@@ -139,6 +143,7 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
     recipeId: formData.get("recipeId"),
     name: formData.get("name") || undefined,
     slot: formData.get("slot") || undefined,
+    diet: formData.get("diet") || undefined,
     prepTimeMinutes: formData.get("prepTimeMinutes") ? Number(formData.get("prepTimeMinutes")) : undefined,
     notes: formData.get("notes") || undefined,
     ingredients: formData.get("ingredients") ? JSON.parse(formData.get("ingredients") as string) : undefined,
@@ -150,7 +155,7 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
 
   const { data: target, error: tErr } = await supabase
     .from("recipes")
-    .select("id, household_id, parent_recipe_id")
+    .select("id, household_id, parent_recipe_id, diet, slot")
     .eq("id", parsed.data.recipeId)
     .single();
   if (tErr || !target) return { ok: false, error: { code: "RECIPE_NOT_FOUND", message: "Recipe not found" } };
@@ -158,14 +163,18 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
   let effectiveRecipeId = target.id;
   // Fork-on-edit if target is a starter.
   if (target.household_id === null) {
-    // Deep-copy starter -> household fork
+    // Deep-copy starter -> household fork. Inherit diet + slot from the
+    // starter so the NOT-NULL columns have values even when the edit
+    // doesn't touch them; the patch below overrides if the form submitted
+    // new values.
     const { data: forkRow, error: fErr } = await supabase
       .from("recipes")
       .insert({
         household_id: ctx.household.id,
         parent_recipe_id: target.id,
-        name: parsed.data.name ?? "Forked recipe", // will be overwritten below if name provided
-        slot: parsed.data.slot ?? "lunch",         // ditto
+        name: parsed.data.name ?? "Forked recipe",
+        slot: parsed.data.slot ?? target.slot,
+        diet: parsed.data.diet ?? target.diet,
         created_by_profile_id: ctx.profile.id,
       })
       .select("id")
@@ -187,6 +196,7 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
   const patch: Database["public"]["Tables"]["recipes"]["Update"] = {};
   if (parsed.data.name !== undefined) patch.name = parsed.data.name;
   if (parsed.data.slot !== undefined) patch.slot = parsed.data.slot;
+  if (parsed.data.diet !== undefined) patch.diet = parsed.data.diet;
   if (parsed.data.prepTimeMinutes !== undefined) patch.prep_time_minutes = parsed.data.prepTimeMinutes;
   if (parsed.data.notes !== undefined) patch.notes = parsed.data.notes;
   if (parsed.data.youtubeUrl !== undefined) patch.youtube_url = parsed.data.youtubeUrl;

@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
 import { MainNav } from "@/components/site/main-nav";
 import {
-  createInvite, removeMembership, updateMembershipPrivilege,
+  createInvite, removeMembership, updateMembershipDiet, updateMembershipPrivilege,
 } from "@/app/household/settings/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,7 @@ export default async function HouseholdSettingsPage() {
   const [members, invites] = await Promise.all([
     svc
       .from("household_memberships")
-      .select("id, role, privilege, status, profile:profiles(id, display_name, email)")
+      .select("id, role, privilege, status, diet_preference, profile:profiles(id, display_name, email)")
       .eq("household_id", ctx.household.id)
       .eq("status", "active"),
     svc
@@ -70,6 +70,13 @@ export default async function HouseholdSettingsPage() {
       privilege: String(formData.get("privilege")) as Privilege,
     });
   }
+  async function changeDiet(formData: FormData) {
+    "use server";
+    await updateMembershipDiet({
+      membershipId: String(formData.get("membershipId")),
+      diet: String(formData.get("diet")),
+    });
+  }
 
   return (
     <main className="mx-auto max-w-md">
@@ -92,6 +99,8 @@ export default async function HouseholdSettingsPage() {
               const canRemove =
                 isOwner ? m.role !== "owner" || p.id !== ctx.profile.id
                         : p.id === ctx.profile.id && m.role !== "owner";
+              const isSelf = p.id === ctx.profile.id;
+              const canEditDiet = isOwner || isMaid || isSelf;
               return (
                 <li
                   key={m.id}
@@ -105,9 +114,28 @@ export default async function HouseholdSettingsPage() {
                     <p className="text-xs text-muted-foreground">
                       <span className={cn(isMaidRow && "text-primary font-medium")}>{m.role}</span>
                       {m.role === "family_member" ? ` · ${m.privilege}` : ""}
+                      {isMaidRow ? " · diet noted but plan ignores it" : ""}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    {canEditDiet ? (
+                      <form action={changeDiet} className="flex items-center gap-2">
+                        <input type="hidden" name="membershipId" value={m.id} />
+                        <select
+                          name="diet"
+                          defaultValue={m.diet_preference ?? "none"}
+                          className="rounded-md border bg-background px-2 py-1 text-sm"
+                          aria-label="Diet preference"
+                        >
+                          <option value="none">No preference</option>
+                          <option value="vegan">Vegan</option>
+                          <option value="vegetarian">Vegetarian</option>
+                          <option value="eggitarian">Eggitarian</option>
+                          <option value="non_vegetarian">Non-veg</option>
+                        </select>
+                        <Button type="submit" size="sm" variant="outline">Save</Button>
+                      </form>
+                    ) : null}
                     {isOwner && m.role === "family_member" ? (
                       <form action={changePriv} className="flex items-center gap-2">
                         <input type="hidden" name="membershipId" value={m.id} />
