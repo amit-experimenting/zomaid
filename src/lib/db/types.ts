@@ -79,6 +79,7 @@ export type Database = {
           invited_by_profile_id: string;
           intended_role: Role;
           intended_privilege: Privilege | null;
+          intended_email: string | null;
           code: string;
           token: string;
           expires_at: string;
@@ -91,6 +92,7 @@ export type Database = {
           invited_by_profile_id: string;
           intended_role: Role;
           intended_privilege?: Privilege | null;
+          intended_email?: string | null;
           code: string;
           token: string;
           expires_at?: string;

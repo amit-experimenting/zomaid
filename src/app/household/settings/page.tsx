@@ -7,7 +7,9 @@ import {
 } from "@/app/household/settings/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import type { Privilege } from "@/lib/db/types";
 
 export default async function HouseholdSettingsPage() {
@@ -23,7 +25,7 @@ export default async function HouseholdSettingsPage() {
       .eq("status", "active"),
     svc
       .from("invites")
-      .select("id, intended_role, intended_privilege, code, token, expires_at, consumed_at")
+      .select("id, intended_role, intended_privilege, intended_email, code, token, expires_at, consumed_at")
       .eq("household_id", ctx.household.id)
       .is("consumed_at", null)
       .gt("expires_at", new Date().toISOString())
@@ -40,15 +42,22 @@ export default async function HouseholdSettingsPage() {
     await createInvite({
       role: "family_member",
       privilege: (formData.get("privilege") ?? "view_only") as Privilege,
+      email: String(formData.get("email") ?? ""),
     });
   }
-  async function inviteMaid() {
+  async function inviteMaid(formData: FormData) {
     "use server";
-    await createInvite({ role: "maid" });
+    await createInvite({
+      role: "maid",
+      email: String(formData.get("email") ?? ""),
+    });
   }
-  async function inviteOwner() {
+  async function inviteOwner(formData: FormData) {
     "use server";
-    await createInvite({ role: "owner" });
+    await createInvite({
+      role: "owner",
+      email: String(formData.get("email") ?? ""),
+    });
   }
   async function remove(formData: FormData) {
     "use server";
@@ -75,17 +84,26 @@ export default async function HouseholdSettingsPage() {
         <CardHeader><CardTitle>Members</CardTitle></CardHeader>
         <CardContent>
           <ul className="divide-y">
-            {members.data!.map((m) => {
+            {[...members.data!]
+              .sort((a, b) => (a.role === "maid" ? 1 : 0) - (b.role === "maid" ? 1 : 0))
+              .map((m) => {
               const p = (m as unknown as { profile: { id: string; display_name: string; email: string } }).profile;
+              const isMaidRow = m.role === "maid";
               const canRemove =
                 isOwner ? m.role !== "owner" || p.id !== ctx.profile.id
                         : p.id === ctx.profile.id && m.role !== "owner";
               return (
-                <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <li
+                  key={m.id}
+                  className={cn(
+                    "flex flex-wrap items-center justify-between gap-3 py-3",
+                    isMaidRow && "border-l-2 border-l-primary bg-primary/5 pl-3",
+                  )}
+                >
                   <div>
                     <p className="font-medium">{p.display_name || p.email}</p>
                     <p className="text-xs text-muted-foreground">
-                      {m.role}
+                      <span className={cn(isMaidRow && "text-primary font-medium")}>{m.role}</span>
                       {m.role === "family_member" ? ` · ${m.privilege}` : ""}
                     </p>
                   </div>
@@ -120,26 +138,40 @@ export default async function HouseholdSettingsPage() {
         <CardHeader><CardTitle>Invites</CardTitle></CardHeader>
         <CardContent className="space-y-6">
           {isOwner ? (
-            <form action={inviteFamily} className="flex flex-wrap items-end gap-3">
-              <div className="grow space-y-1.5">
-                <Label htmlFor="privilege">Family member privilege</Label>
-                <select name="privilege" id="privilege" defaultValue="view_only"
-                        className="block w-full rounded-md border bg-background px-2 py-1 text-sm">
-                  <option value="view_only">view_only ($5)</option>
-                  <option value="meal_modify">meal_modify ($9)</option>
-                </select>
+            <form action={inviteFamily} className="space-y-3">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="grow space-y-1.5">
+                  <Label htmlFor="privilege">Family member privilege</Label>
+                  <select name="privilege" id="privilege" defaultValue="view_only"
+                          className="block w-full rounded-md border bg-background px-2 py-1 text-sm">
+                    <option value="view_only">view_only ($5)</option>
+                    <option value="meal_modify">meal_modify ($9)</option>
+                  </select>
+                </div>
+                <Button type="submit">Invite family member</Button>
               </div>
-              <Button type="submit">Invite family member</Button>
+              <div className="space-y-1">
+                <Input name="email" type="email" placeholder="Email (optional)" />
+                <p className="text-xs text-muted-foreground">Auto-join when this email signs in.</p>
+              </div>
             </form>
           ) : null}
           {isOwner ? (
-            <form action={inviteMaid}>
+            <form action={inviteMaid} className="space-y-3">
               <Button type="submit" variant="outline">Invite maid</Button>
+              <div className="space-y-1">
+                <Input name="email" type="email" placeholder="Email (optional)" />
+                <p className="text-xs text-muted-foreground">Auto-join when this email signs in.</p>
+              </div>
             </form>
           ) : null}
           {isMaid ? (
-            <form action={inviteOwner}>
+            <form action={inviteOwner} className="space-y-3">
               <Button type="submit" variant="outline">Invite owner</Button>
+              <div className="space-y-1">
+                <Input name="email" type="email" placeholder="Email (optional)" />
+                <p className="text-xs text-muted-foreground">Auto-join when this email signs in.</p>
+              </div>
             </form>
           ) : null}
 
@@ -153,6 +185,9 @@ export default async function HouseholdSettingsPage() {
                     <span className="font-medium">{i.intended_role}</span>
                     <span className="text-xs text-muted-foreground">code: <code>{i.code}</code></span>
                   </div>
+                  {i.intended_email && (
+                    <div className="text-xs text-muted-foreground">→ {i.intended_email}</div>
+                  )}
                   <code className="block break-all rounded bg-muted px-2 py-1 text-xs">
                     {`${origin}/join/${i.token}`}
                   </code>

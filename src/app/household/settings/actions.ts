@@ -11,10 +11,15 @@ import type { Privilege, Role } from "@/lib/db/types";
 const createInviteSchema = z.object({
   role: z.enum(["owner", "family_member", "maid"]),
   privilege: z.enum(["full", "meal_modify", "view_only"]).optional(),
+  // Optional whitelist email. Empty string is treated as absent.
+  email: z
+    .union([z.literal(""), z.string().trim().toLowerCase().email()])
+    .optional(),
 });
 
 export async function createInvite(input: unknown) {
   const data = createInviteSchema.parse(input);
+  const email = data.email && data.email.length > 0 ? data.email : null;
   const ctx = await getCurrentHousehold();
   if (!ctx) throw new Error("no active household");
   const { household, membership, profile } = ctx;
@@ -52,6 +57,23 @@ export async function createInvite(input: unknown) {
     if (has.data?.length) throw new Error("household already has an active owner");
   }
 
+  if (email) {
+    // App-level duplicate guard: turns the partial unique index into a clean
+    // error instead of a 23505 from the insert below.
+    const dupe = await svc
+      .from("invites")
+      .select("id")
+      .eq("household_id", household.id)
+      .is("consumed_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .ilike("intended_email", email)
+      .limit(1);
+    if (dupe.error) throw new Error(dupe.error.message);
+    if (dupe.data?.length) {
+      throw new Error("an unconsumed invite for that email already exists");
+    }
+  }
+
   const code = String(Math.floor(100000 + Math.random() * 900000));
   const token = randomBytes(32).toString("base64url");
 
@@ -65,6 +87,7 @@ export async function createInvite(input: unknown) {
         data.role === "family_member" ? (data.privilege ?? "view_only") : ("full" as Privilege),
       code,
       token,
+      intended_email: email,
     })
     .select("code, token")
     .single();
