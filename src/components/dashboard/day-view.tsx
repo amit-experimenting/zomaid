@@ -26,8 +26,11 @@ export type MealFeedItem = {
   recipeName: string;
   /** Slot start time projected onto the selected date, ISO string. */
   slotTimeIso: string;
-  /** Per-serving calories for the assigned recipe. null hides the suffix. */
+  /** Per-serving nutrition. nulls hide their segments. */
   kcalPerServing: number | null;
+  carbsGPerServing: number | null;
+  fatGPerServing: number | null;
+  proteinGPerServing: number | null;
   /** Effective number of people eating this slot (peopleEating ?? rosterSize). */
   peopleEating: number;
 };
@@ -154,6 +157,12 @@ export function DayView(props: DayViewProps) {
 }
 
 function MealInlineRow({ item }: { item: MealFeedItem }) {
+  const scale = (v: number | null) => (v == null ? null : Math.round(v * item.peopleEating));
+  const totalKcal = scale(item.kcalPerServing);
+  const totalCarbs = scale(item.carbsGPerServing);
+  const totalFat = scale(item.fatGPerServing);
+  const totalProtein = scale(item.proteinGPerServing);
+  const showMacros = totalCarbs != null || totalFat != null || totalProtein != null;
   return (
     <Link
       href="/recipes"
@@ -166,15 +175,21 @@ function MealInlineRow({ item }: { item: MealFeedItem }) {
         <div className="truncate font-medium">{item.recipeName}</div>
         <div className="text-xs text-primary/80">
           {SLOT_LABEL[item.slot]}
-          {item.kcalPerServing != null && (() => {
-            const total = Math.round(item.kcalPerServing * item.peopleEating);
-            return (
-              <span className="tabular-nums">
-                {" "}· {total} kcal{item.peopleEating > 1 ? ` (×${item.peopleEating})` : ""}
-              </span>
-            );
-          })()}
+          {totalKcal != null && (
+            <span className="tabular-nums">
+              {" "}· {totalKcal} kcal{item.peopleEating > 1 ? ` (×${item.peopleEating})` : ""}
+            </span>
+          )}
         </div>
+        {showMacros && (
+          <div className="mt-0.5 text-[10px] text-primary/70 tabular-nums">
+            {totalCarbs != null && <>C {totalCarbs}g</>}
+            {totalCarbs != null && totalFat != null && " · "}
+            {totalFat != null && <>F {totalFat}g</>}
+            {(totalCarbs != null || totalFat != null) && totalProtein != null && " · "}
+            {totalProtein != null && <>P {totalProtein}g</>}
+          </div>
+        )}
       </div>
       <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
         Meal
