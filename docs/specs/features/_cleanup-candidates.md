@@ -36,7 +36,7 @@ Filtering notes:
 ## Unused shadcn primitives
 - [x] `src/components/ui/dropdown-menu.tsx` — deleted; only self-references in file. HANDOFF mention is historical note about the primitive being added.
 - [x] `src/components/ui/card.tsx` — exports `CardFooter`, `CardAction` — deleted both functions and their export entries; zero callers
-- [ ] `src/components/ui/sheet.tsx` — exports `SheetClose`, `SheetFooter`, `SheetDescription` — zero importers per knip
+- [x] `src/components/ui/sheet.tsx` — exports `SheetClose`, `SheetFooter`, `SheetDescription` — deleted all three components and exports; zero callers
 - [ ] `src/components/ui/dialog.tsx` — exports `DialogClose`, `DialogDescription`, `DialogFooter`, `DialogOverlay`, `DialogPortal` — zero importers per knip
 
 ## Unused lib helpers
