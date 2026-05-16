@@ -130,4 +130,55 @@ No Sentry or other dedicated observability integration; the dev shim in `src/app
 - **`tryRedeemPendingEmailInvite` swallows RPC errors silently.** That's the documented behaviour (failed auto-redeem falls through to the no-household flow), but there's no telemetry hook — a chronically-failing invite is invisible. Could add a `console.warn` or an admin-visible counter without changing the silent-to-user contract.
 
 ## Test coverage
-_To be filled in Phase 2._
+
+Cron-driver entries below are listed here because the routes themselves (bearer-token gating, return JSON shape, scheduling) are infra concerns. Their underlying feature RPCs (`shopping_sweep_checked`, `dispatch-task-pushes` payload semantics, `runSonnetBillScan`) are owned by — and tracked from — the consuming feature specs.
+
+| Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `createClient` (RLS-scoped server client) | `src/lib/supabase/server.ts` | — | — | — | high | `tests/auth/` |
+| `createServiceClient` | `src/lib/supabase/server.ts`, `src/lib/supabase/service.ts` | — | — | — | high | `tests/auth/` |
+| `getCurrentHousehold()` (incl. lost-membership fallthrough) | `src/lib/auth/current-household.ts` | — | — | — | high | `tests/auth/` |
+| `getCurrentProfile()` (lazy upsert race with webhook) | `src/lib/auth/current-profile.ts` | — | — | — | high | `tests/auth/` |
+| `GET /api/cron/dispatch-task-pushes` (driver: bearer gate, return shape) | `src/app/api/cron/dispatch-task-pushes/route.ts` | — | — | — | high | `tests/actions/` (route test) |
+| `GET /api/cron/retry-bill-scans` (driver: bearer gate, return shape) | `src/app/api/cron/retry-bill-scans/route.ts` | — | — | — | high | `tests/actions/` (route test) |
+| `GET /api/cron/sweep-checked-shopping` (driver: bearer gate, return shape) | `src/app/api/cron/sweep-checked-shopping/route.ts` | — | — | — | high | `tests/actions/` (route test) |
+| `POST /api/webhooks/clerk` (Svix verify, user.created/updated/deleted) | `src/app/api/webhooks/clerk/route.ts` | — | — | — | high | `tests/actions/` (route test) |
+| `requireAdmin()` | `src/lib/auth/require.ts` | — | — | — | high | `tests/auth/` |
+| `requireHousehold()` | `src/lib/auth/require.ts` | — | — | — | high | `tests/auth/` |
+| `requirePrivilege()` (incl. order map) | `src/lib/auth/require.ts` | partial via `tests/auth/helpers.test.ts` (privilege-order map copy only) | — | — | high | `tests/auth/` |
+| `requireRole()` | `src/lib/auth/require.ts` | — | — | — | high | `tests/auth/` |
+| `sendWebPush()` (incl. 410/404 → `gone` flag) | `src/lib/push/webpush.ts` | — | — | — | high | `tests/unit/` |
+| `current_is_admin()` helper | `supabase/migrations/20260510_001_profiles.sql` | — | — | — | medium | `tests/db/` |
+| `current_profile_id()` helper | `supabase/migrations/20260510_001_profiles.sql` | — | — | — | medium | `tests/db/` |
+| `has_active_membership(p_household)` helper | `supabase/migrations/20260512_001_household_memberships.sql` | — | — | — | medium | `tests/db/` |
+| `Home` (`/`) signed-in redirect branch | `src/app/page.tsx` | — | — | partial via `tests/e2e/foundations.spec.ts` (sign-in CTA only) | medium | `tests/e2e/` |
+| `is_active_owner(p_household)` helper | `supabase/migrations/20260512_001_household_memberships.sql` | — | — | — | medium | `tests/db/` |
+| `is_active_owner_or_maid(p_household)` helper | `supabase/migrations/20260517_001_recipes.sql` | — | — | — | medium | `tests/db/` |
+| `JoinCodePage` (`/join/code`) | `src/app/join/code/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `JoinTokenPage` (`/join/[token]`) | `src/app/join/[token]/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `MainNav` | `src/components/site/main-nav.tsx` | — | — | — | medium | `tests/e2e/` |
+| `push_subscriptions` RLS (per-profile scoping) | `supabase/migrations/20260531_001_tasks_and_occurrences.sql` | — | — | — | medium | `tests/db/` |
+| `readAdminEnv()` | `src/lib/admin/env-sync.ts` | — | — | — | medium | `tests/admin/` |
+| `SignInPage` / `SignUpPage` | `src/app/sign-in/[[...sign-in]]/page.tsx`, `src/app/sign-up/[[...sign-up]]/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `siteUrl()` (header-derived origin) | `src/lib/site-url.ts` | — | — | — | medium | `tests/unit/` |
+| `src/proxy.ts` (public/auth-gated route matcher) | `src/proxy.ts` | — | — | partial via `tests/e2e/{foundations,inventory,shopping,bills,tasks,recipes-plan,plan-autofill}.spec.ts` (unauth → `/` redirects) | medium | `tests/e2e/` |
+| `touch_updated_at()` trigger | `supabase/migrations/20260512_001_household_memberships.sql` | — | — | — | medium | `tests/db/` |
+| `useSupabaseClient()` (browser client; Clerk token forwarding) | `src/lib/supabase/client.ts` | — | — | — | medium | `tests/unit/` |
+| `apple-icon` route | `src/app/apple-icon.tsx` | — | — | — | low | `tests/unit/` |
+| `cn()` helper | `src/lib/utils.ts` | — | — | — | low | `tests/unit/` |
+| `diet` enum + strictness ordering | `supabase/migrations/20260624_001_diet_preferences.sql` | — | `tests/db/household-diet-preference.test.ts` (exercises ordering via `household_effective_diet`) | — | low | — |
+| `icon` route | `src/app/icon.tsx` | — | — | — | low | `tests/unit/` |
+| `manifest.webmanifest` | `src/app/manifest.ts` | — | — | — | low | `tests/unit/` |
+| `PendingButton` (incl. `useFormStatus` outside `<form>`) | `src/components/ui/pending-button.tsx` | — | — | — | low | `tests/unit/` |
+| `RootLayout` (Geist font, perf-measure dev shim) | `src/app/layout.tsx` | — | — | — | low | `tests/unit/` |
+| Shadcn UI primitives (`Button`, `Card`, `Dialog`, `DropdownMenu`, `Input`, `Label`, `Sheet`, `Textarea`) | `src/components/ui/*` | — | — | — | low | `tests/unit/` |
+| `sw.ts` service worker (push + notificationclick handlers) | `src/app/sw.ts` | — | — | — | low | `tests/unit/` |
+| `households` table RLS | `supabase/migrations/20260511_001_households.sql`, `20260512_001_household_memberships.sql` | — | `tests/db/households.test.ts` | — | none | — |
+| `household_memberships` table RLS + invariants | `supabase/migrations/20260512_001_household_memberships.sql` | — | `tests/db/memberships.test.ts` | — | none | — |
+| `invites` table RLS + visibility | `supabase/migrations/20260513_001_invites.sql` | — | `tests/db/invites.test.ts` | — | none | — |
+| `profiles` table RLS | `supabase/migrations/20260510_001_profiles.sql` | — | `tests/db/profiles.test.ts` | — | none | — |
+| `profiles_block_protected_columns` trigger | `supabase/migrations/20260510_001_profiles.sql`, `20260515_001_admin_trigger_fix.sql` | — | `tests/db/profiles.test.ts` (is_admin denial under auth context); `tests/admin/env-sync.test.ts` (null-jwt boot-task path) | — | none | — |
+| `redeem_invite(p_token)` RPC | `supabase/migrations/20260514_001_redeem_invite_rpc.sql`, `20260516_001_redeem_invite_duplicate_check.sql` | — | `tests/db/invites.test.ts`, `tests/actions/invites.test.ts` | — | none | — |
+| `syncAdminFlags()` boot task | `src/lib/admin/env-sync.ts` | — | `tests/admin/env-sync.test.ts` | — | none | — |
+
+`tryRedeemPendingEmailInvite` (`src/lib/auth/redeem-email-invite.ts`) is listed under Server actions for visibility but its gap row lives in `features/household.md` (where the email-whitelist UI + semantics are owned). Likewise `subscribePush` / `unsubscribePush` gap rows live in `features/tasks.md`.
