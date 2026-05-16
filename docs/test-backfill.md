@@ -4,7 +4,7 @@ Aggregated from the 2026-05-16 codebase audit. Phase 2 produced per-feature test
 coverage tables in `docs/specs/features/<feature>.md`; this file is the priority-1
 extract for "what to test next."
 
-> **Phase 5 update (2026-05-16):** Tasks + Onboarding features now have full test coverage on the items listed below. See the "Covered in Phase 5" section at the bottom for the moved rows.
+> **Phase 5 + 6 update (2026-05-16):** Tasks, Onboarding, and Household features now have full test coverage on the items listed below. See the "Covered in Phase 5 + Phase 6" section at the bottom for the moved rows.
 
 ## How to read
 
@@ -114,23 +114,7 @@ Mutations:
 
 ## Household
 
-Mutations:
-
-- `removeMembership` — `src/app/household/settings/actions.ts:181` → `tests/actions/`
-- `updateMealTime` — `src/app/household/meal-times/actions.ts:20` → `tests/actions/`
-- `updateMembershipDiet` — `src/app/household/settings/actions.ts:228` → `tests/actions/`
-- `updateMembershipPrivilege` — `src/app/household/settings/actions.ts:265` → `tests/actions/`
-
-Silent-failure surfaces:
-
-- `tryRedeemPendingEmailInvite` — `src/lib/auth/redeem-email-invite.ts` → `tests/actions/`
-  (see also "Explicitly called out" below)
-
-Triggers:
-
-- `seed_default_meal_times` trigger —
-  `supabase/migrations/20260609_001_household_meal_times.sql` → `tests/db/`
-  (see also "Explicitly called out" below)
+_Fully covered in Phase 6 — see "Covered in Phase 5 + Phase 6" at the bottom._
 
 ## Onboarding
 
@@ -173,18 +157,6 @@ Push transport:
 - `sendWebPush()` (incl. 410/404 → `gone` flag) — `src/lib/push/webpush.ts` →
   `tests/unit/`
 
-## Explicitly called out by audit (priority high regardless of inventory above)
-
-- `seed_default_meal_times` trigger (household.md): fires on every household insert
-  to populate `household_meal_times`. Silent failure would leave the household with
-  no meal times until manually fixed. Recommended: `tests/db/seed-default-meal-times.test.ts`
-  asserting insert-then-select.
-- `tryRedeemPendingEmailInvite` (household.md): silently runs inside
-  `getCurrentHousehold()` to auto-redeem email-whitelist invites. Failure means a
-  user with a valid email invite would silently NOT be added to the household.
-  Recommended: `tests/actions/email-invite-auto-redeem.test.ts` covering happy
-  path + the silently-swallowed-error path.
-
 ## Items removed by Phase 4 cleanup (no longer need tests)
 
 - `archiveRecipe`, `unarchiveRecipe`, `hideStarterRecipe`, `unhideStarterRecipe` (recipes)
@@ -193,9 +165,9 @@ Push transport:
 - `deleteBill` (bills)
 - `ingest_bill_ocr` RPC (dropped in migration `20260707_001_drop_dead_db_surface.sql`)
 
-## Covered in Phase 5
+## Covered in Phase 5 + Phase 6
 
-8 new test files (84 tests) landed on 2026-05-16. Suite is now 241/241 passing.
+Phase 5 (2026-05-16) landed 8 new test files (84 tests); Phase 6 (2026-05-16) added 4 more test files (33 tests) plus a tightened trigger guard. Suite is now 288/288 passing.
 
 ### Tasks
 
@@ -234,5 +206,28 @@ RPCs / triggers:
 
 - `households_sync_maid_mode_on_join()` + `household_memberships_sync_maid_mode`
   trigger — `supabase/migrations/20260705_001_household_setup_gates.sql` → `tests/db/maid-mode-sync-trigger.test.ts`
+  (Phase 6: guard tightened from `<> 'invited'` to `= 'unset'` by
+  `supabase/migrations/20260708_001_tighten_maid_mode_guard.sql` so the owner's
+  `family_run` choice is preserved on late maid-join; pinning test updated.)
 - `task_setup_drafts` RLS + upsert lifecycle —
   `supabase/migrations/20260705_001_household_setup_gates.sql` → `tests/db/task-setup-drafts.test.ts`
+
+### Household (Phase 6)
+
+Mutations:
+
+- `removeMembership` — `src/app/household/settings/actions.ts:181` → `tests/actions/household-settings.test.ts`
+- `updateMembershipDiet` — `src/app/household/settings/actions.ts:228` → `tests/actions/household-settings.test.ts`
+- `updateMembershipPrivilege` — `src/app/household/settings/actions.ts:265` → `tests/actions/household-settings.test.ts`
+- `updateMealTime` — `src/app/household/meal-times/actions.ts:20` → `tests/actions/meal-times.test.ts`
+
+Silent-failure surfaces (both explicitly called out by the original audit):
+
+- `tryRedeemPendingEmailInvite` — `src/lib/auth/redeem-email-invite.ts` → `tests/actions/email-invite-auto-redeem.test.ts`
+  (covers happy path + the silently-swallowed-error path).
+
+Triggers (also explicitly called out by the original audit):
+
+- `seed_default_meal_times` trigger —
+  `supabase/migrations/20260609_001_household_meal_times.sql` → `tests/db/seed-default-meal-times.test.ts`
+  (asserts insert-then-select after household creation).

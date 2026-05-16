@@ -104,22 +104,21 @@ External RPCs **not** owned here but worth naming for the boundary:
 ## Open questions
 - **No revoke UI on the settings invites card.** `revokeInvite` is exported and exercised by `/dashboard` (maid-invite revoke), but the settings page only lists active invites — there is no per-row Revoke button. Either add one or document the omission as deliberate. (`src/app/household/settings/page.tsx:271–286`.)
 - **`/household/meal-times` has no `loading.tsx`.** The settings page has one; the meal-times page does not. Tiny mismatch — could just port the settings skeleton's shape.
-- **Diet chip deep-link target.** The dashboard's meal-preference chip links to `/household/settings#diet`, but the settings page does not assign an `id="diet"` anchor to the Meal preference card. The deep-link silently falls back to the page top. Should add `id="diet"` (or pick an explicit fragment convention shared with the chip).
 - **No anchor convention for settings cards in general.** Same issue would bite any future cross-feature link into a specific card.
 - **`HouseholdDietForm` re-implements `household_effective_diet`'s strictness ranking client-side.** If the SQL helper's ordering ever changes (e.g. a new enum value), the in-browser warning will drift silently. Could either (a) export the ranking from a single source-of-truth module shared by SQL + TS, or (b) accept the drift and document the convention.
 - **No test coverage tracker yet** for the household feature surface. Phase 2 will populate this section.
-- **`households_sync_maid_mode_on_join` trigger can override `family_run`.** The trigger's guard is `<> 'invited'`, so an active maid INSERT (e.g. via late maid invite redemption) on a `family_run` household silently flips `maid_mode` back to `'invited'`. Test pinned in `tests/db/maid-mode-sync-trigger.test.ts`. Decide: tighten guard to also skip `'family_run'` to respect the owner's choice, or document as intentional override.
+- **`updateMealTime` allows family-member writes via RLS policy.** The `hmt_update` policy in `supabase/migrations/20260609_001_household_meal_times.sql` permits any active household member, and the action has no extra role gate. A family member can change meal times for the whole household. Test in `tests/actions/meal-times.test.ts` pins the current permissive behavior. Decide: tighten to owner+maid, or document as intentional.
 
 ## Test coverage
 
 | Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
 | --- | --- | --- | --- | --- | --- | --- |
-| `removeMembership` | `src/app/household/settings/actions.ts:181` | — | — | — | high | `tests/actions/` |
-| `seed_default_meal_times` trigger | `supabase/migrations/20260609_001_household_meal_times.sql` | — | — | — | high | `tests/db/` |
-| `tryRedeemPendingEmailInvite` | `src/lib/auth/redeem-email-invite.ts` | — | — | — | high | `tests/actions/` |
-| `updateMealTime` | `src/app/household/meal-times/actions.ts:20` | — | — | — | high | `tests/actions/` |
-| `updateMembershipDiet` | `src/app/household/settings/actions.ts:228` | — | — | — | high | `tests/actions/` |
-| `updateMembershipPrivilege` | `src/app/household/settings/actions.ts:265` | — | — | — | high | `tests/actions/` |
+| `removeMembership` | `src/app/household/settings/actions.ts:181` | — | `tests/actions/household-settings.test.ts` | — | none | — |
+| `seed_default_meal_times` trigger | `supabase/migrations/20260609_001_household_meal_times.sql` | — | `tests/db/seed-default-meal-times.test.ts` | — | none | — |
+| `tryRedeemPendingEmailInvite` | `src/lib/auth/redeem-email-invite.ts` | — | `tests/actions/email-invite-auto-redeem.test.ts` | — | none | — |
+| `updateMealTime` | `src/app/household/meal-times/actions.ts:20` | — | `tests/actions/meal-times.test.ts` | — | none | — |
+| `updateMembershipDiet` | `src/app/household/settings/actions.ts:228` | — | `tests/actions/household-settings.test.ts` | — | none | — |
+| `updateMembershipPrivilege` | `src/app/household/settings/actions.ts:265` | — | `tests/actions/household-settings.test.ts` | — | none | — |
 | `HouseholdDietForm` | `src/components/household/household-diet-form.tsx` | — | — | — | medium | `tests/e2e/` |
 | `HouseholdSettingsPage` (`/household/settings`) | `src/app/household/settings/page.tsx` | — | — | — | medium | `tests/e2e/` |
 | `JoinCodePage` (`/join/code`) | `src/app/join/code/page.tsx` | — | — | — | medium | `tests/e2e/` |
