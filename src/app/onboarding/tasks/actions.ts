@@ -196,3 +196,39 @@ export async function submitTaskSetup(input: unknown) {
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }
+
+// --- Re-run setup (only when household has zero tasks) --------------------
+//
+// Recovery path for owners whose tasks were wiped (e.g. by a migration) but
+// whose `task_setup_completed_at` latch is still set. The zero-tasks guard
+// keeps this safe to expose: owners with real tasks can never trip it.
+
+export async function resetTaskSetupForEmptyState() {
+  const ctx = await getCurrentHousehold();
+  if (!ctx) throw new Error("no active household");
+  if (ctx.membership.role !== "owner") throw new Error("only the owner can reset task setup");
+  if (ctx.household.task_setup_completed_at === null) {
+    redirect("/onboarding/tasks");
+  }
+
+  const svc = createServiceClient();
+
+  const countRes = await svc
+    .from("tasks")
+    .select("id", { count: "exact", head: true })
+    .eq("household_id", ctx.household.id);
+  if (countRes.error) throw new Error(countRes.error.message);
+  if ((countRes.count ?? 0) > 0) throw new Error("household still has tasks");
+
+  await svc.from("task_setup_drafts").delete().eq("household_id", ctx.household.id);
+  await svc.from("household_task_hides").delete().eq("household_id", ctx.household.id);
+
+  const reset = await svc
+    .from("households")
+    .update({ task_setup_completed_at: null })
+    .eq("id", ctx.household.id);
+  if (reset.error) throw new Error(reset.error.message);
+
+  revalidatePath("/dashboard");
+  redirect("/onboarding/tasks");
+}

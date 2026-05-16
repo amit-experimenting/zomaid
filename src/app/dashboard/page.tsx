@@ -70,6 +70,20 @@ export default async function DashboardPage({
     ctx.household.maid_mode !== "unset" &&
     !setupCompleted;
 
+  // Recovery path: setup latched as complete but household has zero tasks
+  // (e.g. wiped by a migration). Offered to owners only; the action is
+  // re-guarded server-side against the same zero-tasks condition.
+  let showTaskSetupRerunCard = false;
+  if (setupCompleted && ctx.membership.role === "owner") {
+    const supabase = await createClient();
+    const { count, error } = await supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("household_id", ctx.household.id);
+    if (error) throw new Error(error.message);
+    showTaskSetupRerunCard = (count ?? 0) === 0;
+  }
+
   // --- onboarding cards (gated) ------------------------------------------
 
   let pendingOwnerInviteToken: string | null = null;
@@ -336,6 +350,7 @@ export default async function DashboardPage({
         {showHouseholdModeCard ? <HouseholdModeCard /> : null}
         {ownerCard ? <OwnerInviteMaidCard {...ownerCard} /> : null}
         {showTaskSetupPromptCard ? <TaskSetupPromptCard /> : null}
+        {showTaskSetupRerunCard ? <TaskSetupPromptCard variant="rerun" /> : null}
 
         {showInventoryCard && <InventoryPromptCard />}
 
