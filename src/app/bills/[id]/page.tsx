@@ -78,7 +78,6 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
         billDate={bill.bill_date}
         totalAmount={bill.total_amount}
         currency={bill.currency}
-        githubIssueUrl={null}
       />
       {imageUrl && (
         <div className="border-b border-border px-4 py-3">

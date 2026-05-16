@@ -7,7 +7,6 @@ export type BillDetailHeaderProps = {
   billDate: string | null;
   totalAmount: number | null;
   currency: string;
-  githubIssueUrl: string | null;
 };
 
 export function BillDetailHeader(p: BillDetailHeaderProps) {
@@ -25,16 +24,6 @@ export function BillDetailHeader(p: BillDetailHeaderProps) {
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1 text-xs text-destructive">
           {p.statusReason}
         </p>
-      )}
-      {p.githubIssueUrl && (
-        <a
-          href={p.githubIssueUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-muted-foreground underline hover:no-underline"
-        >
-          See ticket
-        </a>
       )}
     </header>
   );
