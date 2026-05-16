@@ -6,6 +6,7 @@ export type Privilege = "full" | "meal_modify" | "view_only";
 export type MembershipStatus = "active" | "pending" | "removed";
 export type IntendedRole = Role;
 export type Diet = "vegan" | "vegetarian" | "eggitarian" | "non_vegetarian";
+export type MaidMode = "unset" | "invited" | "family_run";
 
 export type Database = {
   public: {
@@ -39,6 +40,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
           inventory_card_dismissed_at: string | null;
+          maid_mode: MaidMode;
+          task_setup_completed_at: string | null;
         };
         Insert: {
           name: string;
@@ -46,6 +49,8 @@ export type Database = {
           address_line?: string | null;
           postal_code?: string | null;
           inventory_card_dismissed_at?: string | null;
+          maid_mode?: MaidMode;
+          task_setup_completed_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["households"]["Row"]>;
         Relationships: [];
@@ -441,6 +446,27 @@ export type Database = {
           hidden_by_profile_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["household_task_hides"]["Insert"]>;
+        Relationships: [];
+      };
+      task_setup_drafts: {
+        Row: {
+          household_id: string;
+          picked_task_ids: string[];
+          tuned_json: unknown | null;
+          updated_at: string;
+        };
+        Insert: {
+          household_id: string;
+          picked_task_ids?: string[];
+          tuned_json?: unknown | null;
+          updated_at?: string;
+        };
+        Update: {
+          household_id?: string;
+          picked_task_ids?: string[];
+          tuned_json?: unknown | null;
+          updated_at?: string;
+        };
         Relationships: [];
       };
       task_occurrences: {
