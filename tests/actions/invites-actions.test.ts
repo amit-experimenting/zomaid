@@ -213,8 +213,9 @@ describe("revokeInvite (action)", () => {
       .single();
     // I4: consumed_at set
     expect(after?.consumed_at).not.toBeNull();
-    // I4: expires_at NOT bumped to now() — still original 7-day-out value
-    expect(after?.expires_at).toBe(originalExpiry);
+    // I4: expires_at NOT bumped to now() — still original 7-day-out value.
+    // Normalize to canonical ISO since Postgres returns +00:00 vs JS .toISOString()'s Z.
+    expect(new Date(after!.expires_at).toISOString()).toBe(originalExpiry);
   });
 
   it("C2: caller from a different household cannot revoke", async () => {
