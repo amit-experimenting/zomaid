@@ -79,4 +79,21 @@ Cross-feature components rendered alongside the catalog but owned elsewhere: `Da
 - The four soft-state actions (`archiveRecipe`, `unarchiveRecipe`, `hideStarterRecipe`, `unhideStarterRecipe`) are exported and database-backed but no UI calls them yet. `effective_recipes` already filters on `archived_at IS NULL` and `household_recipe_hides`, so the back end is ready — but there is no entry point in `RecipeCard`, `RecipeDetail`, or `RecipeForm` for a user to trigger an archive or a starter-hide. Either wire these into the detail view's overflow menu, or remove them if the product direction has changed.
 
 ## Test coverage
-_To be filled in Phase 2._
+
+| Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `addRecipeToTodayPlan` | `src/app/recipes/actions.ts:284` | — | — | — | high | `tests/actions/` |
+| `createRecipe` | `src/app/recipes/actions.ts:89` | — | — | — | high | `tests/actions/` |
+| `updateRecipe` | `src/app/recipes/actions.ts:168` | — | — | — | high | `tests/actions/` |
+| `archiveRecipe` | `src/app/recipes/actions.ts:329` | — | — | — | medium | `tests/actions/` |
+| `hideStarterRecipe` | `src/app/recipes/actions.ts:347` | — | — | — | medium | `tests/actions/` |
+| `unarchiveRecipe` | `src/app/recipes/actions.ts:338` | — | — | — | medium | `tests/actions/` |
+| `unhideStarterRecipe` | `src/app/recipes/actions.ts:358` | — | — | — | medium | `tests/actions/` |
+| `household_recipe_hides_check_starter` trigger | `supabase/migrations/20260519_001_household_recipe_hides.sql` | — | — | — | medium | `tests/db/` |
+| `EditRecipePage` (`/recipes/[id]/edit` route) | `src/app/recipes/[id]/edit/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `NewRecipePage` (`/recipes/new` route) | `src/app/recipes/new/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `RecipePage` (`/recipes/[id]` route) | `src/app/recipes/[id]/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `RecipesIndex` (`/recipes` LibraryView) | `src/app/recipes/page.tsx` | — | — | `tests/e2e/recipes-plan.spec.ts` (unauthenticated redirect only) | medium | `tests/e2e/` |
+| `is_active_owner_or_maid(uuid)` | `supabase/migrations/20260517_001_recipes.sql` | — | — | — | low | `tests/db/` |
+| `effective_recipes(p_household uuid)` | `supabase/migrations/20260521_001_effective_recipes.sql` (rewritten by `20260624_001_diet_preferences.sql`) | — | `tests/db/household-diet-preference.test.ts` | — | none | `tests/db/` |
+| Starter pack seed integrity | `supabase/migrations/20260525_001_starter_pack_seed.sql` + follow-ups | — | `tests/db/recipes-seed.test.ts` | — | none | `tests/db/` |
