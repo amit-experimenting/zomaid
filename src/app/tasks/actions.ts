@@ -135,24 +135,6 @@ export async function updateTask(input: z.infer<typeof UpdateInput>): Promise<Ta
   return { ok: true, data: { taskId: parsed.data.taskId } };
 }
 
-export async function archiveTask(input: { taskId: string }): Promise<TaskActionResult<{ taskId: string }>> {
-  const parsed = z.object({ taskId: z.string().uuid() }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: { code: "TASK_INVALID", message: "Invalid input" } };
-  await requireHousehold();
-  const supabase = await createClient();
-  const { error } = await supabase.from("tasks").update({ archived_at: new Date().toISOString() }).eq("id", parsed.data.taskId);
-  if (error) return { ok: false, error: { code: "TASK_FORBIDDEN", message: error.message } };
-  // Drop future pending occurrences.
-  await supabase
-    .from("task_occurrences")
-    .delete()
-    .eq("task_id", parsed.data.taskId)
-    .eq("status", "pending")
-    .gt("due_at", new Date().toISOString());
-  revalidatePath("/tasks");
-  return { ok: true, data: { taskId: parsed.data.taskId } };
-}
-
 export async function markOccurrenceDone(input: { occurrenceId: string }): Promise<TaskActionResult<{ occurrenceId: string }>> {
   const parsed = z.object({ occurrenceId: z.string().uuid() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: { code: "TASK_INVALID", message: "Invalid input" } };
