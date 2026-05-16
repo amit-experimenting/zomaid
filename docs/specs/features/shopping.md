@@ -71,4 +71,19 @@ Cross-feature components rendered by `_bills-tab.tsx` but owned elsewhere: `Bill
 - **Role-derivation in `ShoppingPage` picks the most-recently-joined active membership.** If a profile has memberships in multiple households (rare but possible), the role shown for `/shopping` may not correspond to the household whose rows RLS is actually scoping reads to. Worth aligning with whichever "current household" abstraction the rest of the app uses (e.g. `requireHousehold()` server-side).
 
 ## Test coverage
-_To be filled in Phase 2._
+
+| Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `addShoppingItem` | `src/app/shopping/actions.ts:28` | — | — | — | high | `tests/actions/` |
+| `autoAddFromPlans` | `src/app/shopping/actions.ts:205` | — | — | — | high | `tests/actions/` |
+| `clearShoppingItemChecked` | `src/app/shopping/actions.ts:176` | — | — | — | high | `tests/actions/` |
+| `deleteShoppingItem` | `src/app/shopping/actions.ts:191` | — | — | — | high | `tests/actions/` |
+| `setShoppingItemChecked` | `src/app/shopping/actions.ts:161` | — | — | — | high | `tests/actions/` |
+| `shopping_auto_add_from_plans()` | `supabase/migrations/20260527_001_shopping_auto_add_fn.sql` (rewritten by `20260622_001_ingredient_aliases.sql`, `20260630_001_shopping_checked_state.sql`) | — | — | — | high | `tests/db/` |
+| `shopping_commit_to_inventory(p_shopping_id, p_actor)` | `supabase/migrations/20260630_001_shopping_checked_state.sql` | — | — | — | high | `tests/db/` |
+| `shopping_sweep_checked()` | `supabase/migrations/20260630_001_shopping_checked_state.sql` | — | — | — | high | `tests/db/` |
+| `sweep-checked-shopping` cron route | `src/app/api/cron/sweep-checked-shopping/route.ts` | — | — | — | high | `tests/db/` (invoke `shopping_sweep_checked`) |
+| `updateShoppingItem` | `src/app/shopping/actions.ts:121` | — | — | — | high | `tests/actions/` |
+| `searchShoppingItems` | `src/app/shopping/actions.ts:80` | — | — | — | low | `tests/actions/` |
+| `sli_bought_consistency` CHECK + `sli_touch_updated_at` trigger | `supabase/migrations/20260526_001_shopping_list_items.sql` | — | — | — | low | `tests/db/` |
+| `ShoppingPage` (`/shopping` route) | `src/app/shopping/page.tsx` | — | — | `tests/e2e/shopping.spec.ts` (unauthenticated redirect only) | medium | `tests/e2e/` |
