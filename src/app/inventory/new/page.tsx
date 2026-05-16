@@ -1,14 +1,19 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireHousehold } from "@/lib/auth/require";
 import { createInventoryItem } from "@/app/inventory/actions";
 import { MainNav } from "@/components/site/main-nav";
 import { PendingButton } from "@/components/ui/pending-button";
+import { cn } from "@/lib/utils";
 import { OnboardingInventoryForm } from "./_onboarding-form";
+import { ScanReceiptForm } from "./_scan-form";
+
+type Mode = "manual" | "scan";
 
 export default async function NewInventoryItemPage({
   searchParams,
 }: {
-  searchParams: Promise<{ onboarding?: string }>;
+  searchParams: Promise<{ onboarding?: string; mode?: string }>;
 }) {
   const ctx = await requireHousehold();
   if (ctx.membership.role !== "owner" && ctx.membership.role !== "maid") {
@@ -16,6 +21,7 @@ export default async function NewInventoryItemPage({
   }
   const sp = await searchParams;
   const isOnboarding = sp.onboarding === "1";
+  const mode: Mode = sp.mode === "scan" ? "scan" : "manual";
 
   async function submitSingle(formData: FormData) {
     "use server";
@@ -41,8 +47,21 @@ export default async function NewInventoryItemPage({
         )}
       </header>
 
+      {!isOnboarding && (
+        <nav className="flex gap-1 border-b px-4" aria-label="Add inventory mode">
+          <ModeTab href="/inventory/new" active={mode === "manual"}>
+            Manual
+          </ModeTab>
+          <ModeTab href="/inventory/new?mode=scan" active={mode === "scan"}>
+            Scan receipt
+          </ModeTab>
+        </nav>
+      )}
+
       {isOnboarding ? (
         <OnboardingInventoryForm />
+      ) : mode === "scan" ? (
+        <ScanReceiptForm />
       ) : (
         <form action={submitSingle} className="flex flex-col gap-3 px-4 py-2">
           <label className="flex flex-col gap-1">
@@ -79,5 +98,30 @@ export default async function NewInventoryItemPage({
         </form>
       )}
     </main>
+  );
+}
+
+function ModeTab({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "border-b-2 px-3 py-2 text-sm",
+        active
+          ? "border-primary font-medium text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {children}
+    </Link>
   );
 }

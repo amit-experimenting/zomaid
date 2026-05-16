@@ -18,6 +18,7 @@
     "db:push": "supabase db push"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
     "@base-ui/react": "^1.4.1",
     "@clerk/nextjs": "^7.3.3",
     "@supabase/ssr": "^0.10.3",
