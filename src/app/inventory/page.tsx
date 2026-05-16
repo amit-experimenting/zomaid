@@ -24,11 +24,12 @@ export default async function InventoryListPage() {
       <PendingScansBanner />
       <header className="flex items-center justify-between px-4 py-3">
         <h1 className="text-lg font-semibold">Inventory</h1>
-        {canWrite && (
-          <Link href="/inventory/new" className={cn(buttonVariants({ size: "sm" }))}>
-            Add item
-          </Link>
-        )}
+        <Link
+          href="/inventory/conversions"
+          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+        >
+          Unit conversions
+        </Link>
       </header>
       {items?.length === 0 ? (
         <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
@@ -75,9 +76,6 @@ export default async function InventoryListPage() {
           </tbody>
         </table>
       )}
-      <div className="px-4 py-3">
-        <Link href="/inventory/conversions" className="text-sm text-muted-foreground underline">Unit conversions</Link>
-      </div>
     </main>
   );
 }
