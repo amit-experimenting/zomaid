@@ -14,7 +14,15 @@ export default async function RecipesIndex({ searchParams }: { searchParams: Pro
   const ctx = await requireHousehold();
   const supabase = await createClient();
 
-  const { data: effective } = await supabase.rpc("effective_recipes", { p_household: ctx.household.id });
+  const { data: effective, error: effectiveErr } = await supabase.rpc(
+    "effective_recipes",
+    { p_household: ctx.household.id },
+  );
+  if (effectiveErr) {
+    // Logged for Vercel function logs; we degrade to empty list rather than
+    // 500ing the page when the RPC chokes (e.g., schema drift mid-deploy).
+    console.error("[/recipes] effective_recipes failed:", effectiveErr);
+  }
   const filtered = (effective ?? [])
     .filter((r: any) => !sp.slot || r.slot === sp.slot)
     .filter((r: any) => !sp.q || r.name.toLowerCase().includes(sp.q.toLowerCase()))
@@ -25,15 +33,22 @@ export default async function RecipesIndex({ searchParams }: { searchParams: Pro
   const canAddToPlan =
     role === "owner" || role === "maid" || (role === "family_member" && priv === "meal_modify");
 
-  // Compute photo URL per row (public bucket for starter, signed URL for household).
+  // Compute photo URL per row. Each row is independently try/catch'd so a bad
+  // photo_path on one recipe (missing file, malformed key, etc.) can never
+  // crash the whole index — the SVG placeholder takes over for that card.
   const cards = await Promise.all(filtered.map(async (r: any) => {
     let photoUrl: string | null = null;
     if (r.photo_path) {
-      if (r.household_id === null) {
-        photoUrl = supabase.storage.from("recipe-images-public").getPublicUrl(r.photo_path).data.publicUrl;
-      } else {
-        const { data } = await supabase.storage.from("recipe-images-household").createSignedUrl(r.photo_path, 3600);
-        photoUrl = data?.signedUrl ?? null;
+      try {
+        if (r.household_id === null) {
+          photoUrl = supabase.storage.from("recipe-images-public").getPublicUrl(r.photo_path).data.publicUrl;
+        } else {
+          const { data } = await supabase.storage.from("recipe-images-household").createSignedUrl(r.photo_path, 3600);
+          photoUrl = data?.signedUrl ?? null;
+        }
+      } catch (err) {
+        console.error(`[/recipes] photo URL failed for ${r.id}:`, err);
+        photoUrl = null;
       }
     }
     return {
