@@ -115,10 +115,10 @@ describe("effective_recipes respects household override", () => {
       await c.query(
         "update households set diet_preference='vegetarian' where id=$1", [h.id]);
 
-      const { rows } = await c.query<{ name: string; diet: string }>(
-        `select name, diet from public.effective_recipes($1)
-          where diet = 'non_vegetarian' limit 1`, [h.id]);
-      expect(rows).toHaveLength(0);
+      const { rows } = await c.query<{ n: string }>(
+        `select count(*)::text as n from public.effective_recipes($1)
+          where diet = 'non_vegetarian'`, [h.id]);
+      expect(Number(rows[0].n)).toBe(0);
     });
   });
 
@@ -133,6 +133,7 @@ describe("effective_recipes respects household override", () => {
       await insertMembership(c, {
         household_id: h.id, profile_id: fam.id, role: "family_member",
       });
+      // Owner has no preference (factory default = null) — only fam is non-veg.
       await c.query(
         `update household_memberships set diet_preference='non_vegetarian'
           where household_id=$1 and profile_id=$2`, [h.id, fam.id]);
