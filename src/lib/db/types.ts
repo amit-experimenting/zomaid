@@ -247,6 +247,7 @@ export type Database = {
           quantity: number | null;
           unit: string | null;
           notes: string | null;
+          checked_at: string | null;
           bought_at: string | null;
           bought_by_profile_id: string | null;
           created_by_profile_id: string | null;
@@ -260,6 +261,7 @@ export type Database = {
           quantity?: number | null;
           unit?: string | null;
           notes?: string | null;
+          checked_at?: string | null;
           bought_at?: string | null;
           bought_by_profile_id?: string | null;
           created_by_profile_id?: string | null;
@@ -617,6 +619,14 @@ export type Database = {
       shopping_auto_add_from_plans: {
         Args: Record<string, never>;
         Returns: Database["public"]["Tables"]["shopping_list_items"]["Row"][];
+      };
+      shopping_commit_to_inventory: {
+        Args: { p_shopping_id: string; p_actor: string };
+        Returns: string | null;
+      };
+      shopping_sweep_checked: {
+        Args: Record<string, never>;
+        Returns: number;
       };
       ingest_bill_ocr: {
         Args: { p_bill_id: string; p_payload: Record<string, unknown> };

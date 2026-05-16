@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/retry-bill-scans",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/sweep-checked-shopping",
+      "schedule": "5 16 * * *"
     }
   ]
 }

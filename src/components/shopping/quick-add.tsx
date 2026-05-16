@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import {
   addShoppingItem,
   searchShoppingItems,
-  unmarkShoppingItemBought,
   type ShoppingSearchResult,
 } from "@/app/shopping/actions";
 
 const DEBOUNCE_MS = 150;
+const UNIT_OPTIONS = ["piece", "kg", "g", "l", "ml", "cup", "tbsp", "tsp"] as const;
+type Unit = (typeof UNIT_OPTIONS)[number];
 
 function highlight(name: string, query: string) {
   const q = query.trim();
@@ -29,6 +30,8 @@ function highlight(name: string, query: string) {
 
 export function QuickAdd({ onChanged }: { onChanged?: () => void }) {
   const [name, setName] = useState("");
+  const [quantity, setQuantity] = useState<string>("1");
+  const [unit, setUnit] = useState<Unit>("piece");
   const [matches, setMatches] = useState<ShoppingSearchResult[]>([]);
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
@@ -38,6 +41,8 @@ export function QuickAdd({ onChanged }: { onChanged?: () => void }) {
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const trimmed = name.trim();
+  const qtyNum = Number(quantity);
+  const qtyValid = Number.isFinite(qtyNum) && qtyNum > 0;
 
   useEffect(() => {
     if (!trimmed) {
@@ -61,6 +66,8 @@ export function QuickAdd({ onChanged }: { onChanged?: () => void }) {
 
   const reset = () => {
     setName("");
+    setQuantity("1");
+    setUnit("piece");
     setMatches([]);
     setOpen(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -72,22 +79,21 @@ export function QuickAdd({ onChanged }: { onChanged?: () => void }) {
     setTimeout(() => setMessage(null), 3000);
   };
 
-  const submitNew = (rawName: string) => {
-    const value = rawName.trim();
-    if (!value) return;
+  const submitNew = () => {
+    if (!trimmed) return;
+    if (!qtyValid) {
+      flashMessage("Quantity must be a positive number.", "error");
+      return;
+    }
     start(async () => {
-      const res = await addShoppingItem({ name: value });
+      const res = await addShoppingItem({
+        name: trimmed,
+        quantity: qtyNum,
+        unit,
+        notes: null,
+      });
       if (!res.ok) { flashMessage(res.error.message, "error"); return; }
       if (res.data.alreadyExists) flashMessage("Already on the list.", "info");
-      reset();
-      onChanged?.();
-    });
-  };
-
-  const addBack = (itemId: string) => {
-    start(async () => {
-      const res = await unmarkShoppingItemBought({ itemId });
-      if (!res.ok) { flashMessage(res.error.message, "error"); return; }
       reset();
       onChanged?.();
     });
@@ -97,18 +103,19 @@ export function QuickAdd({ onChanged }: { onChanged?: () => void }) {
     if (!trimmed) return;
     const exact = matches.find((m) => m.name.toLowerCase() === trimmed.toLowerCase());
     if (exact) {
-      if (exact.boughtAt) addBack(exact.id);
-      else { flashMessage("Already on the list.", "info"); reset(); }
+      flashMessage("Already on the list.", "info");
+      reset();
       return;
     }
-    submitNew(trimmed);
+    submitNew();
   };
 
   const showDropdown = open && trimmed.length > 0;
+  const canSubmit = !!trimmed && qtyValid && !pending;
 
   return (
     <div className="px-4 py-3 border-b border-border">
-      <div className="relative flex gap-2">
+      <div className="relative flex flex-wrap items-stretch gap-2">
         <Input
           value={name}
           onChange={(e) => {
@@ -129,8 +136,35 @@ export function QuickAdd({ onChanged }: { onChanged?: () => void }) {
             else if (e.key === "Escape") { setOpen(false); }
           }}
           disabled={pending}
+          className="min-w-0 flex-1"
         />
-        <PendingButton type="button" onClick={() => onEnter()} pending={pending} disabled={!trimmed}>+</PendingButton>
+        <Input
+          type="number"
+          min="0"
+          step="any"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          aria-label="Quantity"
+          className="w-16"
+          disabled={pending}
+        />
+        <select
+          value={unit}
+          onChange={(e) => setUnit(e.target.value as Unit)}
+          aria-label="Unit"
+          className="rounded-md border bg-background px-2 text-sm"
+          disabled={pending}
+        >
+          {UNIT_OPTIONS.map((u) => (
+            <option key={u} value={u}>{u}</option>
+          ))}
+        </select>
+        <PendingButton
+          type="button"
+          onClick={() => onEnter()}
+          pending={pending}
+          disabled={!canSubmit}
+        >+</PendingButton>
         {showDropdown && (
           <div
             className="absolute left-0 right-0 top-full z-20 mt-1 rounded-md border border-border bg-background shadow-md"
@@ -140,35 +174,32 @@ export function QuickAdd({ onChanged }: { onChanged?: () => void }) {
               if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
             }}
           >
-            {matches.map((m) => {
-              const isBought = m.boughtAt !== null;
-              return (
-                <div key={m.id} className="flex items-center justify-between gap-2 border-b border-border px-3 py-2 last:border-b-0">
-                  <div className="min-w-0 flex-1">
-                    <div className={isBought ? "truncate line-through text-muted-foreground" : "truncate"}>
-                      {highlight(m.name, trimmed)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{isBought ? "Bought" : "On list"}</div>
+            {matches.map((m) => (
+              <div key={m.id} className="flex items-center justify-between gap-2 border-b border-border px-3 py-2 last:border-b-0">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate">{highlight(m.name, trimmed)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {m.quantity ?? ""} {m.unit ?? ""} · On list
                   </div>
-                  {isBought ? (
-                    <PendingButton type="button" size="sm" onClick={() => addBack(m.id)} pending={pending}>
-                      Add back
-                    </PendingButton>
-                  ) : (
-                    <Button type="button" size="sm" variant="ghost" onClick={() => { flashMessage("Already on the list.", "info"); reset(); }} disabled={pending}>
-                      Already on list
-                    </Button>
-                  )}
                 </div>
-              );
-            })}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => { flashMessage("Already on the list.", "info"); reset(); }}
+                  disabled={pending}
+                >
+                  Already on list
+                </Button>
+              </div>
+            ))}
             <button
               type="button"
               className="block w-full px-3 py-2 text-left text-sm hover:bg-muted/40 disabled:opacity-50"
-              onClick={() => submitNew(trimmed)}
-              disabled={pending}
+              onClick={submitNew}
+              disabled={!canSubmit}
             >
-              + Add &quot;{trimmed}&quot; as new
+              + Add &quot;{trimmed}&quot; ({qtyValid ? `${qtyNum} ${unit}` : "set qty"})
             </button>
           </div>
         )}

@@ -71,7 +71,7 @@ export function EditItemSheet(p: EditItemSheetProps) {
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-2 pt-2">
             <Button type="button" onClick={save} disabled={pending || !name.trim()} className="flex-1">Save</Button>
-            <Button type="button" variant="ghost" onClick={remove} disabled={pending}>Delete</Button>
+            <Button type="button" variant="destructive" onClick={remove} disabled={pending}>Remove</Button>
           </div>
         </div>
       </SheetContent>

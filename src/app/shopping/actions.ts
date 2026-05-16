@@ -17,7 +17,10 @@ const ItemIdSchema = z.string().uuid();
 
 const AddInput = z.object({
   name: NameSchema,
-  quantity: QuantitySchema,
+  // Quantity is required for manual adds — the user wants every shopping
+  // row to carry a number so the eventual inventory commit is unambiguous.
+  // Auto-add from plans bypasses this (SQL function inserts directly).
+  quantity: z.number().positive(),
   unit: UnitSchema,
   notes: NotesSchema,
 });
@@ -49,7 +52,7 @@ export async function addShoppingItem(input: z.infer<typeof AddInput>): Promise<
     .insert({
       household_id: ctx.household.id,
       item_name: parsed.data.name,
-      quantity: parsed.data.quantity ?? null,
+      quantity: parsed.data.quantity,
       unit: parsed.data.unit ?? null,
       notes: parsed.data.notes ?? null,
       created_by_profile_id: ctx.profile.id,
@@ -81,17 +84,18 @@ export async function searchShoppingItems(input: { query: string }): Promise<Sho
   }
   const ctx = await requireHousehold();
   const supabase = await createClient();
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
   // Escape ilike wildcards in the user-typed query so a literal % or _ does
   // not act as a wildcard.
   const escaped = parsed.data.query.replace(/[\\%_]/g, (c) => `\\${c}`);
+  // Only surface active (non-bought) items in the typeahead. Bought items
+  // are committed history; if the user wants the same thing again, adding
+  // a fresh row is the right behaviour.
   const { data, error } = await supabase
     .from("shopping_list_items")
     .select("id,item_name,quantity,unit,notes,bought_at,created_at")
     .eq("household_id", ctx.household.id)
+    .is("bought_at", null)
     .ilike("item_name", `%${escaped}%`)
-    .or(`bought_at.is.null,bought_at.gte.${sevenDaysAgo}`)
-    .order("bought_at", { ascending: true, nullsFirst: true })
     .order("created_at", { ascending: false })
     .limit(8);
   if (error) return { ok: false, error: { code: "SHOPPING_FORBIDDEN", message: error.message } };
@@ -150,14 +154,18 @@ export async function updateShoppingItem(input: z.infer<typeof UpdateInput>): Pr
   return { ok: true, data: { itemId: parsed.data.itemId } };
 }
 
-export async function markShoppingItemBought(input: { itemId: string }): Promise<ShoppingActionResult<{ itemId: string }>> {
+// "Checked" is the in-between state: the user has ticked the box during a
+// shopping trip but the row hasn't been committed to inventory yet. Items
+// stay on the main list with strikethrough until the end-of-day sweep or a
+// matching bill upload moves them to "bought" (history + inventory).
+export async function setShoppingItemChecked(input: { itemId: string }): Promise<ShoppingActionResult<{ itemId: string }>> {
   const parsed = z.object({ itemId: ItemIdSchema }).safeParse(input);
   if (!parsed.success) return { ok: false, error: { code: "SHOPPING_INVALID", message: "Invalid input" } };
-  const ctx = await requireHousehold();
+  await requireHousehold();
   const supabase = await createClient();
   const { error } = await supabase
     .from("shopping_list_items")
-    .update({ bought_at: new Date().toISOString(), bought_by_profile_id: ctx.profile.id })
+    .update({ checked_at: new Date().toISOString() })
     .eq("id", parsed.data.itemId)
     .is("bought_at", null);
   if (error) return { ok: false, error: { code: "SHOPPING_FORBIDDEN", message: error.message } };
@@ -165,15 +173,16 @@ export async function markShoppingItemBought(input: { itemId: string }): Promise
   return { ok: true, data: { itemId: parsed.data.itemId } };
 }
 
-export async function unmarkShoppingItemBought(input: { itemId: string }): Promise<ShoppingActionResult<{ itemId: string }>> {
+export async function clearShoppingItemChecked(input: { itemId: string }): Promise<ShoppingActionResult<{ itemId: string }>> {
   const parsed = z.object({ itemId: ItemIdSchema }).safeParse(input);
   if (!parsed.success) return { ok: false, error: { code: "SHOPPING_INVALID", message: "Invalid input" } };
   await requireHousehold();
   const supabase = await createClient();
   const { error } = await supabase
     .from("shopping_list_items")
-    .update({ bought_at: null, bought_by_profile_id: null })
-    .eq("id", parsed.data.itemId);
+    .update({ checked_at: null })
+    .eq("id", parsed.data.itemId)
+    .is("bought_at", null);
   if (error) return { ok: false, error: { code: "SHOPPING_FORBIDDEN", message: error.message } };
   revalidatePath("/shopping");
   return { ok: true, data: { itemId: parsed.data.itemId } };

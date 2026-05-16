@@ -18,6 +18,7 @@ type ShoppingItem = {
   unit: string | null;
   notes: string | null;
   bought_at: string | null;
+  checked_at: string | null;
   created_at: string;
 };
 
@@ -43,13 +44,13 @@ export default function ShoppingPage() {
     start(async () => {
       const { data: u } = await supabase
         .from("shopping_list_items")
-        .select("id,item_name,quantity,unit,notes,bought_at,created_at")
+        .select("id,item_name,quantity,unit,notes,bought_at,checked_at,created_at")
         .is("bought_at", null)
         .order("created_at", { ascending: false });
       const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
       const { data: b } = await supabase
         .from("shopping_list_items")
-        .select("id,item_name,quantity,unit,notes,bought_at,created_at")
+        .select("id,item_name,quantity,unit,notes,bought_at,checked_at,created_at")
         .gte("bought_at", sevenDaysAgo)
         .order("bought_at", { ascending: false });
       setUnbought((u ?? []) as ShoppingItem[]);
@@ -71,13 +72,13 @@ export default function ShoppingPage() {
       // initial fetch
       const { data: u } = await supabase
         .from("shopping_list_items")
-        .select("id,item_name,quantity,unit,notes,bought_at,created_at")
+        .select("id,item_name,quantity,unit,notes,bought_at,checked_at,created_at")
         .is("bought_at", null)
         .order("created_at", { ascending: false });
       const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
       const { data: bRows } = await supabase
         .from("shopping_list_items")
-        .select("id,item_name,quantity,unit,notes,bought_at,created_at")
+        .select("id,item_name,quantity,unit,notes,bought_at,checked_at,created_at")
         .gte("bought_at", sevenDaysAgo)
         .order("bought_at", { ascending: false });
       setUnbought((u ?? []) as ShoppingItem[]);
@@ -137,7 +138,7 @@ export default function ShoppingPage() {
               quantity={it.quantity}
               unit={it.unit}
               notes={it.notes}
-              bought={false}
+              checked={it.checked_at !== null}
               boughtAt={null}
               readOnly={readOnly}
               onEdit={readOnly ? undefined : () => setEditTarget(it)}

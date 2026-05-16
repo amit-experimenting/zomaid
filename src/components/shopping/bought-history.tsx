@@ -11,7 +11,9 @@ export type BoughtItem = {
   boughtAt: string;
 };
 
-export function BoughtHistory({ items, readOnly, onChanged }: { items: BoughtItem[]; readOnly: boolean; onChanged?: () => void }) {
+// readOnly + onChanged kept in the prop signature for caller compat;
+// bought rows are committed history and are not interactive.
+export function BoughtHistory({ items }: { items: BoughtItem[]; readOnly?: boolean; onChanged?: () => void }) {
   const [open, setOpen] = useState(false);
   if (items.length === 0) return null;
   return (
@@ -34,10 +36,9 @@ export function BoughtHistory({ items, readOnly, onChanged }: { items: BoughtIte
               quantity={it.quantity}
               unit={it.unit}
               notes={it.notes}
-              bought
+              checked
               boughtAt={it.boughtAt}
-              readOnly={readOnly}
-              onChanged={onChanged}
+              readOnly
             />
           ))}
         </div>

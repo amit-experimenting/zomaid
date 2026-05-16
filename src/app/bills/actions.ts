@@ -333,6 +333,39 @@ export async function uploadBillFromScan(
     return { ok: false, error: { code: "BILL_DB", message: lineErr.message } };
   }
 
+  // ── 5. Bill-match: any active shopping rows whose (lower name, unit)
+  // match one of this bill's line items are moved to "bought" so the
+  // user doesn't have to tick them by hand. Inventory was already
+  // updated above for lines the user checked "Add to inventory"; we
+  // intentionally don't double-write here. Shopping rows that should
+  // have gone to inventory but didn't (user unchecked) will get picked
+  // up by the end-of-day sweep instead.
+  {
+    const now = new Date().toISOString();
+    for (const item of cleanItems) {
+      const name = item.item_name.trim();
+      if (!name) continue;
+      let q = supabase
+        .from("shopping_list_items")
+        .update({
+          bought_at: now,
+          checked_at: now,
+          bought_by_profile_id: ctx.profile.id,
+        })
+        .eq("household_id", ctx.household.id)
+        .is("bought_at", null)
+        .ilike("item_name", name);
+      q = item.unit === null ? q.is("unit", null) : q.eq("unit", item.unit);
+      const { error } = await q;
+      if (error) {
+        // Non-fatal: log and continue. The bill itself is already
+        // saved; failing the bill because shopping match misfired
+        // would be worse than the row staying on the list.
+        console.error("[uploadBillFromScan] shopping match failed", error);
+      }
+    }
+  }
+
   // If the caller is finalising a queued retry, stamp the attempt row so
   // it stops showing on /scans/pending and the inventory-tab badge. Best
   // effort — failure to stamp is logged but does not roll back the bill.
