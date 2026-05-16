@@ -11,6 +11,7 @@
 > **Superseded as the living architecture doc for the bills area by [`features/bills.md`](features/bills.md).** This dated spec is retained for historical context.
 > **Superseded as the living architecture doc for the tasks area by [`features/tasks.md`](features/tasks.md).** This dated spec is retained for historical context.
 > **Superseded as the living architecture doc for the household area by [`features/household.md`](features/household.md).** This dated spec is retained for historical context.
+> **Superseded as the living architecture doc for the infrastructure area by [`features/infrastructure.md`](features/infrastructure.md).** This dated spec is retained for historical context.
 
 Date: 2026-05-16
 

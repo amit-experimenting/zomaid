@@ -1,6 +1,7 @@
 # Zomaid — Slice 5: Tasks + Reminders + Web Push — Design
 
 > **Superseded as the living architecture doc for the tasks area by [`features/tasks.md`](features/tasks.md).** This dated spec is retained for historical context.
+> **Superseded as the living architecture doc for the infrastructure area by [`features/infrastructure.md`](features/infrastructure.md).** This dated spec is retained for historical context.
 
 - **Date**: 2026-05-11
 - **Status**: Approved (brainstorming) — pending implementation plan

@@ -1,5 +1,7 @@
 # Codebase audit + per-feature spec refresh — design
 
+> **Superseded as the living architecture doc for the infrastructure area by [`features/infrastructure.md`](features/infrastructure.md).** This dated spec is retained for historical context.
+
 **Date:** 2026-05-16
 **Status:** Approved (awaiting implementation plan)
 **Scope:** Documentation + conservative dead-code removal only. No behavior changes, no DB migrations, no new tests written.
