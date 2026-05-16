@@ -6,6 +6,7 @@ import {
   createInvite, removeMembership, updateMembershipDiet, updateMembershipPrivilege,
 } from "@/app/household/settings/actions";
 import { PendingButton } from "@/components/ui/pending-button";
+import { NotificationToggle } from "@/components/tasks/notification-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,6 +87,15 @@ export default async function HouseholdSettingsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">{ctx.household.name}</h1>
         <p className="text-sm text-muted-foreground">Household settings</p>
       </header>
+
+      {(isOwner || isMaid) && (
+        <Card>
+          <CardHeader><CardTitle>Notifications</CardTitle></CardHeader>
+          <CardContent>
+            <NotificationToggle />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle>Members</CardTitle></CardHeader>

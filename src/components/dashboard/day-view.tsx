@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { DayStrip } from "@/components/site/day-strip";
 import { OccurrenceRow, type OccurrenceRowItem } from "@/components/tasks/occurrence-row";
 import { OccurrenceActionSheet } from "@/components/tasks/occurrence-action-sheet";
-import { NotificationToggle } from "@/components/tasks/notification-toggle";
 import { SlotRow } from "@/components/plan/slot-row";
 import { SlotActionSheet } from "@/components/plan/slot-action-sheet";
 import type { Recipe } from "@/components/plan/recipe-picker";
@@ -52,8 +51,6 @@ export type DayViewProps = {
   taskActionsEnabled: boolean;
   /** Can the caller see the "+ New task" button? owner/maid/family_member. */
   canAddTasks: boolean;
-  /** Can the caller see / use the NotificationToggle? owner/maid only. */
-  showNotificationToggle: boolean;
   /** Can the caller edit meal slots? (mirrors can_modify_meal_plan helper). */
   mealPlanReadOnly: boolean;
   /** True if the household has no recipes — meal tab shows empty state. */
@@ -87,12 +84,6 @@ export function DayView(props: DayViewProps) {
 
   return (
     <section>
-      {props.showNotificationToggle && (
-        <div className="px-1 pb-2">
-          <NotificationToggle />
-        </div>
-      )}
-
       <DayStrip activeYmd={props.selectedYmd} view={view} />
 
       <nav

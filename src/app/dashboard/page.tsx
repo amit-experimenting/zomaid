@@ -136,7 +136,6 @@ export default async function DashboardPage({
   const isOwnerOrMaid =
     ctx.membership.role === "owner" || ctx.membership.role === "maid";
   const canAddTasks = isOwnerOrMaid || ctx.membership.role === "family_member";
-  const showNotificationToggle = isOwnerOrMaid;
   const taskActionsEnabled = isOwnerOrMaid;
   // can_modify_meal_plan() in the DB: not (family_member ∧ view_only).
   const mealPlanReadOnly =
@@ -343,7 +342,6 @@ export default async function DashboardPage({
           rosterSize={rosterSize}
           taskActionsEnabled={taskActionsEnabled}
           canAddTasks={canAddTasks}
-          showNotificationToggle={showNotificationToggle}
           mealPlanReadOnly={mealPlanReadOnly}
           recipeLibraryEmpty={recipeLibraryEmpty}
         />
