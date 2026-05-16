@@ -6,6 +6,7 @@ import { TopAppBar } from "@/components/ui/top-app-bar";
 import { OwnerInviteMaidCard } from "@/components/site/owner-invite-maid-card";
 import { HouseholdModeCard } from "@/components/site/household-mode-card";
 import { TaskSetupPromptCard } from "@/components/site/task-setup-prompt-card";
+import { TaskSetupWaitingCard } from "@/components/site/task-setup-waiting-card";
 import { InventoryPromptCard } from "@/components/site/inventory-prompt-card";
 import { DayView, type MealFeedItem } from "@/components/dashboard/day-view";
 import type { OccurrenceRowItem } from "@/components/tasks/occurrence-row";
@@ -67,6 +68,10 @@ export default async function DashboardPage({
     ctx.membership.role === "owner" && ctx.household.maid_mode === "unset";
   const showTaskSetupPromptCard =
     ctx.membership.role === "owner" &&
+    ctx.household.maid_mode !== "unset" &&
+    !setupCompleted;
+  const showTaskSetupWaitingCard =
+    ctx.membership.role === "maid" &&
     ctx.household.maid_mode !== "unset" &&
     !setupCompleted;
 
@@ -351,6 +356,7 @@ export default async function DashboardPage({
         {ownerCard ? <OwnerInviteMaidCard {...ownerCard} /> : null}
         {showTaskSetupPromptCard ? <TaskSetupPromptCard /> : null}
         {showTaskSetupRerunCard ? <TaskSetupPromptCard variant="rerun" /> : null}
+        {showTaskSetupWaitingCard ? <TaskSetupWaitingCard /> : null}
 
         {showInventoryCard && <InventoryPromptCard />}
 
