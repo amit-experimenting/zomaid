@@ -1,6 +1,7 @@
 # Zomaid — Bills Cleanup + Shopping "Bills" Tab — Design
 
 > **Superseded as the living architecture doc for the shopping area by [`features/shopping.md`](features/shopping.md).** This dated spec is retained for historical context.
+> **Superseded as the living architecture doc for the bills area by [`features/bills.md`](features/bills.md).** This dated spec is retained for historical context.
 
 - **Date**: 2026-05-16
 - **Status**: Approved — implementing in same session
