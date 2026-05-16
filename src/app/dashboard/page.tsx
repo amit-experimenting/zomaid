@@ -5,9 +5,22 @@ import { siteUrl } from "@/lib/site-url";
 import { MainNav } from "@/components/site/main-nav";
 import { OwnerInviteMaidCard } from "@/components/site/owner-invite-maid-card";
 import { InventoryPromptCard } from "@/components/site/inventory-prompt-card";
+import { TodayView, type MealItem } from "@/components/dashboard/today-view";
+import type { OccurrenceRowItem } from "@/components/tasks/occurrence-row";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const TZ = "Asia/Singapore";
+
+function sgYmd(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
 
 type OwnerCardProps =
   | { state: "empty" }
@@ -87,6 +100,74 @@ export default async function DashboardPage() {
       ctx.household.inventory_card_dismissed_at == null && (count ?? 0) < 5;
   }
 
+  // Today's tasks + meal plan for the new "Today" section. Both queries are
+  // cheap (single date) and run for every household member regardless of role
+  // — family members see read-only views.
+  const supabase = await createClient();
+  const todayYmd = sgYmd(new Date());
+  const dayStart = new Date(`${todayYmd}T00:00:00+08:00`).toISOString();
+  const dayEnd = new Date(`${todayYmd}T00:00:00+08:00`);
+  dayEnd.setDate(dayEnd.getDate() + 1);
+  const dayEndIso = dayEnd.toISOString();
+
+  // Generate occurrences out to tomorrow (idempotent; cheap when nothing missing).
+  await supabase.rpc("tasks_generate_occurrences", { p_horizon_date: todayYmd });
+
+  const [{ data: occRows }, { data: planRows }] = await Promise.all([
+    supabase
+      .from("task_occurrences")
+      .select(
+        "id, due_at, status, household_id, tasks!inner(id, title, household_id, assigned_to_profile_id, profiles!assigned_to_profile_id(display_name))",
+      )
+      .eq("household_id", ctx.household.id)
+      .gte("due_at", dayStart)
+      .lt("due_at", dayEndIso)
+      .order("due_at", { ascending: true }),
+    supabase
+      .from("meal_plans")
+      .select("slot, recipe:recipes(id, name)")
+      .eq("household_id", ctx.household.id)
+      .eq("plan_date", todayYmd),
+  ]);
+
+  type OccRow = {
+    id: string;
+    due_at: string;
+    status: "pending" | "done" | "skipped";
+    tasks: {
+      id: string;
+      title: string;
+      household_id: string | null;
+      profiles: { display_name: string } | { display_name: string }[] | null;
+    };
+  };
+  const todayTasks: OccurrenceRowItem[] = ((occRows ?? []) as unknown as OccRow[]).map((r) => ({
+    occurrenceId: r.id,
+    taskId: r.tasks.id,
+    title: r.tasks.title,
+    dueAt: r.due_at,
+    assigneeName: Array.isArray(r.tasks.profiles)
+      ? (r.tasks.profiles[0]?.display_name ?? null)
+      : (r.tasks.profiles?.display_name ?? null),
+    status: r.status,
+    isStandard: r.tasks.household_id === null,
+  }));
+
+  type PlanRow = {
+    slot: "breakfast" | "lunch" | "snacks" | "dinner";
+    recipe: { id: string; name: string } | { id: string; name: string }[] | null;
+  };
+  const todayMeals: MealItem[] = ((planRows ?? []) as unknown as PlanRow[]).map((r) => {
+    const rec = Array.isArray(r.recipe) ? r.recipe[0] ?? null : r.recipe;
+    return {
+      slot: r.slot,
+      recipeId: rec?.id ?? null,
+      recipeName: rec?.name ?? null,
+    };
+  });
+
+  const taskReadOnly = ctx.membership.role !== "owner" && ctx.membership.role !== "maid";
+
   return (
     <main className="mx-auto max-w-md">
       <MainNav active="home" />
@@ -120,6 +201,13 @@ export default async function DashboardPage() {
         {ownerCard ? <OwnerInviteMaidCard {...ownerCard} /> : null}
 
         {showInventoryCard && <InventoryPromptCard />}
+
+        <TodayView
+          dateYmd={todayYmd}
+          tasks={todayTasks}
+          meals={todayMeals}
+          readOnly={taskReadOnly}
+        />
       </div>
     </main>
   );
