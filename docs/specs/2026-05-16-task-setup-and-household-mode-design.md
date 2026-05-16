@@ -1,5 +1,7 @@
 # Task setup wizard + household mode (maid vs. family-run)
 
+> **Superseded as living documentation by [`features/dashboard.md`](features/dashboard.md).** This dated spec is retained for historical context.
+
 - **Date:** 2026-05-16
 - **Status:** Brainstorming → pending implementation plan
 - **Owner:** dharni05@gmail.com

@@ -1,5 +1,7 @@
 # Zomaid — Merge Home tabs + rename Recipes to "Meal" — Design
 
+> **Superseded as living documentation by [`features/dashboard.md`](features/dashboard.md).** This dated spec is retained for historical context.
+
 - **Date**: 2026-05-16
 - **Status**: Approved — implementing in same session
 - **Scope**: Collapse the Tasks/Meal-plan tab toggle on `/dashboard` into a single chronological feed that merges today's tasks with today's meal-plan rows, then move the per-day meal-plan view (the old Meal tab) to `/recipes` (renamed to "Meal" in the main nav). The grid-of-recipe-cards library that previously lived at `/recipes` moves to `/recipes?view=library`. Recipe create/detail/edit pages, shopping, inventory, household settings, and all DB schema are untouched.

@@ -1,5 +1,7 @@
 # Owner-side "Invite your maid" card on Home
 
+> **Superseded as living documentation by [`features/dashboard.md`](features/dashboard.md).** This dated spec is retained for historical context.
+
 **Date:** 2026-05-11
 **Status:** Approved (brainstorm), pending implementation plan
 **Scope:** Single change — surface the existing maid-invite flow on the owner's Home (`/dashboard`) page.
