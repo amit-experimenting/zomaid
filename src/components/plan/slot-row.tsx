@@ -1,9 +1,9 @@
 "use client";
 import * as React from "react";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { PeoplePill } from "@/components/plan/people-pill";
 import { SlotWarningBadge, type Warning } from "@/components/plan/slot-warning-badge";
+import { RecipePhoto } from "@/components/recipes/recipe-photo";
 
 export type SlotRowOwnProps = {
   slot: "breakfast" | "lunch" | "snacks" | "dinner";
@@ -52,10 +52,16 @@ export const SlotRow = React.forwardRef<HTMLButtonElement, SlotRowProps>(functio
       )}
     >
       <div className="size-12 shrink-0 overflow-hidden rounded-md bg-muted">
-        {photoUrl ? (
-          <Image src={photoUrl} alt={recipeName ?? ""} width={48} height={48} className="size-12 object-cover" />
+        {recipeId !== null ? (
+          <RecipePhoto
+            src={photoUrl}
+            alt={recipeName ?? ""}
+            width={48}
+            height={48}
+            className="size-12 object-cover"
+          />
         ) : (
-          <div className="flex size-12 items-center justify-center text-xs text-muted-foreground">no photo</div>
+          <div className="flex size-12 items-center justify-center text-xs text-muted-foreground">—</div>
         )}
       </div>
       <div className="min-w-0 flex-1">
