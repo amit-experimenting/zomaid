@@ -32,6 +32,7 @@ export async function updateMealTime(
     );
   if (error) return { ok: false, error: { code: "MT_DB", message: error.message } };
   revalidatePath("/household/meal-times");
-  revalidatePath("/plan");
+  revalidatePath("/dashboard");
+  revalidatePath("/recipes");
   return { ok: true, data: parsed.data };
 }

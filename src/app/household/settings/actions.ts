@@ -254,7 +254,7 @@ export async function updateMembershipDiet(input: unknown) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/household/settings");
-  revalidatePath("/plan");
+  revalidatePath("/dashboard");
   revalidatePath("/recipes");
 }
 
@@ -315,6 +315,5 @@ export async function updateHouseholdDiet(input: unknown) {
 
   revalidatePath("/household/settings");
   revalidatePath("/dashboard");
-  revalidatePath("/plan");
   revalidatePath("/recipes");
 }

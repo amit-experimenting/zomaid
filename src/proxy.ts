@@ -15,7 +15,6 @@ const isAuthGated = createRouteMatcher([
   "/household(.*)",
   "/inventory(.*)",
   "/onboarding(.*)",
-  "/plan(.*)",
   "/recipes(.*)",
   "/shopping(.*)",
   "/bills(.*)",

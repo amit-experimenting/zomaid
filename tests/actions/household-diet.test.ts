@@ -64,7 +64,6 @@ describe("updateHouseholdDiet", () => {
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/household/settings");
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/plan");
     expect(revalidatePathMock).toHaveBeenCalledWith("/recipes");
   });
 

@@ -34,8 +34,8 @@ export async function setMealPlanSlot(input: z.infer<typeof SetSchema>): Promise
     }
     return { ok: false, error: { code: "PLAN_FORBIDDEN", message: error.message } };
   }
-  revalidatePath("/plan");
-  revalidatePath(`/plan/${parsed.data.planDate}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/recipes");
   return { ok: true, data: { recipeId: data?.recipe_id ?? null } };
 }
 
@@ -62,8 +62,8 @@ export async function regenerateMealPlanSlot(input: z.infer<typeof RegenerateSch
   if (!data?.recipe_id) {
     return { ok: false, error: { code: "MEAL_PLAN_NO_ELIGIBLE_RECIPE", message: "No recipes available for this slot." } };
   }
-  revalidatePath("/plan");
-  revalidatePath(`/plan/${parsed.data.planDate}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/recipes");
   return { ok: true, data: { recipeId: data.recipe_id } };
 }
 
@@ -91,6 +91,7 @@ export async function setPeopleEating(
     }
     return { ok: false, error: { code: "PLAN_FORBIDDEN", message: error.message } };
   }
-  revalidatePath(`/plan/${parsed.data.planDate}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/recipes");
   return { ok: true, data: { recipeId: data?.recipe_id ?? null, peopleEating: data?.people_eating ?? parsed.data.people } };
 }

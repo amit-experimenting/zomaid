@@ -7,8 +7,9 @@ import { addRecipeToTodayPlan } from "@/app/recipes/actions";
 
 /**
  * Sets today's meal-plan slot to this recipe and navigates the user to
- * /plan/<today> so they can see the result. Slot is implied by the recipe.
- * Permission-gated server-side (owner | maid | family-with-meal_modify).
+ * /recipes?date=<today> (PlannedView) so they can see the result. Slot is
+ * implied by the recipe. Permission-gated server-side
+ * (owner | maid | family-with-meal_modify).
  */
 export function AddToTodayButton({ recipeId, slotLabel }: { recipeId: string; slotLabel: string }) {
   const router = useRouter();
@@ -23,7 +24,7 @@ export function AddToTodayButton({ recipeId, slotLabel }: { recipeId: string; sl
         setError(res.error.message);
         return;
       }
-      router.push(`/plan/${res.data.planDate}`);
+      router.push(`/recipes?date=${encodeURIComponent(res.data.planDate)}`);
     });
   };
 

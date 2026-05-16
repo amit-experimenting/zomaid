@@ -157,7 +157,7 @@ export async function createRecipe(formData: FormData): Promise<RecipeActionResu
   }
 
   revalidatePath("/recipes");
-  revalidatePath("/plan");
+  revalidatePath("/dashboard");
   return { ok: true, data: { recipeId: recipeRow.id } };
 }
 
@@ -277,7 +277,7 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
 
   revalidatePath("/recipes");
   revalidatePath(`/recipes/${effectiveRecipeId}`);
-  revalidatePath("/plan");
+  revalidatePath("/dashboard");
   return { ok: true, data: { recipeId: effectiveRecipeId } };
 }
 
@@ -321,8 +321,8 @@ export async function addRecipeToTodayPlan(input: { recipeId: string }): Promise
     return { ok: false, error: { code: "RECIPE_FORBIDDEN", message: setErr.message } };
   }
 
-  revalidatePath("/plan");
-  revalidatePath(`/plan/${planDate}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/recipes");
   return { ok: true, data: { planDate } };
 }
 
