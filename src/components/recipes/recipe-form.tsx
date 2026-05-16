@@ -3,6 +3,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import imageCompression from "browser-image-compression";
 import { Button } from "@/components/ui/button";
+import { PendingButton } from "@/components/ui/pending-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -145,7 +146,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
         <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={pending}>{mode === "create" ? "Create recipe" : "Save changes"}</Button>
+      <PendingButton type="submit" pending={pending}>{mode === "create" ? "Create recipe" : "Save changes"}</PendingButton>
     </form>
   );
 }

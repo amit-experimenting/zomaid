@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { requireHousehold } from "@/lib/auth/require";
 import { createInventoryItem } from "@/app/inventory/actions";
 import { MainNav } from "@/components/site/main-nav";
-import { Button } from "@/components/ui/button";
+import { PendingButton } from "@/components/ui/pending-button";
 import { OnboardingInventoryForm } from "./_onboarding-form";
 
 export default async function NewInventoryItemPage({
@@ -75,7 +75,7 @@ export default async function NewInventoryItemPage({
               placeholder="e.g. kg, g, l, ml, piece"
             />
           </label>
-          <Button type="submit">Save</Button>
+          <PendingButton type="submit">Save</PendingButton>
         </form>
       )}
     </main>

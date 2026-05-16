@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import imageCompression from "browser-image-compression";
-import { Button } from "@/components/ui/button";
+import { PendingButton } from "@/components/ui/pending-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { uploadBill } from "@/app/bills/actions";
@@ -67,9 +67,9 @@ export function UploadForm() {
         <Input id="bill-hint" value={storeHint} onChange={(e) => setStoreHint(e.target.value)} placeholder="e.g., NTUC Tampines" maxLength={200} />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={pending || !file || phase !== "idle"}>
+      <PendingButton type="submit" pending={pending || phase !== "idle"} disabled={!file}>
         {phase === "compressing" ? "Compressing…" : phase === "submitting" ? "Uploading…" : "Upload bill"}
-      </Button>
+      </PendingButton>
     </form>
   );
 }

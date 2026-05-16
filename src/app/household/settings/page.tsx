@@ -5,7 +5,7 @@ import { MainNav } from "@/components/site/main-nav";
 import {
   createInvite, removeMembership, updateMembershipDiet, updateMembershipPrivilege,
 } from "@/app/household/settings/actions";
-import { Button } from "@/components/ui/button";
+import { PendingButton } from "@/components/ui/pending-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,7 +133,7 @@ export default async function HouseholdSettingsPage() {
                           <option value="eggitarian">Eggitarian</option>
                           <option value="non_vegetarian">Non-veg</option>
                         </select>
-                        <Button type="submit" size="sm" variant="outline">Save</Button>
+                        <PendingButton type="submit" size="sm" variant="outline">Save</PendingButton>
                       </form>
                     ) : null}
                     {isOwner && m.role === "family_member" ? (
@@ -143,15 +143,15 @@ export default async function HouseholdSettingsPage() {
                           <option value="meal_modify">meal_modify</option>
                           <option value="view_only">view_only</option>
                         </select>
-                        <Button type="submit" size="sm" variant="outline">Update</Button>
+                        <PendingButton type="submit" size="sm" variant="outline">Update</PendingButton>
                       </form>
                     ) : null}
                     {canRemove ? (
                       <form action={remove}>
                         <input type="hidden" name="membershipId" value={m.id} />
-                        <Button type="submit" size="sm" variant="destructive">
+                        <PendingButton type="submit" size="sm" variant="destructive">
                           {p.id === ctx.profile.id ? "Leave" : "Remove"}
-                        </Button>
+                        </PendingButton>
                       </form>
                     ) : null}
                   </div>
@@ -176,7 +176,7 @@ export default async function HouseholdSettingsPage() {
                     <option value="meal_modify">meal_modify ($9)</option>
                   </select>
                 </div>
-                <Button type="submit">Invite family member</Button>
+                <PendingButton type="submit">Invite family member</PendingButton>
               </div>
               <div className="space-y-1">
                 <Input name="email" type="email" placeholder="Email (optional)" />
@@ -186,7 +186,7 @@ export default async function HouseholdSettingsPage() {
           ) : null}
           {isOwner ? (
             <form action={inviteMaid} className="space-y-3">
-              <Button type="submit" variant="outline">Invite maid</Button>
+              <PendingButton type="submit" variant="outline">Invite maid</PendingButton>
               <div className="space-y-1">
                 <Input name="email" type="email" placeholder="Email (optional)" />
                 <p className="text-xs text-muted-foreground">Auto-join when this email signs in.</p>
@@ -195,7 +195,7 @@ export default async function HouseholdSettingsPage() {
           ) : null}
           {isMaid ? (
             <form action={inviteOwner} className="space-y-3">
-              <Button type="submit" variant="outline">Invite owner</Button>
+              <PendingButton type="submit" variant="outline">Invite owner</PendingButton>
               <div className="space-y-1">
                 <Input name="email" type="email" placeholder="Email (optional)" />
                 <p className="text-xs text-muted-foreground">Auto-join when this email signs in.</p>

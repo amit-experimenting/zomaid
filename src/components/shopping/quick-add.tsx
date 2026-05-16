@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { PendingButton } from "@/components/ui/pending-button";
 import { Input } from "@/components/ui/input";
 import {
   addShoppingItem,
@@ -129,7 +130,7 @@ export function QuickAdd({ onChanged }: { onChanged?: () => void }) {
           }}
           disabled={pending}
         />
-        <Button type="button" onClick={() => onEnter()} disabled={pending || !trimmed}>+</Button>
+        <PendingButton type="button" onClick={() => onEnter()} pending={pending} disabled={!trimmed}>+</PendingButton>
         {showDropdown && (
           <div
             className="absolute left-0 right-0 top-full z-20 mt-1 rounded-md border border-border bg-background shadow-md"
@@ -150,9 +151,9 @@ export function QuickAdd({ onChanged }: { onChanged?: () => void }) {
                     <div className="text-xs text-muted-foreground">{isBought ? "Bought" : "On list"}</div>
                   </div>
                   {isBought ? (
-                    <Button type="button" size="sm" onClick={() => addBack(m.id)} disabled={pending}>
+                    <PendingButton type="button" size="sm" onClick={() => addBack(m.id)} pending={pending}>
                       Add back
-                    </Button>
+                    </PendingButton>
                   ) : (
                     <Button type="button" size="sm" variant="ghost" onClick={() => { flashMessage("Already on the list.", "info"); reset(); }} disabled={pending}>
                       Already on list
