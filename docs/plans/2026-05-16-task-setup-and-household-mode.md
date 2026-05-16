@@ -15,7 +15,7 @@
 ## Task 1: Database migration — schema + destructive backfill + gated cron + trigger
 
 **Files:**
-- Create: `supabase/migrations/20260703_001_household_setup_gates.sql`
+- Create: `supabase/migrations/20260705_001_household_setup_gates.sql`
 
 - [ ] **Step 1: Write the migration SQL**
 
@@ -202,7 +202,7 @@ psql postgresql://postgres:postgres@localhost:54322/postgres -c "select id, maid
 - [ ] **Step 4: Commit**
 
 ```bash
-git add supabase/migrations/20260703_001_household_setup_gates.sql
+git add supabase/migrations/20260705_001_household_setup_gates.sql
 git commit -m "$(cat <<'EOF'
 feat(tasks): add maid_mode + task_setup_completed_at gates
 
