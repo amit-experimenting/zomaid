@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 
 /**
- * `/plan` used to be the meal-plan landing page. The Day view on
- * `/dashboard` now hosts both tasks and meal plan in one place. This
+ * `/plan` used to be the meal-plan landing page. The per-day meal-plan view
+ * now lives at `/recipes` (the renamed "Meal" tab in the main nav). This
  * redirect preserves old bookmarks / push-notification deep links.
  */
 export default function PlanIndex() {
-  redirect("/dashboard?view=meal");
+  redirect("/recipes");
 }

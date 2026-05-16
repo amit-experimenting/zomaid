@@ -19,7 +19,7 @@ function SettingsIcon() {
 export function MainNav({ active }: { active: Route }) {
   const links: { route: Route; href: string; label: string }[] = [
     { route: "home",       href: "/dashboard",  label: "Home" },
-    { route: "recipes",    href: "/recipes",    label: "Recipes" },
+    { route: "recipes",    href: "/recipes",    label: "Meal" },
     { route: "shopping",   href: "/shopping",   label: "Shopping" },
     { route: "inventory",  href: "/inventory",  label: "Inventory" },
   ];

@@ -14,19 +14,22 @@ function sgYmd(d: Date): string {
 }
 
 /**
- * Date navigation strip used by the unified `/dashboard` Day view.
+ * Date navigation strip used by `/dashboard` (Home) and `/recipes` (Meal).
  *
  * Shows 5 pills: Yest, Today, Tom, +2, +3. Each pill links to
- * `/dashboard?date=<ymd>` and preserves the active `view` (Tasks vs Meal).
- * Replaces the older `WeekStrip` (next-4) and `TasksWeekStrip` (yest..+3) —
- * the yest..+3 window is the more useful triage range.
+ * `<baseHref>?date=<ymd>` (the `date` param is omitted for today so the link
+ * is the shortest form).
+ *
+ * `baseHref` defaults to `/dashboard` for backwards compatibility with the
+ * single previous caller — pass `/recipes` to use the strip on the meal
+ * landing page.
  */
 export function DayStrip({
   activeYmd,
-  view,
+  baseHref = "/dashboard",
 }: {
   activeYmd: string;
-  view: "tasks" | "meal";
+  baseHref?: string;
 }) {
   const today = sgYmd(new Date());
   const anchor = new Date(`${today}T00:00:00+08:00`);
@@ -46,14 +49,10 @@ export function DayStrip({
   }
 
   function hrefFor(ymd: string): string {
-    // Encode params in a stable order: view first (when meal), then date.
-    // Tasks is the default view → omit it from the URL to keep links shorter
-    // and match the contract documented in the design doc.
     const sp = new URLSearchParams();
-    if (view === "meal") sp.set("view", "meal");
     if (ymd !== today) sp.set("date", ymd);
     const qs = sp.toString();
-    return `/dashboard${qs ? `?${qs}` : ""}`;
+    return `${baseHref}${qs ? `?${qs}` : ""}`;
   }
 
   return (
