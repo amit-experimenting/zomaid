@@ -99,4 +99,33 @@ Cross-feature components consumed by inventory but owned elsewhere: `BillConfirm
 - **No write path for the conversions page.** `/inventory/conversions` renders defaults + household overrides read-only. The `unit_conversions` table has RLS allowing household-scoped owner/maid writes, but there is no form or server action to insert / update / delete overrides today. Either ship the editor or hide the "your overrides" empty-state messaging.
 
 ## Test coverage
-_To be filled in Phase 2._
+
+| Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `createInventoryItem` | `src/app/inventory/actions.ts:23` | — | — | — | high | `tests/actions/` |
+| `createInventoryItemsBulk` | `src/app/inventory/actions.ts:124` | — | — | — | high | `tests/actions/` |
+| `deleteInventoryItem` | `src/app/inventory/actions.ts:73` | — | — | — | high | `tests/actions/` |
+| `updateInventoryItem` | `src/app/inventory/actions.ts:56` | — | — | — | high | `tests/actions/` |
+| `adjustInventoryItem` | `src/app/inventory/actions.ts:92` | — | — | — | medium | `tests/actions/` |
+| `BillConfirmForm` mount via `UploadBillForm` | `src/components/bills/bill-confirm-form.tsx` | — | — | — | medium | `tests/e2e/` |
+| `ConversionsPage` | `src/app/inventory/conversions/page.tsx` | — | — | partial via `tests/e2e/inventory.spec.ts` (unauth redirect only) | medium | `tests/e2e/` |
+| `dismissInventoryCard` | `src/app/inventory/actions.ts:112` | — | — | — | medium | `tests/actions/` |
+| `InventoryAdjustForm` | `src/components/inventory/adjust-form.tsx` | — | — | — | medium | `tests/e2e/` |
+| `InventoryItemDetail` page | `src/app/inventory/[id]/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `InventoryListPage` | `src/app/inventory/page.tsx` | — | — | partial via `tests/e2e/inventory.spec.ts` (unauth redirect only) | medium | `tests/e2e/` |
+| `InventoryPromptCard` | `src/components/site/inventory-prompt-card.tsx` | — | — | — | medium | `tests/e2e/` |
+| `NewInventoryItemPage` (manual / scan / onboarding modes) | `src/app/inventory/new/page.tsx` | — | — | partial via `tests/e2e/inventory.spec.ts` (unauth redirect only) | medium | `tests/e2e/` |
+| `OnboardingInventoryForm` | `src/app/inventory/new/_onboarding-form.tsx` | — | — | — | medium | `tests/e2e/` |
+| `UploadBillForm` (mount; OCR pipeline owned by scans) | `src/app/inventory/new/_bill-form.tsx` | — | — | — | medium | `tests/e2e/` |
+| `household_roster_size` RPC | `supabase/migrations/20260613_001_inventory_helpers.sql` | — | — | — | low | `tests/db/` |
+| `inventory_lookup` RPC | `supabase/migrations/20260613_001_inventory_helpers.sql` | — | — | — | low | `tests/db/` |
+| `InventoryLoading` skeleton | `src/app/inventory/loading.tsx` | — | — | — | low | n/a (presentational) |
+| `InventoryTransactionLog` | `src/components/inventory/transaction-log.tsx` | — | — | — | low | `tests/e2e/` |
+| `is_meal_slot_locked` helper RPC | `supabase/migrations/20260618_001_meal_plan_inventory_rpcs.sql` | — | — | — | low | `tests/db/` |
+| `inventory_bill_ingest` / `_skip` / `_unskip` RPCs | `supabase/migrations/20260616_001_inventory_bill_rpcs.sql` | — | `tests/db/inventory-bill-ingest.test.ts` | — | none | `tests/db/` |
+| `inventory_convert` RPC | `supabase/migrations/20260613_001_inventory_helpers.sql` | — | `tests/db/inventory-conversions.test.ts` | — | none | `tests/db/` |
+| `inventory_cook_deduct` RPC | `supabase/migrations/20260614_001_inventory_cook_deduct.sql` | — | `tests/db/inventory-cook-deduct.test.ts` | — | none | `tests/db/` |
+| `inventory_items` table RLS + `inventory_manual_adjust` RPC | `supabase/migrations/20260607_001_inventory_items.sql`, `20260617_001_inventory_manual_adjust.sql` | — | `tests/db/inventory-items.test.ts` | — | none | `tests/db/` |
+| `inventory_sweep_due_meals` RPC + `inventory-sweep` cron | `supabase/migrations/20260615_001_inventory_sweep_cron.sql` | — | `tests/db/inventory-sweep.test.ts` | — | none | `tests/db/` |
+| `parseOnboardingFormData` | `src/app/inventory/_onboarding-parse.ts` | `tests/unit/inventory-onboarding-parse.test.ts` | — | — | none | `tests/unit/` |
+| `STARTER_ITEMS` constant | `src/app/inventory/_starter-items.ts` | — | — | — | none | n/a (data constant) |
