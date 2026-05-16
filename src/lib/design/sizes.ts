@@ -1,6 +1,7 @@
 import { buttonSizes } from "@/components/ui/button";
-import { iconButtonSizes } from "@/components/ui/icon-button";
 import { inputSizes } from "@/components/ui/input";
+import { iconButtonSizes } from "@/components/ui/icon-button";
+import { listRowSizes } from "@/components/ui/list-row";
 
 export type PrimitiveSize = {
   height: number;
@@ -15,4 +16,5 @@ export const primitiveSizes: Record<string, PrimitiveSizeMap> = {
   button: buttonSizes,
   input: inputSizes,
   iconButton: iconButtonSizes,
+  listRow: listRowSizes,
 };
