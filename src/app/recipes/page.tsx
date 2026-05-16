@@ -45,13 +45,15 @@ export default async function RecipesIndex({
   searchParams: Promise<{ q?: string; slot?: string; view?: string; date?: string }>;
 }) {
   const sp = await searchParams;
-  const ctx = await requireHousehold();
-  const supabase = await createClient();
-
+  // Each branch resolves its own ctx + supabase client. React Server
+  // Components serialise props across function boundaries, and the
+  // Supabase client carries non-serialisable methods (auth.toJSON,
+  // storage callbacks). Passing it as a prop crashes the render with
+  // "Unknown Value: React could not send it from the server".
   if (sp.view === "library") {
-    return <LibraryView q={sp.q} slot={sp.slot} ctx={ctx} supabase={supabase} />;
+    return <LibraryView q={sp.q} slot={sp.slot} />;
   }
-  return <PlannedView ctxDate={sp.date} ctx={ctx} supabase={supabase} />;
+  return <PlannedView ctxDate={sp.date} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -59,15 +61,9 @@ export default async function RecipesIndex({
 // (no params) lands on and what the old `MealTab` on `/dashboard` rendered.
 // ---------------------------------------------------------------------------
 
-async function PlannedView({
-  ctxDate,
-  ctx,
-  supabase,
-}: {
-  ctxDate: string | undefined;
-  ctx: Awaited<ReturnType<typeof requireHousehold>>;
-  supabase: Awaited<ReturnType<typeof createClient>>;
-}) {
+async function PlannedView({ ctxDate }: { ctxDate: string | undefined }) {
+  const ctx = await requireHousehold();
+  const supabase = await createClient();
   const now = new Date();
   const todayYmd = sgYmd(now);
   const selectedYmd = resolveSelectedYmd(ctxDate, todayYmd);
@@ -251,14 +247,12 @@ async function PlannedView({
 async function LibraryView({
   q,
   slot,
-  ctx,
-  supabase,
 }: {
   q: string | undefined;
   slot: string | undefined;
-  ctx: Awaited<ReturnType<typeof requireHousehold>>;
-  supabase: Awaited<ReturnType<typeof createClient>>;
 }) {
+  const ctx = await requireHousehold();
+  const supabase = await createClient();
   const { data: effective, error: effectiveErr } = await supabase.rpc(
     "effective_recipes",
     { p_household: ctx.household.id },
