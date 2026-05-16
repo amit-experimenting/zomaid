@@ -1,5 +1,7 @@
 # Diet preferences (per member) + recipe diet classification
 
+> **Superseded as the living architecture doc for the recipes area by [`features/recipes.md`](features/recipes.md).** This dated spec is retained for historical context.
+
 Date: 2026-05-16
 
 ## Problem
