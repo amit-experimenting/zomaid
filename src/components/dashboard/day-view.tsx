@@ -37,10 +37,8 @@ export type MealSlotRow = {
 export type DayViewProps = {
   /** Selected date in YYYY-MM-DD (SG). */
   selectedYmd: string;
-  /** Today's date in YYYY-MM-DD (SG) — used to label "Today" / "Yesterday" etc. */
+  /** Today's date in YYYY-MM-DD (SG). */
   todayYmd: string;
-  /** Long human label for the heading. */
-  headingLabel: string;
   /** Overdue occurrences. Only populated when selectedYmd === todayYmd. */
   overdue: OccurrenceRowItem[];
   /** Task occurrences on the selected date. */
@@ -88,34 +86,32 @@ export function DayView(props: DayViewProps) {
   }
 
   return (
-    <section className="mt-6">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-1 pb-2">
-        <h2 className="text-lg font-semibold tracking-tight">
-          {props.headingLabel}
-        </h2>
-        <div className="flex items-center gap-2">
-          {view === "tasks" && props.canAddTasks && (
-            <Link href="/tasks/new">
-              <Button size="sm">+ New task</Button>
-            </Link>
-          )}
-        </div>
-      </div>
+    <section>
       {props.showNotificationToggle && (
-        <div className="px-1 pt-2">
+        <div className="px-1 pb-2">
           <NotificationToggle />
         </div>
       )}
 
       <DayStrip activeYmd={props.selectedYmd} view={view} />
 
-      <nav className="flex gap-1 border-b border-border px-2" aria-label="Day view">
-        <TabButton active={view === "tasks"} onClick={() => setView("tasks")}>
-          Tasks
-        </TabButton>
-        <TabButton active={view === "meal"} onClick={() => setView("meal")}>
-          Meal plan
-        </TabButton>
+      <nav
+        className="flex items-center justify-between gap-3 border-b border-border px-2"
+        aria-label="Day view"
+      >
+        <div className="flex gap-1">
+          <TabButton active={view === "tasks"} onClick={() => setView("tasks")}>
+            Tasks
+          </TabButton>
+          <TabButton active={view === "meal"} onClick={() => setView("meal")}>
+            Meal plan
+          </TabButton>
+        </div>
+        {view === "tasks" && props.canAddTasks && (
+          <Link href="/tasks/new">
+            <Button size="sm">+ New task</Button>
+          </Link>
+        )}
       </nav>
 
       {view === "tasks" ? (

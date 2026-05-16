@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
@@ -10,8 +9,6 @@ import type { OccurrenceRowItem } from "@/components/tasks/occurrence-row";
 import type { Recipe } from "@/components/plan/recipe-picker";
 import type { Warning } from "@/components/plan/slot-warning-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 const TZ = "Asia/Singapore";
 const ALL_SLOTS: MealSlotRow["slot"][] = ["breakfast", "lunch", "snacks", "dinner"];
@@ -30,16 +27,6 @@ function addDays(d: Date, days: number): Date {
   const r = new Date(d);
   r.setDate(r.getDate() + days);
   return r;
-}
-
-function sgLongLabel(ymd: string): string {
-  // Anchor noon SG to dodge DST edges (SG has none, harmless).
-  return new Intl.DateTimeFormat("en-SG", {
-    timeZone: TZ,
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(new Date(`${ymd}T12:00:00+08:00`));
 }
 
 /** Validate a `?date=` query param. Invalid → returns today's SG date. */
@@ -324,34 +311,12 @@ export default async function DashboardPage({
   );
   const recipeLibraryEmpty = recipes.length === 0;
 
-  // Heading label: "Today" / "Yesterday" / "Tomorrow" / "Monday, 18 May".
-  const tomorrowYmd = sgYmd(addDays(now, 1));
-  const headingLabel = isToday
-    ? "Today"
-    : selectedYmd === yesterdayYmd
-      ? "Yesterday"
-      : selectedYmd === tomorrowYmd
-        ? "Tomorrow"
-        : sgLongLabel(selectedYmd);
-
   return (
     <main className="mx-auto max-w-md">
       <MainNav active="home" />
       <div className="px-4 py-6">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{ctx.household.name}</h1>
-            <p className="text-sm text-muted-foreground">
-              You are signed in as <strong>{ctx.profile.display_name}</strong> ({ctx.membership.role}).
-            </p>
-          </div>
-          <Link href="/household/settings" className={cn(buttonVariants({ variant: "outline" }))}>
-            Settings
-          </Link>
-        </div>
-
         {pendingOwnerInviteToken ? (
-          <Card className="mt-6">
+          <Card>
             <CardHeader>
               <CardTitle>Share this link with your owner</CardTitle>
               <CardDescription>One-time link, expires in 7 days.</CardDescription>
@@ -371,7 +336,6 @@ export default async function DashboardPage({
         <DayView
           selectedYmd={selectedYmd}
           todayYmd={todayYmd}
-          headingLabel={headingLabel}
           overdue={overdue}
           tasks={onDay}
           meals={meals}
