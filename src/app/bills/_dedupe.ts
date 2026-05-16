@@ -7,7 +7,7 @@
 //
 // Pure functions only. Unit-tested.
 
-export type DedupeLine = {
+type DedupeLine = {
   name: string;          // lower(trim(item_name))
   qty: number | null;    // raw, no rounding beyond what the parser did
   unit: string | null;   // lower(trim(unit))

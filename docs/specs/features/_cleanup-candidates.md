@@ -27,7 +27,7 @@ Filtering notes:
 - [x] `src/app/api/bills/scan/_parse.ts` — exports `ModelBillResponseSchema` — removed `export` keyword; used internally only
 - [x] `src/app/api/bills/scan/_parse.ts` — exports type `ParsedBillLine` — removed `export` keyword; used internally only
 - [x] `src/app/api/inventory/scan/_parse.ts` — exports `SCAN_UNITS`, `ModelResponseSchema` — removed `export` keyword on both; used internally only (SCAN_UNITS still backs exported ScanUnit type)
-- [ ] `src/app/bills/_dedupe.ts` — exports type `DedupeLine` — zero importers per knip (type-only; verify before removal)
+- [x] `src/app/bills/_dedupe.ts` — exports type `DedupeLine` — removed `export` keyword; used internally only
 - [ ] `src/lib/db/types.ts` — exports types `MembershipStatus`, `IntendedRole`, `MaidMode` — zero importers per knip (type-only; verify before removal)
 - [ ] `src/lib/auth/current-household.ts` — exports types `Membership`, `Household` — zero importers per knip (used internally to build `CurrentHousehold`; may be safe to drop `export` keyword rather than the types themselves)
 - [ ] `src/components/plan/slot-row.tsx` — exports type `SlotRowOwnProps` — zero importers per knip (type-only; verify before removal)
