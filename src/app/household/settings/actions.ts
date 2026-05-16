@@ -287,3 +287,34 @@ export async function updateMembershipPrivilege(input: unknown) {
 
   revalidatePath("/household/settings");
 }
+
+const updateHouseholdDietSchema = z.object({
+  diet: z
+    .union([
+      z.literal(""),
+      z.enum(["vegan", "vegetarian", "eggitarian", "non_vegetarian"]),
+    ])
+    .optional(),
+});
+
+export async function updateHouseholdDiet(input: unknown) {
+  const data = updateHouseholdDietSchema.parse(input);
+  const ctx = await getCurrentHousehold();
+  if (!ctx) throw new Error("no active household");
+  if (ctx.membership.role !== "owner" && ctx.membership.role !== "maid") {
+    throw new Error("forbidden");
+  }
+
+  const value = data.diet && data.diet.length > 0 ? data.diet : null;
+  const svc = createServiceClient();
+  const { error } = await svc
+    .from("households")
+    .update({ diet_preference: value })
+    .eq("id", ctx.household.id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/household/settings");
+  revalidatePath("/dashboard");
+  revalidatePath("/plan");
+  revalidatePath("/recipes");
+}
