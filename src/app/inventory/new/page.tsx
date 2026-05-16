@@ -7,8 +7,9 @@ import { PendingButton } from "@/components/ui/pending-button";
 import { cn } from "@/lib/utils";
 import { OnboardingInventoryForm } from "./_onboarding-form";
 import { ScanReceiptForm } from "./_scan-form";
+import { UploadBillForm } from "./_bill-form";
 
-type Mode = "manual" | "scan";
+type Mode = "manual" | "scan" | "bill";
 
 export default async function NewInventoryItemPage({
   searchParams,
@@ -21,7 +22,8 @@ export default async function NewInventoryItemPage({
   }
   const sp = await searchParams;
   const isOnboarding = sp.onboarding === "1";
-  const mode: Mode = sp.mode === "scan" ? "scan" : "manual";
+  const mode: Mode =
+    sp.mode === "scan" ? "scan" : sp.mode === "bill" ? "bill" : "manual";
 
   async function submitSingle(formData: FormData) {
     "use server";
@@ -55,6 +57,9 @@ export default async function NewInventoryItemPage({
           <ModeTab href="/inventory/new?mode=scan" active={mode === "scan"}>
             Scan receipt
           </ModeTab>
+          <ModeTab href="/inventory/new?mode=bill" active={mode === "bill"}>
+            Upload bill
+          </ModeTab>
         </nav>
       )}
 
@@ -62,6 +67,8 @@ export default async function NewInventoryItemPage({
         <OnboardingInventoryForm />
       ) : mode === "scan" ? (
         <ScanReceiptForm />
+      ) : mode === "bill" ? (
+        <UploadBillForm />
       ) : (
         <form action={submitSingle} className="flex flex-col gap-3 px-4 py-2">
           <label className="flex flex-col gap-1">

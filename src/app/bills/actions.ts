@@ -6,6 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { requireHousehold } from "@/lib/auth/require";
 import { closeBillIssue, createBillIssue } from "@/lib/github/issues";
 import type { Database } from "@/lib/db/types";
+import { createInventoryItem } from "@/app/inventory/actions";
+import {
+  areDedupeKeysEqual,
+  buildBillDedupeKey,
+  type DedupeKey,
+} from "@/app/bills/_dedupe";
 
 export type BillActionResult<T> =
   | { ok: true; data: T }
@@ -317,4 +323,224 @@ export async function unskipBillLineItem(input: z.infer<typeof SkipSchema>) {
   if (error) return { ok: false as const, error: { code: "BILL_DB", message: error.message } };
   revalidatePath(`/bills`);
   return { ok: true as const, data: null };
+}
+
+// ── uploadBillFromScan ──────────────────────────────────────────────
+// Server-side companion of the /inventory/new "Upload bill" tab.
+// Takes the user-confirmed parsed-bill object plus a per-line
+// addToInventory flag. Rejects exact duplicates of an earlier bill.
+// On unique: creates bills + bill_line_items rows, plus an
+// inventory_items row per checked line, and links each line back to
+// the inventory row it produced via matched_inventory_item_id.
+
+const ScanUnitEnum = z.enum(["kg", "g", "l", "ml", "piece"]);
+
+const ScanLineSchema = z.object({
+  item_name: z.string().min(1).max(120),
+  quantity: z.number().positive().nullable(),
+  unit: ScanUnitEnum.nullable(),
+  price: z.number().nonnegative().nullable(),
+  addToInventory: z.boolean(),
+});
+
+const UploadBillFromScanSchema = z.object({
+  store_name: z.string().trim().min(1).max(200),
+  bill_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  currency: z.string().regex(/^[A-Z]{3}$/),
+  total_amount: z.number().nonnegative().nullable(),
+  items: z.array(ScanLineSchema).min(1).max(200),
+});
+
+export type UploadBillFromScanInput = z.infer<typeof UploadBillFromScanSchema>;
+
+// Sentinel value for bills uploaded via the inventory-new scan tab —
+// the image is never persisted to Supabase Storage. The bills.image_storage_path
+// column is `not null`, so we record this string instead. The detail
+// page's signed-URL attempt against this path harmlessly returns null
+// and the photo block is skipped.
+const SENTINEL_IMAGE_PATH = "bill-scan-not-persisted";
+
+export async function uploadBillFromScan(
+  input: UploadBillFromScanInput,
+): Promise<BillActionResult<{ billId: string }>> {
+  const parsed = UploadBillFromScanSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: {
+        code: "BILL_INVALID",
+        message: "Invalid input.",
+        fieldErrors: parsed.error.flatten().fieldErrors as unknown as Record<string, string>,
+      },
+    };
+  }
+  const ctx = await requireHousehold();
+  if (ctx.membership.role !== "owner" && ctx.membership.role !== "maid") {
+    return { ok: false, error: { code: "BILL_FORBIDDEN", message: "You don't have permission to upload bills." } };
+  }
+  const supabase = await createClient();
+
+  // Drop empty-name lines defensively (zod already enforces min length 1,
+  // but a leading/trailing whitespace-only row could slip through).
+  const cleanItems = parsed.data.items.filter((it) => it.item_name.trim().length > 0);
+  if (cleanItems.length === 0) {
+    return { ok: false, error: { code: "BILL_INVALID", message: "Add at least one line item." } };
+  }
+
+  // ── 1. Dedupe check ───────────────────────────────────────────────
+  const candidateKey = buildBillDedupeKey({
+    store_name: parsed.data.store_name,
+    bill_date: parsed.data.bill_date,
+    lines: cleanItems.map((it) => ({
+      item_name: it.item_name,
+      quantity: it.quantity,
+      unit: it.unit,
+      price: it.price,
+    })),
+  });
+  if (candidateKey) {
+    // Pull all bills with matching store+date for this household and check
+    // their line sets in JS. Per-household bill volume is small (~tens/month).
+    const { data: candidateBills, error: candidateErr } = await supabase
+      .from("bills")
+      .select("id, bill_date, store_name")
+      .eq("household_id", ctx.household.id)
+      .eq("bill_date", parsed.data.bill_date);
+    if (candidateErr) {
+      return { ok: false, error: { code: "BILL_DB", message: candidateErr.message } };
+    }
+    const sameStoreBills = (candidateBills ?? []).filter(
+      (b) => (b.store_name ?? "").trim().toLowerCase() === candidateKey.store,
+    );
+    if (sameStoreBills.length > 0) {
+      const ids = sameStoreBills.map((b) => b.id);
+      const { data: lineRows, error: linesErr } = await supabase
+        .from("bill_line_items")
+        .select("bill_id, item_name, quantity, unit, line_total")
+        .in("bill_id", ids);
+      if (linesErr) {
+        return { ok: false, error: { code: "BILL_DB", message: linesErr.message } };
+      }
+      const byBill = new Map<string, Array<{ item_name: string; quantity: number | null; unit: string | null; line_total: number | null }>>();
+      for (const row of lineRows ?? []) {
+        const list = byBill.get(row.bill_id) ?? [];
+        list.push({
+          item_name: row.item_name,
+          quantity: row.quantity == null ? null : Number(row.quantity),
+          unit: row.unit,
+          line_total: row.line_total == null ? null : Number(row.line_total),
+        });
+        byBill.set(row.bill_id, list);
+      }
+      for (const b of sameStoreBills) {
+        const existingLines = byBill.get(b.id) ?? [];
+        const existingKey: DedupeKey | null = buildBillDedupeKey({
+          store_name: b.store_name,
+          bill_date: b.bill_date,
+          lines: existingLines.map((l) => ({
+            item_name: l.item_name,
+            quantity: l.quantity,
+            unit: l.unit,
+            price: l.line_total,
+          })),
+        });
+        if (existingKey && areDedupeKeysEqual(candidateKey, existingKey)) {
+          return {
+            ok: false,
+            error: {
+              code: "BILL_DUPLICATE",
+              message: `Looks like a duplicate of a bill uploaded on ${b.bill_date}.`,
+            },
+          };
+        }
+      }
+    }
+  }
+
+  // ── 2. Insert the bills row ──────────────────────────────────────
+  const { data: billRow, error: billInsertErr } = await supabase
+    .from("bills")
+    .insert({
+      household_id: ctx.household.id,
+      uploaded_by_profile_id: ctx.profile.id,
+      status: "processed",
+      processed_at: new Date().toISOString(),
+      store_name: parsed.data.store_name.trim(),
+      bill_date: parsed.data.bill_date,
+      currency: parsed.data.currency,
+      total_amount: parsed.data.total_amount ?? null,
+      image_storage_path: SENTINEL_IMAGE_PATH,
+    })
+    .select("id")
+    .single();
+  if (billInsertErr || !billRow) {
+    return {
+      ok: false,
+      error: {
+        code: "BILL_DB",
+        message: billInsertErr?.message ?? "Failed to create bill.",
+      },
+    };
+  }
+  const billId: string = billRow.id;
+
+  // ── 3. Create inventory rows for checked lines + remember mapping ─
+  const inventoryIdByIndex: Array<string | null> = [];
+  for (const item of cleanItems) {
+    if (!item.addToInventory) {
+      inventoryIdByIndex.push(null);
+      continue;
+    }
+    // createInventoryItem requires a unit and a non-negative quantity.
+    // If the user left them empty, fall back to safe defaults so the
+    // inventory row is still created — they can edit it later.
+    const invResult = await createInventoryItem({
+      item_name: item.item_name.trim(),
+      quantity: item.quantity ?? 0,
+      unit: item.unit ?? "piece",
+    });
+    if (!invResult.ok) {
+      // Best-effort rollback: delete the half-built bill row.
+      await supabase.from("bills").delete().eq("id", billId);
+      return {
+        ok: false,
+        error: {
+          code: "BILL_DB",
+          message: `Failed to add ${item.item_name} to inventory: ${invResult.error.message}`,
+        },
+      };
+    }
+    inventoryIdByIndex.push(invResult.data.id);
+  }
+
+  // ── 4. Insert all bill_line_items at once ────────────────────────
+  const lineRows: Database["public"]["Tables"]["bill_line_items"]["Insert"][] =
+    cleanItems.map((item, i) => ({
+      bill_id: billId,
+      position: i + 1,
+      item_name: item.item_name.trim(),
+      quantity: item.quantity,
+      unit: item.unit,
+      // `line_total` is the per-line dollar amount; we reuse the column the
+      // dedupe key reads (no separate `price` column on bill_line_items).
+      line_total: item.price,
+      unit_price: null,
+      matched_inventory_item_id: inventoryIdByIndex[i],
+      // Treat unchecked rows as explicitly skipped so they don't show up
+      // in the legacy pending-inventory review queue on /bills/[id].
+      inventory_ingestion_skipped: !item.addToInventory,
+      inventory_ingested_at: inventoryIdByIndex[i] ? new Date().toISOString() : null,
+    }));
+  const { error: lineErr } = await supabase
+    .from("bill_line_items")
+    .insert(lineRows);
+  if (lineErr) {
+    await supabase.from("bills").delete().eq("id", billId);
+    return { ok: false, error: { code: "BILL_DB", message: lineErr.message } };
+  }
+
+  revalidatePath("/bills");
+  revalidatePath(`/bills/${billId}`);
+  revalidatePath("/inventory");
+  return { ok: true, data: { billId } };
 }
