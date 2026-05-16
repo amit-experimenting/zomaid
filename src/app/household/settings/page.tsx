@@ -3,8 +3,10 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
 import { MainNav } from "@/components/site/main-nav";
 import {
-  createInvite, removeMembership, updateMembershipDiet, updateMembershipPrivilege,
+  createInvite, removeMembership,
+  updateHouseholdDiet, updateMembershipDiet, updateMembershipPrivilege,
 } from "@/app/household/settings/actions";
+import { HouseholdDietForm } from "@/components/household/household-diet-form";
 import { PendingButton } from "@/components/ui/pending-button";
 import { NotificationToggle } from "@/components/tasks/notification-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { Privilege } from "@/lib/db/types";
+
+function dietLabel(d: import("@/lib/db/types").Diet): string {
+  return { vegan: "Vegan", vegetarian: "Vegetarian",
+           eggitarian: "Eggitarian", non_vegetarian: "Non-vegetarian" }[d];
+}
 
 export default async function HouseholdSettingsPage() {
   const ctx = await requireHousehold();
@@ -78,6 +85,10 @@ export default async function HouseholdSettingsPage() {
       diet: String(formData.get("diet")),
     });
   }
+  async function changeHouseholdDiet(formData: FormData) {
+    "use server";
+    await updateHouseholdDiet({ diet: String(formData.get("diet") ?? "") });
+  }
 
   return (
     <main className="mx-auto max-w-md">
@@ -96,6 +107,39 @@ export default async function HouseholdSettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader><CardTitle>Meal preference</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Sets what shows up in your meal plan and recipes for the whole household.
+            When set, this overrides each member&apos;s personal preference for planning.
+          </p>
+          {isOwner || isMaid ? (
+            <HouseholdDietForm
+              currentValue={ctx.household.diet_preference}
+              members={[...members.data!]
+                .filter((m) => m.role !== "maid")
+                .map((m) => {
+                  const p = (m as unknown as {
+                    profile: { display_name: string; email: string };
+                  }).profile;
+                  return {
+                    displayName: p.display_name || p.email,
+                    dietPreference: m.diet_preference,
+                  };
+                })}
+              action={changeHouseholdDiet}
+            />
+          ) : (
+            <p className="text-sm">
+              {ctx.household.diet_preference
+                ? dietLabel(ctx.household.diet_preference)
+                : "No household preference"}
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle>Members</CardTitle></CardHeader>
@@ -125,6 +169,9 @@ export default async function HouseholdSettingsPage() {
                       <span className={cn(isMaidRow && "text-primary font-medium")}>{m.role}</span>
                       {m.role === "family_member" ? ` · ${m.privilege}` : ""}
                       {isMaidRow ? " · diet noted but plan ignores it" : ""}
+                      {!isMaidRow && ctx.household.diet_preference !== null
+                        ? " · household preference active — this is ignored for planning"
+                        : ""}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
