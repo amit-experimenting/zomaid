@@ -31,7 +31,7 @@ Filtering notes:
 - [x] `src/lib/db/types.ts` — exports types `MembershipStatus`, `IntendedRole`, `MaidMode` — removed `export` from MembershipStatus and MaidMode (used in Database type); removed IntendedRole entirely (unused alias)
 - [x] `src/lib/auth/current-household.ts` — exports types `Membership`, `Household` — removed `export` keyword; used internally only in CurrentHousehold
 - [x] `src/components/plan/slot-row.tsx` — exports type `SlotRowOwnProps` — removed `export` keyword; used internally only
-- [ ] `src/components/bills/bill-confirm-form.tsx` — exports type `ConfirmFormInitialItem` — zero importers per knip (type-only; verify before removal)
+- [x] `src/components/bills/bill-confirm-form.tsx` — exports type `ConfirmFormInitialItem` — removed `export` keyword; used internally only
 
 ## Unused shadcn primitives
 - [ ] `src/components/ui/dropdown-menu.tsx` — whole file unimported per knip; zero references per `rg`

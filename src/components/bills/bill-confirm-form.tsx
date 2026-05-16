@@ -21,7 +21,7 @@ import { PendingButton } from "@/components/ui/pending-button";
 const UNIT_OPTIONS = ["kg", "g", "l", "ml", "piece"] as const;
 type Unit = (typeof UNIT_OPTIONS)[number];
 
-export type ConfirmFormInitialItem = {
+type ConfirmFormInitialItem = {
   item_name: string;
   quantity: number | null;
   unit: Unit | null;
