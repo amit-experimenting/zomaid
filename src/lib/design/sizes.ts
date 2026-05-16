@@ -2,6 +2,7 @@ import { buttonSizes } from "@/components/ui/button";
 import { inputSizes } from "@/components/ui/input";
 import { iconButtonSizes } from "@/components/ui/icon-button";
 import { listRowSizes } from "@/components/ui/list-row";
+import { tabBarSizes } from "@/components/ui/tab-bar";
 
 export type PrimitiveSize = {
   height: number;
@@ -17,4 +18,5 @@ export const primitiveSizes: Record<string, PrimitiveSizeMap> = {
   input: inputSizes,
   iconButton: iconButtonSizes,
   listRow: listRowSizes,
+  tabBar: tabBarSizes,
 };
