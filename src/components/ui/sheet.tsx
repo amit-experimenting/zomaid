@@ -61,8 +61,8 @@ function SheetContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-3 right-3"
-                size="icon-sm"
+                className="size-9 p-0 absolute top-3 right-3"
+                // TODO(IconButton): replace with <IconButton variant="ghost"> in Task 6.2 (and remove the size-9 p-0 interim)
               />
             }
           >

@@ -195,7 +195,7 @@ export default async function HouseholdSettingsPage() {
                           <option value="eggitarian">Eggitarian</option>
                           <option value="non_vegetarian">Non-veg</option>
                         </select>
-                        <PendingButton type="submit" size="sm" variant="outline">Save</PendingButton>
+                        <PendingButton type="submit" size="sm" variant="secondary">Save</PendingButton>
                       </form>
                     ) : null}
                     {isOwner && m.role === "family_member" ? (
@@ -205,7 +205,7 @@ export default async function HouseholdSettingsPage() {
                           <option value="meal_modify">meal_modify</option>
                           <option value="view_only">view_only</option>
                         </select>
-                        <PendingButton type="submit" size="sm" variant="outline">Update</PendingButton>
+                        <PendingButton type="submit" size="sm" variant="secondary">Update</PendingButton>
                       </form>
                     ) : null}
                     {canRemove ? (
@@ -248,7 +248,7 @@ export default async function HouseholdSettingsPage() {
           ) : null}
           {isOwner ? (
             <form action={inviteMaid} className="space-y-3">
-              <PendingButton type="submit" variant="outline">Invite maid</PendingButton>
+              <PendingButton type="submit" variant="secondary">Invite maid</PendingButton>
               <div className="space-y-1">
                 <Input name="email" type="email" placeholder="Email (optional)" />
                 <p className="text-xs text-muted-foreground">Auto-join when this email signs in.</p>
@@ -257,7 +257,7 @@ export default async function HouseholdSettingsPage() {
           ) : null}
           {isMaid ? (
             <form action={inviteOwner} className="space-y-3">
-              <PendingButton type="submit" variant="outline">Invite owner</PendingButton>
+              <PendingButton type="submit" variant="secondary">Invite owner</PendingButton>
               <div className="space-y-1">
                 <Input name="email" type="email" placeholder="Email (optional)" />
                 <p className="text-xs text-muted-foreground">Auto-join when this email signs in.</p>

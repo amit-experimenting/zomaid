@@ -26,7 +26,7 @@ export default async function InventoryListPage() {
         <h1 className="text-lg font-semibold">Inventory</h1>
         <Link
           href="/inventory/conversions"
-          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+          className={cn(buttonVariants({ size: "sm", variant: "secondary" }))}
         >
           Unit conversions
         </Link>
@@ -35,7 +35,7 @@ export default async function InventoryListPage() {
         <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
           <p className="text-sm text-muted-foreground">Your inventory is empty.</p>
           {canWrite && (
-            <Link href="/inventory/new" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+            <Link href="/inventory/new" className={cn(buttonVariants({ size: "sm", variant: "secondary" }))}>
               Add your first item →
             </Link>
           )}

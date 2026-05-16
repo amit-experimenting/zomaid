@@ -44,7 +44,7 @@ export function LineItemRow({ item, readOnly, onEdit, onDelete }: LineItemRowPro
       </div>
       {!readOnly && (
         <div className="flex shrink-0 gap-1">
-          <Button size="sm" variant="outline" type="button" onClick={onEdit}>Edit</Button>
+          <Button size="sm" variant="secondary" type="button" onClick={onEdit}>Edit</Button>
           {confirmDelete ? (
             <>
               <Button size="sm" variant="ghost" type="button" onClick={() => setConfirmDelete(false)}>No</Button>

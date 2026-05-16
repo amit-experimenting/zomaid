@@ -53,7 +53,7 @@ export function RecurrencePicker({
           <Button
             key={m.id}
             type="button"
-            variant={value.mode === m.id ? "default" : "outline"}
+            variant={value.mode === m.id ? "primary" : "secondary"}
             size="sm"
             onClick={() => setMode(m.id)}
           >

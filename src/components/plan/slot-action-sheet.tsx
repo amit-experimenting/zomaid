@@ -50,7 +50,7 @@ export function SlotActionSheet(props: SlotActionSheetProps) {
         </SheetHeader>
         <div className="flex flex-col gap-2 py-4">
           {props.currentRecipeId && (
-            <Button variant="outline" nativeButton={false} render={<a href={`/recipes/${props.currentRecipeId}`} />}>
+            <Button variant="secondary" nativeButton={false} render={<a href={`/recipes/${props.currentRecipeId}`} />}>
               View recipe
             </Button>
           )}
@@ -63,9 +63,9 @@ export function SlotActionSheet(props: SlotActionSheetProps) {
                 open={pickerOpen}
                 onOpenChange={setPickerOpen}
                 pending={pending}
-                trigger={<Button variant="outline" disabled={pending}>Pick different</Button>}
+                trigger={<Button variant="secondary" disabled={pending}>Pick different</Button>}
               />
-              <PendingButton variant="outline" pending={pending} onClick={onRegenerate}>Regenerate</PendingButton>
+              <PendingButton variant="secondary" pending={pending} onClick={onRegenerate}>Regenerate</PendingButton>
               <PendingButton variant="ghost" pending={pending} onClick={onClear}>Clear</PendingButton>
             </>
           )}

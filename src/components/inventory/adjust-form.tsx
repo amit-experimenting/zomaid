@@ -40,8 +40,8 @@ export function InventoryAdjustForm({ itemId }: { itemId: string }) {
         className="rounded border px-2 py-1 text-sm"
       />
       <div className="flex gap-2">
-        <PendingButton onClick={submit(1)} pending={pending} variant="outline">Add</PendingButton>
-        <PendingButton onClick={submit(-1)} pending={pending} variant="outline">Subtract</PendingButton>
+        <PendingButton onClick={submit(1)} pending={pending} variant="secondary">Add</PendingButton>
+        <PendingButton onClick={submit(-1)} pending={pending} variant="secondary">Subtract</PendingButton>
       </div>
       {err && <div className="text-xs text-red-600">{err}</div>}
     </div>

@@ -101,7 +101,7 @@ export function UploadBillForm() {
               <label
                 className={cn(
                   buttonVariants({
-                    variant: file ? "outline" : "default",
+                    variant: file ? "secondary" : "primary",
                     size: "sm",
                   }),
                   "cursor-pointer",

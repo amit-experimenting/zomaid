@@ -30,7 +30,7 @@ export function OccurrenceActionSheet(p: OccurrenceActionSheetProps) {
         <SheetHeader><SheetTitle>{p.title}</SheetTitle></SheetHeader>
         <div className="flex flex-col gap-2 py-4">
           <PendingButton type="button" onClick={done} pending={pending}>Mark done</PendingButton>
-          <PendingButton type="button" variant="outline" onClick={skip} pending={pending}>Skip</PendingButton>
+          <PendingButton type="button" variant="secondary" onClick={skip} pending={pending}>Skip</PendingButton>
           {p.isStandard ? (
             confirmHide ? (
               <div className="flex flex-col gap-2 rounded-md border border-border p-3">

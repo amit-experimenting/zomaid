@@ -49,7 +49,7 @@ export default async function MealTimesPage() {
                 required
                 className="rounded border px-2 py-1 text-sm"
               />
-              <Button type="submit" size="sm" variant="outline">Save</Button>
+              <Button type="submit" size="sm" variant="secondary">Save</Button>
             </div>
           </form>
         ))}

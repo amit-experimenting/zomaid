@@ -86,7 +86,7 @@ export function HouseholdDietForm({ currentValue, members, action }: Props) {
         <option value="eggitarian">Eggitarian</option>
         <option value="non_vegetarian">Non-vegetarian</option>
       </select>
-      <PendingButton type="submit" size="sm" variant="outline" disabled={isUnchanged}>
+      <PendingButton type="submit" size="sm" variant="secondary" disabled={isUnchanged}>
         Save
       </PendingButton>
     </form>

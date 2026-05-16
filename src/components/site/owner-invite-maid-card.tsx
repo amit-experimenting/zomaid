@@ -95,7 +95,7 @@ function PendingCard({ origin, code, token, inviteId }: Extract<Props, { state: 
             {copied ? "Copied!" : "Copy link"}
           </Button>
           {canShare ? (
-            <Button type="button" size="sm" variant="outline" onClick={share}>
+            <Button type="button" size="sm" variant="secondary" onClick={share}>
               Share
             </Button>
           ) : null}
@@ -128,7 +128,7 @@ function JoinedCard({ maidName }: { maidName: string }) {
       <CardContent>
         <Link
           href="/household/settings"
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
         >
           Manage
         </Link>

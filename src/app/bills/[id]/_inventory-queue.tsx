@@ -105,7 +105,7 @@ function PendingRow({ line, match, disabled }: { line: LineRow; match: ExistingI
       </div>
       <div className="mt-2 flex gap-2">
         <Button onClick={confirm} disabled={disabled || pendingTx}>Confirm</Button>
-        <Button onClick={skip} variant="outline" disabled={disabled || pendingTx}>Skip</Button>
+        <Button onClick={skip} variant="secondary" disabled={disabled || pendingTx}>Skip</Button>
       </div>
       {err && <div className="mt-1 text-xs text-red-600">{err}</div>}
     </li>

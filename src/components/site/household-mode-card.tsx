@@ -27,7 +27,7 @@ export function HouseholdModeCard() {
           Invite your maid
         </Button>
         <Button
-          variant="outline"
+          variant="secondary"
           className="flex-1"
           disabled={busy}
           onClick={() => startFamily(async () => { await setHouseholdFamilyRun(); })}

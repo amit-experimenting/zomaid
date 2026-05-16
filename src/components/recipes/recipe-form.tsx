@@ -178,7 +178,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
             <Button type="button" variant="ghost" onClick={() => setIngredients(ingredients.filter((_, idx) => idx !== i))}>×</Button>
           </div>
         ))}
-        <Button type="button" variant="outline" onClick={() => setIngredients([...ingredients, { item_name: "", quantity: null, unit: null }])}>+ Add ingredient</Button>
+        <Button type="button" variant="secondary" onClick={() => setIngredients([...ingredients, { item_name: "", quantity: null, unit: null }])}>+ Add ingredient</Button>
       </fieldset>
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Steps</legend>
@@ -189,7 +189,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
             <Button type="button" variant="ghost" onClick={() => setSteps(steps.filter((_, idx) => idx !== i))}>×</Button>
           </div>
         ))}
-        <Button type="button" variant="outline" onClick={() => setSteps([...steps, { instruction: "" }])}>+ Add step</Button>
+        <Button type="button" variant="secondary" onClick={() => setSteps([...steps, { instruction: "" }])}>+ Add step</Button>
       </fieldset>
       <div>
         <Label htmlFor="notes">Notes</Label>

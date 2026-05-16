@@ -51,7 +51,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
       </div>
       <div className="flex items-center justify-end border-b border-border px-4 py-2">
         {canEdit && (
-          <Link href={`/recipes/${id}/edit`} className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>Edit</Link>
+          <Link href={`/recipes/${id}/edit`} className={cn(buttonVariants({ size: "sm", variant: "secondary" }))}>Edit</Link>
         )}
       </div>
       <RecipeDetail

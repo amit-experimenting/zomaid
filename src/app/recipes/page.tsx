@@ -213,7 +213,7 @@ async function PlannedView({ ctxDate }: { ctxDate: string | undefined }) {
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold">Planned meals</h1>
           <Link href="/recipes?view=library">
-            <Button variant="outline">Recipes</Button>
+            <Button variant="secondary">Recipes</Button>
           </Link>
         </div>
       </div>
@@ -335,7 +335,7 @@ async function LibraryView({
           <h1 className="text-lg font-semibold">Recipes</h1>
           <div className="flex items-center gap-2">
             <Link href="/recipes">
-              <Button variant="outline">Planned meals</Button>
+              <Button variant="secondary">Planned meals</Button>
             </Link>
             <Link href="/recipes/new"><Button>+ Add</Button></Link>
           </div>
@@ -347,7 +347,7 @@ async function LibraryView({
             <option value="">All</option>
             {ALL_SLOTS.map((s) => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}
           </select>
-          <Button type="submit" variant="outline">Filter</Button>
+          <Button type="submit" variant="secondary">Filter</Button>
         </form>
         <div className="mt-4 grid gap-2">
           {cards.length === 0 && <p className="py-8 text-center text-muted-foreground">No recipes match.</p>}

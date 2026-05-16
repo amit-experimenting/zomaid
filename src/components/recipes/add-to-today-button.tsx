@@ -33,7 +33,7 @@ export function AddToTodayButton({ recipeId, slotLabel }: { recipeId: string; sl
       <PendingButton
         type="button"
         size="sm"
-        variant="outline"
+        variant="secondary"
         pending={pending}
         onClick={(e) => {
           e.preventDefault();
