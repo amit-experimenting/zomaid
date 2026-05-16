@@ -1,5 +1,7 @@
 # Zomaid — Bills Cleanup + Shopping "Bills" Tab — Design
 
+> **Superseded as the living architecture doc for the shopping area by [`features/shopping.md`](features/shopping.md).** This dated spec is retained for historical context.
+
 - **Date**: 2026-05-16
 - **Status**: Approved — implementing in same session
 - **Scope**: Retire the legacy GitHub-Issues OCR pipeline now that [`/inventory/new`'s "Upload bill" tab](../../src/app/inventory/new/_bill-form.tsx) (shipped in `16c03b2`) is the canonical bill-capture entry point. Remove the standalone `/bills` index and `/bills/new` upload, remove the `Bills` link from the main nav, and surface the list of household bills as a new "Bills" tab on [`/shopping`](../../src/app/shopping/page.tsx). The detail page at `/bills/[id]` stays exactly as-is — it's the redirect target from both the new scan flow and the new shopping tab.

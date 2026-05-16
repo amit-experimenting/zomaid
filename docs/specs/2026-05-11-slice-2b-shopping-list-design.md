@@ -1,5 +1,7 @@
 # Zomaid — Slice 2b: Shopping List — Design
 
+> **Superseded as the living architecture doc for the shopping area by [`features/shopping.md`](features/shopping.md).** This dated spec is retained for historical context.
+
 - **Date**: 2026-05-11
 - **Status**: Approved (brainstorming) — pending implementation plan
 - **Slice**: 2b of 7 — see _Decomposition_ in the foundations spec

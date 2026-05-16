@@ -1,5 +1,7 @@
 # Shopping: typeahead, duplicate guard, and auto-refresh
 
+> **Superseded as the living architecture doc for the shopping area by [`features/shopping.md`](features/shopping.md).** This dated spec is retained for historical context.
+
 Date: 2026-05-14
 
 ## Problem
