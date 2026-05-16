@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 import { PendingButton } from "@/components/ui/pending-button";
 import type { Diet } from "@/lib/db/types";
 
@@ -40,11 +40,12 @@ const LABEL: Record<Diet, string> = {
 };
 
 export function HouseholdDietForm({ currentValue, members, action }: Props) {
-  const selectRef = useRef<HTMLSelectElement | null>(null);
+  const initial: string = currentValue ?? "";
+  const [chosen, setChosen] = useState<string>(initial);
+  const isUnchanged = chosen === initial;
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    const chosen = selectRef.current?.value ?? "";
-    if (chosen === "" || chosen === currentValue) return; // submit normally
+    if (chosen === "" || chosen === currentValue) return; // submit normally (or short-circuit upstream)
     const chosenDiet = chosen as Diet;
     const implied = memberImpliedDiet(members);
     if (RANK[chosenDiet] <= RANK[implied]) return; // less strict — no prompt
@@ -73,9 +74,9 @@ export function HouseholdDietForm({ currentValue, members, action }: Props) {
   return (
     <form action={action} onSubmit={handleSubmit} className="flex items-center gap-2">
       <select
-        ref={selectRef}
         name="diet"
-        defaultValue={currentValue ?? ""}
+        value={chosen}
+        onChange={(e) => setChosen(e.target.value)}
         className="rounded-md border bg-background px-2 py-1 text-sm"
         aria-label="Household meal preference"
       >
@@ -85,7 +86,9 @@ export function HouseholdDietForm({ currentValue, members, action }: Props) {
         <option value="eggitarian">Eggitarian</option>
         <option value="non_vegetarian">Non-vegetarian</option>
       </select>
-      <PendingButton type="submit" size="sm" variant="outline">Save</PendingButton>
+      <PendingButton type="submit" size="sm" variant="outline" disabled={isUnchanged}>
+        Save
+      </PendingButton>
     </form>
   );
 }
