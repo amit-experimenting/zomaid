@@ -19,6 +19,7 @@ export type RecipeFormProps = {
     slot: Slot;
     diet: Diet;
     prepTimeMinutes: number | null;
+    defaultServings: number;
     notes: string | null;
     ingredients: { item_name: string; quantity: number | null; unit: string | null }[];
     steps: { instruction: string }[];
@@ -34,6 +35,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
   const [slot, setSlot] = useState<Slot>(initial?.slot ?? "lunch");
   const [diet, setDiet] = useState<Diet>(initial?.diet ?? "non_vegetarian");
   const [prep, setPrep] = useState<string>(initial?.prepTimeMinutes?.toString() ?? "");
+  const [servings, setServings] = useState<string>((initial?.defaultServings ?? 4).toString());
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [ingredients, setIngredients] = useState(initial?.ingredients ?? [{ item_name: "", quantity: null, unit: null }]);
   const [steps, setSteps] = useState(initial?.steps ?? [{ instruction: "" }]);
@@ -55,6 +57,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
       fd.append("slot", slot);
       fd.append("diet", diet);
       if (prep) fd.append("prepTimeMinutes", prep);
+      if (servings) fd.append("defaultServings", servings);
       fd.append("notes", notes);
       fd.append("ingredients", JSON.stringify(ingredients.filter((i) => i.item_name.trim().length > 0)));
       fd.append("steps", JSON.stringify(steps.filter((s) => s.instruction.trim().length > 0)));
@@ -100,6 +103,10 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
       <div>
         <Label htmlFor="prep">Prep time (minutes)</Label>
         <Input id="prep" type="number" min={1} value={prep} onChange={(e) => setPrep(e.target.value)} />
+      </div>
+      <div>
+        <Label htmlFor="servings">Serves (people)</Label>
+        <Input id="servings" type="number" min={1} max={20} value={servings} onChange={(e) => setServings(e.target.value)} required />
       </div>
       <div>
         <Label htmlFor="youtubeUrl">Video URL</Label>

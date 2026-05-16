@@ -55,6 +55,7 @@ const CreateRecipeSchema = z.object({
   slot: SlotEnum,
   diet: DietEnum,
   prepTimeMinutes: z.number().int().positive().optional().nullable(),
+  defaultServings: z.number().int().min(1).max(20).optional(),
   notes: z.string().max(2000).optional().nullable(),
   ingredients: z.array(IngredientSchema),
   steps: z.array(StepSchema),
@@ -74,6 +75,7 @@ export async function createRecipe(formData: FormData): Promise<RecipeActionResu
     slot: formData.get("slot"),
     diet: formData.get("diet"),
     prepTimeMinutes: formData.get("prepTimeMinutes") ? Number(formData.get("prepTimeMinutes")) : null,
+    defaultServings: formData.get("defaultServings") ? Number(formData.get("defaultServings")) : undefined,
     notes: formData.get("notes") || null,
     ingredients: JSON.parse((formData.get("ingredients") as string) || "[]"),
     steps: JSON.parse((formData.get("steps") as string) || "[]"),
@@ -92,6 +94,7 @@ export async function createRecipe(formData: FormData): Promise<RecipeActionResu
       slot: parsed.data.slot,
       diet: parsed.data.diet,
       prep_time_minutes: parsed.data.prepTimeMinutes ?? null,
+      default_servings: parsed.data.defaultServings ?? 4,
       notes: parsed.data.notes ?? null,
       youtube_url: parsed.data.youtubeUrl ?? null,
       created_by_profile_id: ctx.profile.id,
@@ -145,6 +148,7 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
     slot: formData.get("slot") || undefined,
     diet: formData.get("diet") || undefined,
     prepTimeMinutes: formData.get("prepTimeMinutes") ? Number(formData.get("prepTimeMinutes")) : undefined,
+    defaultServings: formData.get("defaultServings") ? Number(formData.get("defaultServings")) : undefined,
     notes: formData.get("notes") || undefined,
     ingredients: formData.get("ingredients") ? JSON.parse(formData.get("ingredients") as string) : undefined,
     steps: formData.get("steps") ? JSON.parse(formData.get("steps") as string) : undefined,
@@ -155,7 +159,7 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
 
   const { data: target, error: tErr } = await supabase
     .from("recipes")
-    .select("id, household_id, parent_recipe_id, diet, slot")
+    .select("id, household_id, parent_recipe_id, diet, slot, default_servings")
     .eq("id", parsed.data.recipeId)
     .single();
   if (tErr || !target) return { ok: false, error: { code: "RECIPE_NOT_FOUND", message: "Recipe not found" } };
@@ -175,6 +179,7 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
         name: parsed.data.name ?? "Forked recipe",
         slot: parsed.data.slot ?? target.slot,
         diet: parsed.data.diet ?? target.diet,
+        default_servings: parsed.data.defaultServings ?? target.default_servings,
         created_by_profile_id: ctx.profile.id,
       })
       .select("id")
@@ -198,6 +203,7 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
   if (parsed.data.slot !== undefined) patch.slot = parsed.data.slot;
   if (parsed.data.diet !== undefined) patch.diet = parsed.data.diet;
   if (parsed.data.prepTimeMinutes !== undefined) patch.prep_time_minutes = parsed.data.prepTimeMinutes;
+  if (parsed.data.defaultServings !== undefined) patch.default_servings = parsed.data.defaultServings;
   if (parsed.data.notes !== undefined) patch.notes = parsed.data.notes;
   if (parsed.data.youtubeUrl !== undefined) patch.youtube_url = parsed.data.youtubeUrl;
   if (Object.keys(patch).length > 0) {

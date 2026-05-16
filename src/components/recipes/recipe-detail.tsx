@@ -4,6 +4,7 @@ export type RecipeDetailProps = {
   name: string;
   slot: "breakfast" | "lunch" | "snacks" | "dinner";
   prepTimeMinutes: number | null;
+  defaultServings: number;
   photoUrl: string | null;
   notes: string | null;
   youtubeUrl: string | null;
@@ -24,7 +25,9 @@ export function RecipeDetail(p: RecipeDetailProps) {
       <div className="px-4 py-4">
         <h1 className="text-xl font-semibold">{p.name}</h1>
         <div className="mt-1 text-sm text-muted-foreground">
-          {SLOT[p.slot]}{p.prepTimeMinutes ? ` · ${p.prepTimeMinutes}m prep` : ""}
+          {SLOT[p.slot]}
+          {p.prepTimeMinutes ? ` · ${p.prepTimeMinutes}m prep` : ""}
+          {` · serves ${p.defaultServings}`}
         </div>
         {p.youtubeUrl && (
           <a
