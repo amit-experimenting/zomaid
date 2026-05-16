@@ -121,6 +121,23 @@ export async function submitTaskSetup(input: unknown) {
     if (!stdById.has(id)) throw new Error("unknown standard task id");
   }
 
+  // CAS-claim the setup gate atomically. Only the session that wins this
+  // UPDATE (task_setup_completed_at IS NULL → timestamp) proceeds with
+  // writes. Any concurrent session that already set the timestamp will
+  // match zero rows and bail.
+  const claim = await svc
+    .from("households")
+    .update({ task_setup_completed_at: new Date().toISOString() })
+    .eq("id", ctx.household.id)
+    .is("task_setup_completed_at", null)
+    .select("id");
+  if (claim.error) throw new Error(claim.error.message);
+  if ((claim.data ?? []).length === 0) {
+    // Lost the race — another tab finished first. Redirect without
+    // doing any further writes.
+    redirect("/dashboard");
+  }
+
   // Insert household-owned cloned tasks.
   const inserts = data.entries.map((e) => {
     const std = stdById.get(e.standardTaskId)!;
@@ -156,13 +173,6 @@ export async function submitTaskSetup(input: unknown) {
       .upsert(hideRows, { onConflict: "household_id,task_id" });
     if (hideRes.error) throw new Error(hideRes.error.message);
   }
-
-  // Close the gate.
-  const finRes = await svc
-    .from("households")
-    .update({ task_setup_completed_at: new Date().toISOString() })
-    .eq("id", ctx.household.id);
-  if (finRes.error) throw new Error(finRes.error.message);
 
   // Drop the draft.
   await svc.from("task_setup_drafts").delete().eq("household_id", ctx.household.id);
