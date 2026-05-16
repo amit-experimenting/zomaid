@@ -50,3 +50,19 @@ export async function revokeMaidInviteFromHome(input: unknown) {
   await revokeInvite({ inviteId: data.inviteId });
   revalidatePath("/dashboard");
 }
+
+export async function setHouseholdFamilyRun() {
+  const ctx = await getCurrentHousehold();
+  if (!ctx) throw new Error("no active household");
+  if (ctx.membership.role !== "owner") throw new Error("only the owner can set household mode");
+  if (ctx.household.maid_mode !== "unset") throw new Error("household mode already set");
+
+  const svc = createServiceClient();
+  const upd = await svc
+    .from("households")
+    .update({ maid_mode: "family_run" })
+    .eq("id", ctx.household.id);
+  if (upd.error) throw new Error(upd.error.message);
+
+  revalidatePath("/dashboard");
+}
