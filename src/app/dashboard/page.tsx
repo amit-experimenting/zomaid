@@ -3,6 +3,8 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
 import { MainNav } from "@/components/site/main-nav";
 import { OwnerInviteMaidCard } from "@/components/site/owner-invite-maid-card";
+import { HouseholdModeCard } from "@/components/site/household-mode-card";
+import { TaskSetupPromptCard } from "@/components/site/task-setup-prompt-card";
 import { InventoryPromptCard } from "@/components/site/inventory-prompt-card";
 import { DayView, type MealFeedItem } from "@/components/dashboard/day-view";
 import type { OccurrenceRowItem } from "@/components/tasks/occurrence-row";
@@ -26,10 +28,8 @@ function addDays(d: Date, days: number): Date {
   return r;
 }
 
-/** Validate a `?date=` query param. Invalid → returns today's SG date. */
 function resolveSelectedYmd(raw: string | undefined, todayYmd: string): string {
   if (!raw || !YMD_RE.test(raw)) return todayYmd;
-  // Round-trip via sgYmd to catch rolls (e.g. 2026-13-40).
   const probe = new Date(`${raw}T12:00:00+08:00`);
   if (Number.isNaN(probe.getTime()) || sgYmd(probe) !== raw) return todayYmd;
   return raw;
@@ -49,7 +49,16 @@ export default async function DashboardPage({
   const origin = await siteUrl();
   const sp = await searchParams;
 
-  // --- onboarding cards (unchanged) ----------------------------------------
+  // Gates introduced by 2026-05-16 task-setup design.
+  const setupCompleted = ctx.household.task_setup_completed_at !== null;
+  const showHouseholdModeCard =
+    ctx.membership.role === "owner" && ctx.household.maid_mode === "unset";
+  const showTaskSetupPromptCard =
+    ctx.membership.role === "owner" &&
+    ctx.household.maid_mode !== "unset" &&
+    !setupCompleted;
+
+  // --- onboarding cards (gated) ------------------------------------------
 
   let pendingOwnerInviteToken: string | null = null;
   if (ctx.membership.role === "maid") {
@@ -68,9 +77,7 @@ export default async function DashboardPage({
   }
 
   let ownerCard: OwnerCardProps | null = null;
-  if (ctx.membership.role === "owner") {
-    // Profile-join requires service client because profiles RLS only allows
-    // self-read; mirrors the pattern in /household/settings.
+  if (ctx.membership.role === "owner" && ctx.household.maid_mode !== "unset") {
     const svc = createServiceClient();
     const supabase = await createClient();
     const [maidRes, inviteRes] = await Promise.all([
@@ -94,8 +101,6 @@ export default async function DashboardPage({
     if (maidRes.error) throw new Error(maidRes.error.message);
     if (inviteRes.error) throw new Error(inviteRes.error.message);
 
-    // Database types are hand-curated and don't declare the household_memberships
-    // → profiles FK embed; mirrors the cast in /household/settings.
     const maidRow = (maidRes.data?.[0] as unknown as
       | { id: string; profile: { display_name: string; email: string } | null }
       | undefined);
@@ -120,7 +125,7 @@ export default async function DashboardPage({
       ctx.household.inventory_card_dismissed_at == null && (count ?? 0) < 5;
   }
 
-  // --- Day view fetch ------------------------------------------------------
+  // --- Day view fetch (gated on task_setup_completed_at) -----------------
 
   const supabase = await createClient();
   const now = new Date();
@@ -129,145 +134,137 @@ export default async function DashboardPage({
   const selectedYmd = resolveSelectedYmd(sp?.date, todayYmd);
   const isToday = selectedYmd === todayYmd;
 
-  // Permission flags — mirror /tasks/page.tsx.
   const isOwnerOrMaid =
     ctx.membership.role === "owner" || ctx.membership.role === "maid";
   const canAddTasks = isOwnerOrMaid || ctx.membership.role === "family_member";
   const taskActionsEnabled = isOwnerOrMaid;
 
-  // Materialise occurrences up to the selected date (idempotent).
-  const horizonDate = addDays(new Date(`${selectedYmd}T12:00:00+08:00`), 1);
-  await supabase.rpc("tasks_generate_occurrences", {
-    p_horizon_date: sgYmd(horizonDate),
-  });
-
-  // Window for task_occurrences: when viewing today, pull from the epoch so
-  // overdue surfaces; otherwise just the target day. Same shape as
-  // /tasks/[date]/page.tsx.
-  const targetStart = new Date(`${selectedYmd}T00:00:00+08:00`);
-  const targetEnd = new Date(`${selectedYmd}T00:00:00+08:00`);
-  targetEnd.setDate(targetEnd.getDate() + 1);
-  const leftEdge = isToday ? new Date("1970-01-01T00:00:00Z") : targetStart;
-
-  const [
-    { data: occRows },
-    { data: rawMealRows },
-    { data: mealTimes },
-    { count: rosterCount },
-  ] = await Promise.all([
-    supabase
-      .from("task_occurrences")
-      .select(
-        "id, due_at, status, household_id, tasks!inner(id, title, household_id, assigned_to_profile_id, profiles!assigned_to_profile_id(display_name))",
-      )
-      .eq("household_id", ctx.household.id)
-      .gte("due_at", leftEdge.toISOString())
-      .lt("due_at", targetEnd.toISOString())
-      .order("due_at", { ascending: true }),
-    supabase
-      .from("meal_plans")
-      .select(
-        "slot, recipe_id, people_eating, recipes(name, kcal_per_serving, carbs_g_per_serving, fat_g_per_serving, protein_g_per_serving)",
-      )
-      .eq("household_id", ctx.household.id)
-      .eq("plan_date", selectedYmd),
-    supabase
-      .from("household_meal_times")
-      .select("slot,meal_time")
-      .eq("household_id", ctx.household.id),
-    supabase
-      .from("household_memberships")
-      .select("id", { count: "exact", head: true })
-      .eq("household_id", ctx.household.id)
-      .eq("status", "active"),
-  ]);
-
-  type OccRow = {
-    id: string;
-    due_at: string;
-    status: "pending" | "done" | "skipped";
-    tasks: {
-      id: string;
-      title: string;
-      household_id: string | null;
-      profiles: { display_name: string } | { display_name: string }[] | null;
-    };
-  };
-  // Supabase's generated types don't surface the task_occurrences→tasks
-  // relation, so we cast via unknown — same pattern the original pages use.
-  const all = ((occRows ?? []) as unknown) as OccRow[];
-
-  const toItem = (r: OccRow): OccurrenceRowItem => ({
-    occurrenceId: r.id,
-    taskId: r.tasks.id,
-    title: r.tasks.title,
-    dueAt: r.due_at,
-    assigneeName: Array.isArray(r.tasks.profiles)
-      ? (r.tasks.profiles[0]?.display_name ?? null)
-      : (r.tasks.profiles?.display_name ?? null),
-    status: r.status,
-    isStandard: r.tasks.household_id === null,
-  });
-
   const overdue: OccurrenceRowItem[] = [];
   const onDay: OccurrenceRowItem[] = [];
-  for (const r of all) {
-    const item = toItem(r);
-    const itemYmd = sgYmd(new Date(item.dueAt));
-    if (itemYmd === selectedYmd) {
-      onDay.push(item);
-      continue;
-    }
-    // Only when viewing today: < yesterday pending items become Overdue.
-    if (isToday && item.status === "pending" && itemYmd < yesterdayYmd) {
-      overdue.push(item);
-    }
-  }
-
-  const sortItems = (xs: OccurrenceRowItem[]) =>
-    xs.sort((a, b) => {
-      const da = new Date(a.dueAt).getTime();
-      const db = new Date(b.dueAt).getTime();
-      if (da !== db) return da - db;
-      return a.title.localeCompare(b.title);
-    });
-  sortItems(overdue);
-  sortItems(onDay);
-
-  // Build the meal feed: skip slots without a recipe and slots without a
-  // configured time (we can't sort them otherwise). The slot picker / autofill
-  // / locks live on /recipes now — Home is read-only for meals.
-  const timeBySlot = Object.fromEntries((mealTimes ?? []).map((r) => [r.slot, r.meal_time]));
-  const rosterSize = rosterCount ?? 1;
   const meals: MealFeedItem[] = [];
-  type Slot = MealFeedItem["slot"];
-  for (const r of rawMealRows ?? []) {
-    if (!r.recipe_id) continue;
-    const t = timeBySlot[r.slot];
-    if (!t) continue;
-    type RecipeShape = {
-      name: string;
-      kcal_per_serving: number | string | null;
-      carbs_g_per_serving: number | string | null;
-      fat_g_per_serving: number | string | null;
-      protein_g_per_serving: number | string | null;
-    };
-    const recipeRaw = r.recipes as unknown as RecipeShape | RecipeShape[] | null;
-    const recipe = Array.isArray(recipeRaw) ? recipeRaw[0] ?? null : recipeRaw;
-    if (!recipe?.name) continue;
-    const [hh, mm] = (t as string).split(":").map(Number);
-    const iso = `${selectedYmd}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:00+08:00`;
-    const num = (v: number | string | null) => (v == null ? null : Number(v));
-    meals.push({
-      slot: r.slot as Slot,
-      recipeName: recipe.name,
-      slotTimeIso: iso,
-      kcalPerServing: num(recipe.kcal_per_serving),
-      carbsGPerServing: num(recipe.carbs_g_per_serving),
-      fatGPerServing: num(recipe.fat_g_per_serving),
-      proteinGPerServing: num(recipe.protein_g_per_serving),
-      peopleEating: r.people_eating ?? rosterSize,
+
+  if (setupCompleted) {
+    const horizonDate = addDays(new Date(`${selectedYmd}T12:00:00+08:00`), 1);
+    await supabase.rpc("tasks_generate_occurrences", {
+      p_horizon_date: sgYmd(horizonDate),
     });
+
+    const targetStart = new Date(`${selectedYmd}T00:00:00+08:00`);
+    const targetEnd = new Date(`${selectedYmd}T00:00:00+08:00`);
+    targetEnd.setDate(targetEnd.getDate() + 1);
+    const leftEdge = isToday ? new Date("1970-01-01T00:00:00Z") : targetStart;
+
+    const [
+      { data: occRows },
+      { data: rawMealRows },
+      { data: mealTimes },
+      { count: rosterCount },
+    ] = await Promise.all([
+      supabase
+        .from("task_occurrences")
+        .select(
+          "id, due_at, status, household_id, tasks!inner(id, title, household_id, assigned_to_profile_id, profiles!assigned_to_profile_id(display_name))",
+        )
+        .eq("household_id", ctx.household.id)
+        .gte("due_at", leftEdge.toISOString())
+        .lt("due_at", targetEnd.toISOString())
+        .order("due_at", { ascending: true }),
+      supabase
+        .from("meal_plans")
+        .select(
+          "slot, recipe_id, people_eating, recipes(name, kcal_per_serving, carbs_g_per_serving, fat_g_per_serving, protein_g_per_serving)",
+        )
+        .eq("household_id", ctx.household.id)
+        .eq("plan_date", selectedYmd),
+      supabase
+        .from("household_meal_times")
+        .select("slot,meal_time")
+        .eq("household_id", ctx.household.id),
+      supabase
+        .from("household_memberships")
+        .select("id", { count: "exact", head: true })
+        .eq("household_id", ctx.household.id)
+        .eq("status", "active"),
+    ]);
+
+    type OccRow = {
+      id: string;
+      due_at: string;
+      status: "pending" | "done" | "skipped";
+      tasks: {
+        id: string;
+        title: string;
+        household_id: string | null;
+        profiles: { display_name: string } | { display_name: string }[] | null;
+      };
+    };
+    const all = ((occRows ?? []) as unknown) as OccRow[];
+
+    const toItem = (r: OccRow): OccurrenceRowItem => ({
+      occurrenceId: r.id,
+      taskId: r.tasks.id,
+      title: r.tasks.title,
+      dueAt: r.due_at,
+      assigneeName: Array.isArray(r.tasks.profiles)
+        ? (r.tasks.profiles[0]?.display_name ?? null)
+        : (r.tasks.profiles?.display_name ?? null),
+      status: r.status,
+      isStandard: r.tasks.household_id === null,
+    });
+
+    for (const r of all) {
+      const item = toItem(r);
+      const itemYmd = sgYmd(new Date(item.dueAt));
+      if (itemYmd === selectedYmd) {
+        onDay.push(item);
+        continue;
+      }
+      if (isToday && item.status === "pending" && itemYmd < yesterdayYmd) {
+        overdue.push(item);
+      }
+    }
+
+    const sortItems = (xs: OccurrenceRowItem[]) =>
+      xs.sort((a, b) => {
+        const da = new Date(a.dueAt).getTime();
+        const db = new Date(b.dueAt).getTime();
+        if (da !== db) return da - db;
+        return a.title.localeCompare(b.title);
+      });
+    sortItems(overdue);
+    sortItems(onDay);
+
+    const timeBySlot = Object.fromEntries((mealTimes ?? []).map((r) => [r.slot, r.meal_time]));
+    const rosterSize = rosterCount ?? 1;
+    type Slot = MealFeedItem["slot"];
+    for (const r of rawMealRows ?? []) {
+      if (!r.recipe_id) continue;
+      const t = timeBySlot[r.slot];
+      if (!t) continue;
+      type RecipeShape = {
+        name: string;
+        kcal_per_serving: number | string | null;
+        carbs_g_per_serving: number | string | null;
+        fat_g_per_serving: number | string | null;
+        protein_g_per_serving: number | string | null;
+      };
+      const recipeRaw = r.recipes as unknown as RecipeShape | RecipeShape[] | null;
+      const recipe = Array.isArray(recipeRaw) ? recipeRaw[0] ?? null : recipeRaw;
+      if (!recipe?.name) continue;
+      const [hh, mm] = (t as string).split(":").map(Number);
+      const iso = `${selectedYmd}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:00+08:00`;
+      const num = (v: number | string | null) => (v == null ? null : Number(v));
+      meals.push({
+        slot: r.slot as Slot,
+        recipeName: recipe.name,
+        slotTimeIso: iso,
+        kcalPerServing: num(recipe.kcal_per_serving),
+        carbsGPerServing: num(recipe.carbs_g_per_serving),
+        fatGPerServing: num(recipe.fat_g_per_serving),
+        proteinGPerServing: num(recipe.protein_g_per_serving),
+        peopleEating: r.people_eating ?? rosterSize,
+      });
+    }
   }
 
   return (
@@ -288,7 +285,9 @@ export default async function DashboardPage({
           </Card>
         ) : null}
 
+        {showHouseholdModeCard ? <HouseholdModeCard /> : null}
         {ownerCard ? <OwnerInviteMaidCard {...ownerCard} /> : null}
+        {showTaskSetupPromptCard ? <TaskSetupPromptCard /> : null}
 
         {showInventoryCard && <InventoryPromptCard />}
 
