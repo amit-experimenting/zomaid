@@ -45,10 +45,10 @@ Revalidation:
 - `revokeInvite` revalidates `/household/settings` and `/dashboard`.
 - `redeemInvite` does **not** call `revalidatePath` (it's invoked from `/join/[token]` during page render, where `revalidatePath` is disallowed); the caller (`/join/code/page.tsx`) wraps the call in its own `revalidatePath('/dashboard')`.
 - `removeMembership` revalidates `/household/settings` and `/dashboard`.
-- `updateMembershipDiet` revalidates `/household/settings`, `/plan`, `/recipes`.
+- `updateMembershipDiet` revalidates `/household/settings`, `/dashboard`, `/recipes`.
 - `updateMembershipPrivilege` revalidates `/household/settings`.
-- `updateHouseholdDiet` revalidates `/household/settings`, `/dashboard`, `/plan`, `/recipes`.
-- `updateMealTime` revalidates `/household/meal-times` and `/plan`.
+- `updateHouseholdDiet` revalidates `/household/settings`, `/dashboard`, `/recipes`.
+- `updateMealTime` revalidates `/household/meal-times`, `/dashboard`, and `/recipes`.
 
 Email-whitelist auto-redemption side channel: `getCurrentHousehold` (in `src/lib/auth/current-household.ts`) calls `tryRedeemPendingEmailInvite(profile.email)` (in `src/lib/auth/redeem-email-invite.ts`) when the caller has **no** active membership. That helper finds the most-recent unconsumed-unexpired invite whose `intended_email` matches the caller's profile email (case-insensitive), then calls the `redeem_invite(token)` RPC under the caller's JWT. The helper swallows errors — a failed auto-redeem is silent and the user falls through to the normal "you have no household" flow. This is owned by the household feature because the email-whitelist column (`invites.intended_email`) and its UI affordance (the optional email input on each invite form) are part of the settings page; the helper is just the side-channel that closes the loop on the user's first authenticated request.
 

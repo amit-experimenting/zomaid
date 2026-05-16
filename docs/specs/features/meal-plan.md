@@ -6,11 +6,9 @@
 ## Routes
 | Route | File | Type |
 | --- | --- | --- |
-| `/plan` | `src/app/plan/page.tsx` | page (redirect → `/recipes`) |
-| `/plan/[date]` | `src/app/plan/[date]/page.tsx` | page (redirect → `/recipes?date=…`) |
 | `/plan` (server actions) | `src/app/plan/actions.ts` | server-actions |
 
-Note: the per-day meal-plan surface no longer lives under `/plan/*`. After the "merge home / rename Recipes to Meal" refactor, the live UI is the `PlannedView` subcomponent inside `src/app/recipes/page.tsx` (default render when `?view` is absent). The two `/plan/*` page files are thin `redirect()` shims that preserve old bookmarks and push-notification deep links. The server actions in `src/app/plan/actions.ts` were not moved — `PlannedView` and the planner components still import them from `@/app/plan/actions`.
+Note: the per-day meal-plan surface lives in the `PlannedView` subcomponent inside `src/app/recipes/page.tsx` (default render when `?view` is absent). The `/plan` and `/plan/[date]` redirect shims were deleted in Phase 4 — old bookmarks now 404. The server actions in `src/app/plan/actions.ts` were not moved — `PlannedView` and the planner components still import them from `@/app/plan/actions`.
 
 ## Server actions
 | Action | File | Input shape | Output shape | Called by |
@@ -19,13 +17,11 @@ Note: the per-day meal-plan surface no longer lives under `/plan/*`. After the "
 | `regenerateMealPlanSlot` | `src/app/plan/actions.ts:47` | `{ planDate, slot }` (Zod `RegenerateSchema`) | `PlanActionResult<{ recipeId: string \| null }>` — extra `MEAL_PLAN_NO_ELIGIBLE_RECIPE` error when the scored-eligible set is empty | `src/components/plan/slot-action-sheet.tsx` ("Regenerate" button) |
 | `setPeopleEating` | `src/app/plan/actions.ts:76` | `{ planDate, slot, people: int 1–50 }` (Zod `PeopleEatingSchema`) | `PlanActionResult<{ recipeId: string \| null; peopleEating: number }>` | `src/components/plan/people-pill.tsx` |
 
-All three actions call `requireHousehold()` (`src/lib/auth/require.ts`) to resolve the active Clerk session → profile → household, then invoke a Supabase RPC under caller RLS. Lock/permission errors surfaced from the RPCs are mapped to `PLAN_LOCKED` / `PLAN_FORBIDDEN` so the UI can show inline copy without parsing Postgres messages. `setMealPlanSlot` and `regenerateMealPlanSlot` `revalidatePath("/plan")` and `revalidatePath('/plan/${planDate}')`; `setPeopleEating` revalidates only the dated path. Note: these still point at the legacy `/plan/*` paths even though the live surface is now `/recipes` — see Open questions.
+All three actions call `requireHousehold()` (`src/lib/auth/require.ts`) to resolve the active Clerk session → profile → household, then invoke a Supabase RPC under caller RLS. Lock/permission errors surfaced from the RPCs are mapped to `PLAN_LOCKED` / `PLAN_FORBIDDEN` so the UI can show inline copy without parsing Postgres messages. `setMealPlanSlot` / `regenerateMealPlanSlot` / `setPeopleEating` all revalidate `/dashboard` and `/recipes` — the live surfaces that consume meal-plan state after the Phase 4 cleanup.
 
 ## Components
 | Component | File | Used by |
 | --- | --- | --- |
-| `PlanIndex` (default) | `src/app/plan/page.tsx` | Next.js route `/plan` — redirect-only |
-| `PlanForDate` (default) | `src/app/plan/[date]/page.tsx` | Next.js route `/plan/[date]` — redirect-only |
 | `PlannedView` (internal) | `src/app/recipes/page.tsx:64` | Rendered by the `/recipes` route's default branch (i.e. when `?view` is not `library`). This is the planner surface — owned by this spec even though it lives under `src/app/recipes/`. See Open questions. |
 | `SlotRow` | `src/components/plan/slot-row.tsx` | `PlannedView` (rendered inside `SlotActionSheet`'s `trigger`) |
 | `SlotActionSheet` | `src/components/plan/slot-action-sheet.tsx` | `PlannedView` (one per slot) |
@@ -69,8 +65,6 @@ Cross-feature reuse worth noting:
 - **pg_cron:** the `mealplan-suggest-tomorrow` job (22:00 SGT nightly, registered in `20260523_001_meal_plan_cron.sql`) is the only cron driver the planner owns. Inventory's own sweep cron (`20260615_001_inventory_sweep_cron.sql`) is what eventually writes back to `meal_plans.deduction_*`.
 
 ## Open questions
-- **PlannedView placement.** The planner's primary UI lives at `src/app/recipes/page.tsx:64` (the default branch when `?view` is not `library`). It was placed there during the "merge home / rename Recipes to Meal" refactor so the route URL could be `/recipes` without splitting the file structure. The component is purely planner concerns (slot rows, autofill kickoff, people-pill, lock badges) and could be lifted to e.g. `src/components/plan/planned-view.tsx` so `src/app/recipes/page.tsx` becomes a thin dispatcher. `features/recipes.md` already flagged this; recording here that this spec is the canonical owner.
-- **`revalidatePath` targets are stale.** All three actions revalidate `/plan` and `/plan/[date]`, but those routes are now redirect-only — the live surface is `/recipes` (no params) and `/recipes?date=…`. Mutations still appear to work because the user is redirected through `/plan/*` once and then sees fresh data via the on-view autofill + the `PlannedView` SSR fetch, but the cache-invalidation hint is pointing at the wrong path. Worth a follow-up to re-target `revalidatePath("/recipes")`.
 - **Pre-autofill `mealplan_suggest_for_date` left in place.** The cron-only wrapper still exists for the `mealplan-suggest-tomorrow` job and now just loops households and calls the per-household worker. That's fine; flag here only so future audits don't confuse the two entry points (`mealplan_autofill_date` = user/on-view, `mealplan_suggest_for_date` = cron).
 
 ## Test coverage
@@ -86,11 +80,9 @@ Cross-feature reuse worth noting:
 | `mealplan-suggest-tomorrow` cron job | `supabase/migrations/20260523_001_meal_plan_cron.sql` | — | — | — | medium | `tests/db/` (invoke `mealplan_suggest_for_date`) |
 | `mealplan_autofill_date_for_household(p_household, p_date)` | `supabase/migrations/20260620_001_mealplan_autofill.sql` | — | — | — | medium | `tests/db/` |
 | `mealplan_suggest_for_date(p_date)` | `supabase/migrations/20260522_001_meal_plan_rpcs.sql` (rewritten by `20260620_001_mealplan_autofill.sql`) | — | — | — | medium | `tests/db/` |
-| `PlanForDate` (`/plan/[date]` redirect) | `src/app/plan/[date]/page.tsx` | — | — | — | low | `tests/e2e/` |
-| `PlanIndex` (`/plan` redirect) | `src/app/plan/page.tsx` | — | — | `tests/e2e/recipes-plan.spec.ts` (unauthenticated redirect only) | low | `tests/e2e/` |
-| `PlannedView` (`/recipes` default planner surface) | `src/app/recipes/page.tsx:64` | — | — | `tests/e2e/recipes-plan.spec.ts` (unauthenticated redirect only); `tests/e2e/plan-autofill.spec.ts` | medium | `tests/e2e/` |
+| `PlannedView` (`/recipes` default planner surface) | `src/app/recipes/page.tsx:64` | — | — | `tests/e2e/recipes-plan.spec.ts` (unauthenticated redirect only) | medium | `tests/e2e/` |
 | Orphan null-recipe cleanup invariant | `supabase/migrations/20260619_001_meal_plan_null_recipe_cleanup.sql` | — | `tests/db/mealplan-null-recipe-cleanup.test.ts` | — | none | `tests/db/` |
-| `mealplan_autofill_date(p_date)` | `supabase/migrations/20260620_001_mealplan_autofill.sql` | — | `tests/db/mealplan-autofill.test.ts` | `tests/e2e/plan-autofill.spec.ts` | none | `tests/db/` |
+| `mealplan_autofill_date(p_date)` | `supabase/migrations/20260620_001_mealplan_autofill.sql` | — | `tests/db/mealplan-autofill.test.ts` | — | none | `tests/db/` |
 | `mealplan_recipe_stock_score(p_household, p_recipe_id, p_people)` | `supabase/migrations/20260620_001_mealplan_autofill.sql` | — | `tests/db/inventory-stock-score.test.ts` | — | none | `tests/db/` |
 | `mealplan_regenerate_slot(p_date, p_slot)` | `supabase/migrations/20260522_001_meal_plan_rpcs.sql` (rewritten by `20260620_001_mealplan_autofill.sql`) | — | `tests/db/mealplan-regenerate-scoring.test.ts` | — | none | `tests/db/` |
 | `mealplan_set_people_eating(p_date, p_slot, p_people)` | `supabase/migrations/20260618_001_meal_plan_inventory_rpcs.sql` | — | `tests/db/meal-plan-lock.test.ts` (lock window only) | — | none | `tests/db/` |

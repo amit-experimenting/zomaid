@@ -28,7 +28,7 @@ The `MainNav` shared chrome and the small `ui/*` primitives that every feature m
 
 Public-route matcher in `src/proxy.ts` (`createRouteMatcher`): `/`, `/sign-in(.*)`, `/sign-up(.*)`, `/join/(.*)`, `/api/webhooks/(.*)`, `/api/cron/(.*)`.
 
-Auth-gated matcher: `/dashboard(.*)`, `/household(.*)`, `/inventory(.*)`, `/onboarding(.*)`, `/plan(.*)`, `/recipes(.*)`, `/shopping(.*)`, `/bills(.*)`, `/tasks(.*)`, `/admin(.*)`, `/scans(.*)`. The middleware only enforces "signed in or not"; the `/onboarding` ↔ `/dashboard` choice is per-page (`requireHousehold()` / `getCurrentHousehold()`). Anonymous hits on a gated route are redirected to `/` (the landing page, which mounts the Clerk sign-in/up buttons). Other unmatched routes (e.g. typoed paths) are left alone — Next renders its standard 404. The middleware matcher config excludes `_next`, `sw.js`, `manifest.webmanifest`, the icon routes, and a long list of static-asset extensions; `(api|trpc)(.*)` is force-matched.
+Auth-gated matcher: `/dashboard(.*)`, `/household(.*)`, `/inventory(.*)`, `/onboarding(.*)`, `/recipes(.*)`, `/shopping(.*)`, `/bills(.*)`, `/tasks(.*)`, `/admin(.*)`, `/scans(.*)`. The middleware only enforces "signed in or not"; the `/onboarding` ↔ `/dashboard` choice is per-page (`requireHousehold()` / `getCurrentHousehold()`). Anonymous hits on a gated route are redirected to `/` (the landing page, which mounts the Clerk sign-in/up buttons). Other unmatched routes (e.g. typoed paths) are left alone — Next renders its standard 404. The middleware matcher config excludes `_next`, `sw.js`, `manifest.webmanifest`, the icon routes, and a long list of static-asset extensions; `(api|trpc)(.*)` is force-matched.
 
 The `/proxy.ts` filename (rather than the more familiar `middleware.ts`) is the Next 16 convention — see the deprecation note in `node_modules/next/dist/docs/`.
 
@@ -126,7 +126,6 @@ No Sentry or other dedicated observability integration; the dev shim in `src/app
 - **Public route matcher allows `/api/cron/(.*)` past the auth gate.** The cron handlers themselves enforce `Authorization: Bearer $CRON_SECRET`. That's correct, but the public-route allowlist looks scarier than it is at a glance — a comment on the matcher (or a tighter matcher) would help. Same for `/api/webhooks/(.*)` (Svix signature is the gate).
 - **`auth-gated` matcher in `src/proxy.ts` is a *redirect* signal, not an *enforcement*.** Any path that's not in the gated list AND not signed in falls through to render normally. Today there are no such routes (every authed surface is in the list), but if a new authed route lands without being added, the page itself will need to call `requireHousehold()` (it would anyway) to be safe. The two are belt-and-braces; document as a deliberate redundancy.
 - **No `tests/api/` directory** despite three cron handlers + one webhook handler. Coverage of bearer-token rejection, Svix-signature rejection, and the lazy-upsert race in `getCurrentProfile()` would go here. Phase 2 will populate the test coverage table.
-- **`profiles.locale` and `profiles.timezone` are never read or written by app code.** Defaults: `en-SG`, `Asia/Singapore`. Either remove them, surface them in a settings UI, or document the intent (likely "reserved for future localisation").
 - **`tryRedeemPendingEmailInvite` swallows RPC errors silently.** That's the documented behaviour (failed auto-redeem falls through to the no-household flow), but there's no telemetry hook — a chronically-failing invite is invisible. Could add a `console.warn` or an admin-visible counter without changing the silent-to-user contract.
 
 ## Test coverage
@@ -161,7 +160,7 @@ Cron-driver entries below are listed here because the routes themselves (bearer-
 | `readAdminEnv()` | `src/lib/admin/env-sync.ts` | — | — | — | medium | `tests/admin/` |
 | `SignInPage` / `SignUpPage` | `src/app/sign-in/[[...sign-in]]/page.tsx`, `src/app/sign-up/[[...sign-up]]/page.tsx` | — | — | — | medium | `tests/e2e/` |
 | `siteUrl()` (header-derived origin) | `src/lib/site-url.ts` | — | — | — | medium | `tests/unit/` |
-| `src/proxy.ts` (public/auth-gated route matcher) | `src/proxy.ts` | — | — | partial via `tests/e2e/{foundations,inventory,shopping,bills,tasks,recipes-plan,plan-autofill}.spec.ts` (unauth → `/` redirects) | medium | `tests/e2e/` |
+| `src/proxy.ts` (public/auth-gated route matcher) | `src/proxy.ts` | — | — | partial via `tests/e2e/{foundations,inventory,shopping,bills,tasks,recipes-plan}.spec.ts` (unauth → `/` redirects) | medium | `tests/e2e/` |
 | `touch_updated_at()` trigger | `supabase/migrations/20260512_001_household_memberships.sql` | — | — | — | medium | `tests/db/` |
 | `useSupabaseClient()` (browser client; Clerk token forwarding) | `src/lib/supabase/client.ts` | — | — | — | medium | `tests/unit/` |
 | `apple-icon` route | `src/app/apple-icon.tsx` | — | — | — | low | `tests/unit/` |
