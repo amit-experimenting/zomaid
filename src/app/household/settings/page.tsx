@@ -13,11 +13,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import type { Privilege } from "@/lib/db/types";
+import type { Diet, Privilege } from "@/lib/db/types";
 
-function dietLabel(d: import("@/lib/db/types").Diet): string {
-  return { vegan: "Vegan", vegetarian: "Vegetarian",
-           eggitarian: "Eggitarian", non_vegetarian: "Non-vegetarian" }[d];
+const DIET_LABELS: Record<Diet, string> = {
+  vegan: "Vegan",
+  vegetarian: "Vegetarian",
+  eggitarian: "Eggitarian",
+  non_vegetarian: "Non-vegetarian",
+};
+function dietLabel(d: Diet): string {
+  return DIET_LABELS[d];
 }
 
 export default async function HouseholdSettingsPage() {
