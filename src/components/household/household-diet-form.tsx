@@ -55,6 +55,8 @@ export function HouseholdDietForm({ currentValue, members, action }: Props) {
       const r = RANK[m.dietPreference ?? "non_vegetarian"];
       return r < RANK[chosenDiet];
     });
+    if (affected.length === 0) return; // nobody to warn about — submit normally
+
     const names = affected.slice(0, 3).map((m) => {
       const label = m.dietPreference ? LABEL[m.dietPreference].toLowerCase() : "no preference";
       return `${m.displayName} (${label})`;
