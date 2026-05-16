@@ -4,36 +4,88 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { MainNav } from "@/components/site/main-nav";
 import { NotificationToggle } from "@/components/tasks/notification-toggle";
-import { TodayList } from "@/components/tasks/_today-list";
+import { DaySections, type DaySection } from "@/components/tasks/_day-sections";
 import type { OccurrenceRowItem } from "@/components/tasks/occurrence-row";
+
+// Match the SG-centric assumption baked into /plan and the rest of the app.
+// See docs/specs/2026-05-16-tasks-day-grouping-design.md for the rationale.
+const TZ = "Asia/Singapore";
+const HORIZON_DAYS = 14;
+const NAMED_DAYS = 5; // Today + next 4
+
+/** Format a Date as YYYY-MM-DD in the household timezone (en-CA gives ISO). */
+function sgYmd(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+/** Add `days` to a Date and return a new instance. */
+function addDays(d: Date, days: number): Date {
+  const r = new Date(d);
+  r.setDate(r.getDate() + days);
+  return r;
+}
+
+/** Short human label for a date: "Wed 21 May". */
+function sgShortLabel(d: Date): string {
+  return new Intl.DateTimeFormat("en-SG", {
+    timeZone: TZ,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(d);
+}
 
 export default async function TasksIndex() {
   const ctx = await requireHousehold();
   const supabase = await createClient();
   const isOwnerOrMaid = ctx.membership.role === "owner" || ctx.membership.role === "maid";
 
-  const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
-  const startTomorrow = new Date(startToday); startTomorrow.setDate(startTomorrow.getDate() + 1);
-  const startNextWeek = new Date(startToday); startNextWeek.setDate(startNextWeek.getDate() + 7);
+  const now = new Date();
+  const nowMs = now.getTime();
+  const todayYmd = sgYmd(now);
 
-  // Lazy-generate the next 7 days of occurrences. Idempotent on conflict;
-  // fast when nothing is missing. Ensures new households / fresh installs
-  // see standard-task occurrences without waiting for the nightly cron.
+  // 14-day horizon: enough to power Today + 4 named days + Later. Idempotent
+  // RPC; cheap when nothing is missing.
+  const horizonDate = addDays(now, HORIZON_DAYS);
   await supabase.rpc("tasks_generate_occurrences", {
-    p_horizon_date: new Date(startToday.getTime() + 7 * 86_400_000).toISOString().slice(0, 10),
+    p_horizon_date: sgYmd(horizonDate),
   });
+
+  // Right edge is the start of (today + HORIZON_DAYS) in SG, expressed as a
+  // wall-clock instant. Simpler approximation: cap at now + HORIZON_DAYS * 24h.
+  // Off-by-a-few-hours at the boundary is fine since we re-bucket by sgYmd.
+  const rightEdge = new Date(nowMs + HORIZON_DAYS * 86_400_000);
 
   const { data: occRows } = await supabase
     .from("task_occurrences")
-    .select("id, due_at, status, household_id, tasks!inner(id, title, household_id, assigned_to_profile_id, profiles!assigned_to_profile_id(display_name))")
+    .select(
+      "id, due_at, status, household_id, tasks!inner(id, title, household_id, assigned_to_profile_id, profiles!assigned_to_profile_id(display_name))"
+    )
     .eq("household_id", ctx.household.id)
-    .gte("due_at", startToday.toISOString())
-    .lt("due_at", startNextWeek.toISOString())
+    .lt("due_at", rightEdge.toISOString())
     .order("due_at", { ascending: true });
 
-  const all = (occRows ?? []) as any[];
+  type OccRow = {
+    id: string;
+    due_at: string;
+    status: "pending" | "done" | "skipped";
+    tasks: {
+      id: string;
+      title: string;
+      household_id: string | null;
+      profiles: { display_name: string } | { display_name: string }[] | null;
+    };
+  };
+  // Supabase's generated types don't pick up the task_occurrences→tasks
+  // relation, so we cast via unknown — same pattern the original handler used.
+  const all = ((occRows ?? []) as unknown) as OccRow[];
 
-  const toItem = (r: any): OccurrenceRowItem => ({
+  const toItem = (r: OccRow): OccurrenceRowItem => ({
     occurrenceId: r.id,
     taskId: r.tasks.id,
     title: r.tasks.title,
@@ -45,8 +97,65 @@ export default async function TasksIndex() {
     isStandard: r.tasks.household_id === null,
   });
 
-  const today = all.filter((r) => new Date(r.due_at) < startTomorrow).map(toItem);
-  const upcoming = all.filter((r) => new Date(r.due_at) >= startTomorrow).map(toItem);
+  // Named day buckets keyed by YYYY-MM-DD in SG.
+  const namedYmds: string[] = [];
+  const dayLabels: { ymd: string; label: string; subLabel?: string }[] = [];
+  for (let i = 0; i < NAMED_DAYS; i++) {
+    const d = addDays(now, i);
+    const ymd = sgYmd(d);
+    namedYmds.push(ymd);
+    const short = sgShortLabel(d);
+    if (i === 0) dayLabels.push({ ymd, label: "Today", subLabel: short });
+    else if (i === 1) dayLabels.push({ ymd, label: "Tomorrow", subLabel: short });
+    else dayLabels.push({ ymd, label: short });
+  }
+
+  const overdue: OccurrenceRowItem[] = [];
+  const byDay = new Map<string, OccurrenceRowItem[]>();
+  const later: OccurrenceRowItem[] = [];
+
+  for (const r of all) {
+    const item = toItem(r);
+    const dueMs = new Date(item.dueAt).getTime();
+    const isPending = item.status === "pending";
+
+    if (isPending && dueMs < nowMs) {
+      overdue.push(item);
+      continue;
+    }
+
+    const ymd = sgYmd(new Date(item.dueAt));
+    // Drop past completed/skipped occurrences from the view so the page
+    // does not turn into an audit log.
+    if (ymd < todayYmd) continue;
+
+    if (namedYmds.includes(ymd)) {
+      const bucket = byDay.get(ymd) ?? [];
+      bucket.push(item);
+      byDay.set(ymd, bucket);
+    } else {
+      later.push(item);
+    }
+  }
+
+  // Within each bucket: due_at asc, then title asc as a stable tiebreaker.
+  const sortItems = (xs: OccurrenceRowItem[]) =>
+    xs.sort((a, b) => {
+      const da = new Date(a.dueAt).getTime();
+      const db = new Date(b.dueAt).getTime();
+      if (da !== db) return da - db;
+      return a.title.localeCompare(b.title);
+    });
+  sortItems(overdue);
+  for (const v of byDay.values()) sortItems(v);
+  sortItems(later);
+
+  const days: DaySection[] = dayLabels.map((d) => ({
+    ymd: d.ymd,
+    label: d.label,
+    subLabel: d.subLabel,
+    items: byDay.get(d.ymd) ?? [],
+  }));
 
   return (
     <main className="mx-auto max-w-md">
@@ -54,28 +163,25 @@ export default async function TasksIndex() {
       <header className="border-b border-border px-4 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold">Tasks</h1>
-          {isOwnerOrMaid && <Link href="/tasks/new"><Button size="sm">+ New</Button></Link>}
+          {isOwnerOrMaid && (
+            <Link href="/tasks/new">
+              <Button size="sm">+ New</Button>
+            </Link>
+          )}
         </div>
-        {isOwnerOrMaid && <div className="mt-2"><NotificationToggle /></div>}
+        {isOwnerOrMaid && (
+          <div className="mt-2">
+            <NotificationToggle />
+          </div>
+        )}
       </header>
 
-      <section>
-        <h2 className="px-4 py-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Today</h2>
-        {today.length === 0 ? (
-          <p className="px-4 py-6 text-center text-muted-foreground">Nothing for today.</p>
-        ) : (
-          <TodayList items={today} readOnly={!isOwnerOrMaid} />
-        )}
-      </section>
-
-      <section>
-        <h2 className="px-4 py-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Upcoming (next 7 days)</h2>
-        {upcoming.length === 0 ? (
-          <p className="px-4 py-6 text-center text-muted-foreground">No upcoming occurrences.</p>
-        ) : (
-          <TodayList items={upcoming} readOnly={!isOwnerOrMaid} />
-        )}
-      </section>
+      <DaySections
+        overdue={overdue}
+        days={days}
+        later={later}
+        readOnly={!isOwnerOrMaid}
+      />
     </main>
   );
 }

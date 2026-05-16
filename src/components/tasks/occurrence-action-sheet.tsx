@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { PendingButton } from "@/components/ui/pending-button";
 import Link from "next/link";
 import { hideStandardTask, markOccurrenceDone, markOccurrenceSkipped } from "@/app/tasks/actions";
 
@@ -28,8 +29,8 @@ export function OccurrenceActionSheet(p: OccurrenceActionSheetProps) {
       <SheetContent side="bottom">
         <SheetHeader><SheetTitle>{p.title}</SheetTitle></SheetHeader>
         <div className="flex flex-col gap-2 py-4">
-          <Button type="button" onClick={done} disabled={pending}>Mark done</Button>
-          <Button type="button" variant="outline" onClick={skip} disabled={pending}>Skip</Button>
+          <PendingButton type="button" onClick={done} pending={pending}>Mark done</PendingButton>
+          <PendingButton type="button" variant="outline" onClick={skip} pending={pending}>Skip</PendingButton>
           {p.isStandard ? (
             confirmHide ? (
               <div className="flex flex-col gap-2 rounded-md border border-border p-3">
@@ -39,7 +40,7 @@ export function OccurrenceActionSheet(p: OccurrenceActionSheetProps) {
                 </p>
                 <div className="flex gap-2">
                   <Button type="button" variant="ghost" className="flex-1" disabled={pending} onClick={() => setConfirmHide(false)}>Cancel</Button>
-                  <Button type="button" variant="destructive" className="flex-1" disabled={pending} onClick={hide}>Hide</Button>
+                  <PendingButton type="button" variant="destructive" className="flex-1" pending={pending} onClick={hide}>Hide</PendingButton>
                 </div>
               </div>
             ) : (
