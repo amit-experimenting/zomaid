@@ -281,8 +281,6 @@ export type Database = {
           total_amount: number | null;
           currency: string;
           image_storage_path: string;
-          github_issue_number: number | null;
-          github_issue_url: string | null;
           created_at: string;
           updated_at: string;
           processed_at: string | null;
@@ -298,8 +296,6 @@ export type Database = {
           total_amount?: number | null;
           currency?: string;
           image_storage_path: string;
-          github_issue_number?: number | null;
-          github_issue_url?: string | null;
           created_at?: string;
           updated_at?: string;
           processed_at?: string | null;
