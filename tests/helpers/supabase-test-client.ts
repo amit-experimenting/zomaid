@@ -64,7 +64,13 @@ export function serviceClient(): TypedClient {
 
 /** Delete rows from `table` by id via the service-role client. */
 export async function cleanupRows(
-  table: "profiles" | "households" | "household_memberships" | "invites",
+  table:
+    | "profiles"
+    | "households"
+    | "household_memberships"
+    | "invites"
+    | "tasks"
+    | "task_occurrences",
   ids: readonly string[],
 ): Promise<void> {
   if (ids.length === 0) return;
