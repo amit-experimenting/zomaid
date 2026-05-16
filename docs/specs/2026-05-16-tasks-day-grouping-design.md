@@ -1,5 +1,7 @@
 # Tasks page: day grouping with overdue + later
 
+> **Superseded as the living architecture doc for the tasks area by [`features/tasks.md`](features/tasks.md).** This dated spec is retained for historical context.
+
 Date: 2026-05-16
 
 ## Problem
