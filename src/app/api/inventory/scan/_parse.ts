@@ -6,13 +6,13 @@ export type ParsedItem = {
   unit: ScanUnit | null;
 };
 
-export const SCAN_UNITS = ["kg", "g", "l", "ml", "piece"] as const;
+const SCAN_UNITS = ["kg", "g", "l", "ml", "piece"] as const;
 export type ScanUnit = (typeof SCAN_UNITS)[number];
 
 // Match the shape the model returns. Permissive on quantity/unit
 // because we coerce them in parseScanResponse — only item_name is
 // required to be a string at the schema level.
-export const ModelResponseSchema = z.object({
+const ModelResponseSchema = z.object({
   items: z
     .array(
       z
