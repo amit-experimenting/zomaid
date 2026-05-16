@@ -64,4 +64,12 @@ Cards on the dashboard that link into other feature surfaces (meal rows → `/re
   - Service-role client (`createServiceClient` from `src/lib/supabase/server.ts`) for the owner-side maid lookup that joins `household_memberships` → `profiles` across the RLS boundary, and for the privileged `households.maid_mode` updates inside the two server actions.
 
 ## Test coverage
-_To be filled in Phase 2._
+
+| Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `inviteMaidFromHome` | `src/app/dashboard/actions.ts:9` | — | — | — | high | `tests/actions/` |
+| `revokeMaidInviteFromHome` | `src/app/dashboard/actions.ts:48` | — | — | — | high | `tests/actions/` |
+| `setHouseholdFamilyRun` | `src/app/dashboard/actions.ts:54` | — | — | — | high | `tests/actions/` |
+| `tasks_generate_occurrences(date)` | `supabase/migrations/20260601_001_task_generation_cron.sql` (rewritten by `20260602_001_standard_tasks.sql`, `20260705_001_household_setup_gates.sql`) | — | — | — | medium | `tests/db/` |
+| `DashboardPage` (`/dashboard` route) | `src/app/dashboard/page.tsx` | — | — | `tests/e2e/foundations.spec.ts` (unauthenticated redirect only); `tests/e2e/dashboard-owner-invite-maid.spec.ts` (skipped stub) | medium | `tests/e2e/` |
+| `household_effective_diet(uuid)` | `supabase/migrations/20260706_001_household_diet_preference.sql` | — | `tests/db/household-diet-preference.test.ts` | — | none | `tests/db/` |
