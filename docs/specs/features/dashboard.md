@@ -63,8 +63,5 @@ Cards on the dashboard that link into other feature surfaces (meal rows → `/re
   - RLS-scoped server client (`createClient` from `src/lib/supabase/server.ts`) for all per-household reads (invites lookup, inventory count, meal plans, meal times, membership counts, task occurrences, `household_effective_diet` RPC, `tasks_generate_occurrences` RPC).
   - Service-role client (`createServiceClient` from `src/lib/supabase/server.ts`) for the owner-side maid lookup that joins `household_memberships` → `profiles` across the RLS boundary, and for the privileged `households.maid_mode` updates inside the two server actions.
 
-## Open questions
-- Several supporting features the dashboard links into (meal-plan, recipes, tasks, inventory, household, onboarding, scans) are still cross-referenced from this spec — the corresponding `features/*.md` docs are being authored as part of the same audit; references will firm up once those land.
-
 ## Test coverage
 _To be filled in Phase 2._
