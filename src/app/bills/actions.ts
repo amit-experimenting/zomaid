@@ -133,8 +133,9 @@ const UploadBillFromScanSchema = z.object({
   // omitted on the synchronous /inventory/new → confirm flow.
   attemptId: z.string().uuid().optional(),
   // Storage path in bill-images bucket. Set by the scan API route after a
-  // successful upload; omitted on retry-from-attempt flows (the image lives
-  // in bill-scan-pending and isn't moved on save in v1).
+  // successful upload; omitted on retry-from-attempt flows, where the
+  // image lives in bill-scan-pending and gets moved into bill-images by
+  // this action (copy then delete the pending source on success).
   imageStoragePath: z.string().min(1).max(500).optional(),
 });
 
@@ -246,9 +247,13 @@ export async function uploadBillFromScan(
 
   // ── 1.5. If finalizing a queued retry, copy the image from the
   // bill-scan-pending bucket into bill-images so /bills/[id] can render
-  // it via the bill-images signed-URL path. The pending-bucket original
-  // stays put (user explicitly opted to retain images on success).
+  // it via the bill-images signed-URL path. We hold off on deleting the
+  // pending-bucket source until the bill row + line items are durably
+  // written (move-on-success, executed at the bottom of this action) so
+  // a transient DB failure after the copy doesn't leave the user with no
+  // way to retry against the original image.
   let finalImagePath = parsed.data.imageStoragePath ?? SENTINEL_IMAGE_PATH;
+  let pendingSourcePath: string | null = null;
   if (parsed.data.attemptId && !parsed.data.imageStoragePath) {
     const { createServiceClient } = await import("@/lib/supabase/service");
     const svc = createServiceClient();
@@ -270,6 +275,7 @@ export async function uploadBillFromScan(
           .upload(newPath, dl.data, { contentType: mime, upsert: false });
         if (!ul.error) {
           finalImagePath = newPath;
+          pendingSourcePath = attempt.data.storage_path;
         } else {
           console.error("[uploadBillFromScan] copy to bill-images failed", ul.error);
         }
@@ -417,6 +423,23 @@ export async function uploadBillFromScan(
         "[uploadBillFromScan] failed to stamp bill_scan_attempts",
         stamp.error,
       );
+    }
+    // Move-on-success: now that the bill + line items are durably written
+    // and the attempt row is stamped reviewed, drop the source from
+    // bill-scan-pending. A delete failure here is non-fatal — worst case
+    // is an orphan in the pending bucket, which is the same state we had
+    // before this change. /scans/pending and /admin/bill-scans both
+    // filter on reviewed_at IS NULL / status, so the orphan stays hidden.
+    if (pendingSourcePath) {
+      const cleanup = await svc.storage
+        .from("bill-scan-pending")
+        .remove([pendingSourcePath]);
+      if (cleanup.error) {
+        console.warn(
+          "[uploadBillFromScan] bill-scan-pending cleanup failed",
+          cleanup.error,
+        );
+      }
     }
     revalidatePath("/scans/pending");
   }
