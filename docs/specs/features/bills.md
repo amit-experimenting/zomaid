@@ -96,4 +96,26 @@ Cross-feature components consumed by bills but owned elsewhere: none of the per-
 - **`uploadBillFromScan` rolls back the bill on a line-item insert failure but not on a shopping-match failure.** The shopping-match loop is explicitly best-effort; a line-item insert failure does `delete from bills where id = ...`. That's defensible (the bill is the durable record; matched shopping rows are convenience), but worth documenting against a possible future change.
 
 ## Test coverage
-_To be filled in Phase 2._
+
+| Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `deleteBill` | `src/app/bills/actions.ts:53` | — | — | — | high | `tests/actions/` |
+| `ingestBillLineItem` | `src/app/bills/actions.ts:72` | — | — | — | high | `tests/actions/` |
+| `uploadBillFromScan` | `src/app/bills/actions.ts:161` | — | — | — | high | `tests/actions/` |
+| `bills` + `bill_line_items` RLS | `supabase/migrations/20260528_001_bills_and_line_items.sql` | — | — | — | medium | `tests/db/` |
+| `BillConfirmForm` | `src/components/bills/bill-confirm-form.tsx` | — | — | — | medium | `tests/e2e/` |
+| `BillDetailActions` | `src/components/bills/_detail-actions.tsx` | — | — | — | medium | `tests/e2e/` |
+| `BillDetailPage` | `src/app/bills/[id]/page.tsx` | — | — | partial via `tests/e2e/bills.spec.ts` (unauth redirect only) | medium | `tests/e2e/` |
+| `InventoryReviewQueue` | `src/app/bills/[id]/_inventory-queue.tsx` | — | — | — | medium | `tests/e2e/` |
+| `LineItemEditor` | `src/components/bills/line-item-editor.tsx` | — | — | — | medium | `tests/e2e/` |
+| `skipBillLineItem` | `src/app/bills/actions.ts:96` | — | — | — | medium | `tests/actions/` |
+| `unskipBillLineItem` | `src/app/bills/actions.ts:107` | — | — | — | medium | `tests/actions/` |
+| `updateBillLineItem` | `src/app/bills/actions.ts:28` | — | — | — | medium | `tests/actions/` |
+| `BillCard` | `src/components/bills/bill-card.tsx` | — | — | — | low | `tests/e2e/` (via shopping Bills tab) |
+| `BillDetailHeader` | `src/components/bills/bill-detail-header.tsx` | — | — | — | low | `tests/e2e/` |
+| `BillImageViewer` | `src/components/bills/bill-image-viewer.tsx` | — | — | — | low | `tests/e2e/` |
+| `ingest_bill_ocr` RPC (dead code) | `supabase/migrations/20260530_001_ingest_bill_ocr_fn.sql` | — | — | — | low | `tests/db/` (or remove) |
+| `LineItemRow` | `src/components/bills/line-item-row.tsx` | — | — | — | low | `tests/e2e/` |
+| `StatusBadge` | `src/components/bills/status-badge.tsx` | — | — | — | low | `tests/unit/` |
+| `areDedupeKeysEqual` | `src/app/bills/_dedupe.ts` | `tests/unit/bill-dedupe.test.ts` | — | — | none | `tests/unit/` |
+| `buildBillDedupeKey` | `src/app/bills/_dedupe.ts` | `tests/unit/bill-dedupe.test.ts` | — | — | none | `tests/unit/` |
