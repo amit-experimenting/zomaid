@@ -6,6 +6,8 @@
 
 > **Superseded as the living architecture doc for the household area by [`features/household.md`](features/household.md).** This dated spec is retained for historical context.
 
+> **Superseded as the living architecture doc for the onboarding area by [`features/onboarding.md`](features/onboarding.md).** This dated spec is retained for historical context.
+
 - **Date:** 2026-05-16
 - **Status:** Brainstorming → pending implementation plan
 - **Owner:** dharni05@gmail.com
