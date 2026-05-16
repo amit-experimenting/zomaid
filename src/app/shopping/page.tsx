@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSupabaseClient } from "@/lib/supabase/client";
 import { MainNav } from "@/components/site/main-nav";
 import { QuickAdd } from "@/components/shopping/quick-add";
@@ -7,6 +8,8 @@ import { AutoAddButton } from "@/components/shopping/auto-add-button";
 import { ItemRow } from "@/components/shopping/item-row";
 import { EditItemSheet } from "@/components/shopping/edit-item-sheet";
 import { BoughtHistory, type BoughtItem } from "@/components/shopping/bought-history";
+import { cn } from "@/lib/utils";
+import { BillsTab } from "./_bills-tab";
 
 type ShoppingItem = {
   id: string;
@@ -19,12 +22,17 @@ type ShoppingItem = {
 };
 
 type Role = "owner" | "maid" | "family_member";
+type View = "list" | "bills";
 
 export default function ShoppingPage() {
   // Note: this page is client-side because the user needs interactive checkboxes
   // and quick-add without a full server round-trip per keystroke. RLS still
   // gates every action server-side.
   const supabase = useSupabaseClient();
+  const router = useRouter();
+  const params = useSearchParams();
+  const view: View = params.get("view") === "bills" ? "bills" : "list";
+
   const [unbought, setUnbought] = useState<ShoppingItem[]>([]);
   const [bought, setBought] = useState<ShoppingItem[]>([]);
   const [role, setRole] = useState<Role | null>(null);
@@ -89,53 +97,102 @@ export default function ShoppingPage() {
     boughtAt: b.bought_at!,
   }));
 
+  function setView(next: View) {
+    const sp = new URLSearchParams(params);
+    if (next === "list") sp.delete("view");
+    else sp.set("view", "bills");
+    const qs = sp.toString();
+    router.replace(`/shopping${qs ? `?${qs}` : ""}`, { scroll: false });
+  }
+
   return (
     <main className="mx-auto max-w-md">
       <MainNav active="shopping" />
       <header className="flex items-center justify-between px-4 py-3 border-b border-border">
         <h1 className="text-lg font-semibold">Shopping</h1>
-        {!readOnly && <AutoAddButton />}
+        {view === "list" && !readOnly && <AutoAddButton />}
       </header>
-      {!readOnly && <QuickAdd onChanged={refresh} />}
-      {unbought.length === 0 && bought.length === 0 && (
-        <p className="px-4 py-12 text-center text-muted-foreground">
-          Nothing on the list. {readOnly ? "Wait for an owner or maid to add something." : "Add an item or pull from this week's plans."}
-        </p>
-      )}
-      {unbought.map((it) => (
-        <ItemRow
-          key={it.id}
-          itemId={it.id}
-          name={it.item_name}
-          quantity={it.quantity}
-          unit={it.unit}
-          notes={it.notes}
-          bought={false}
-          boughtAt={null}
-          readOnly={readOnly}
-          onEdit={readOnly ? undefined : () => setEditTarget(it)}
-          onChanged={refresh}
-        />
-      ))}
-      <BoughtHistory items={bHistory} readOnly={readOnly} onChanged={refresh} />
-      {editTarget && (
-        <EditItemSheet
-          itemId={editTarget.id}
-          initial={{
-            name: editTarget.item_name,
-            quantity: editTarget.quantity,
-            unit: editTarget.unit,
-            notes: editTarget.notes,
-          }}
-          open={editTarget !== null}
-          onOpenChange={(open) => {
-            if (!open) {
-              setEditTarget(null);
-              refresh();
-            }
-          }}
-        />
+      <nav className="flex gap-1 border-b border-border px-4" aria-label="Shopping view">
+        <TabButton active={view === "list"} onClick={() => setView("list")}>
+          List
+        </TabButton>
+        <TabButton active={view === "bills"} onClick={() => setView("bills")}>
+          Bills
+        </TabButton>
+      </nav>
+
+      {view === "list" ? (
+        <>
+          {!readOnly && <QuickAdd onChanged={refresh} />}
+          {unbought.length === 0 && bought.length === 0 && (
+            <p className="px-4 py-12 text-center text-muted-foreground">
+              Nothing on the list. {readOnly ? "Wait for an owner or maid to add something." : "Add an item or pull from this week's plans."}
+            </p>
+          )}
+          {unbought.map((it) => (
+            <ItemRow
+              key={it.id}
+              itemId={it.id}
+              name={it.item_name}
+              quantity={it.quantity}
+              unit={it.unit}
+              notes={it.notes}
+              bought={false}
+              boughtAt={null}
+              readOnly={readOnly}
+              onEdit={readOnly ? undefined : () => setEditTarget(it)}
+              onChanged={refresh}
+            />
+          ))}
+          <BoughtHistory items={bHistory} readOnly={readOnly} onChanged={refresh} />
+          {editTarget && (
+            <EditItemSheet
+              itemId={editTarget.id}
+              initial={{
+                name: editTarget.item_name,
+                quantity: editTarget.quantity,
+                unit: editTarget.unit,
+                notes: editTarget.notes,
+              }}
+              open={editTarget !== null}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setEditTarget(null);
+                  refresh();
+                }
+              }}
+            />
+          )}
+        </>
+      ) : (
+        <BillsTab />
       )}
     </main>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "border-b-2 px-3 py-2 text-sm",
+        active
+          ? "border-primary font-medium text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {children}
+    </button>
   );
 }

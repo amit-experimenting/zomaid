@@ -1,36 +1,17 @@
 "use client";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { LineItemRow, type LineItem } from "./line-item-row";
 import { LineItemEditor } from "./line-item-editor";
-import { ManualEntryForm } from "./manual-entry-form";
-import { retryBill } from "@/app/bills/actions";
 
-type Props =
-  | { billId: string; mode: "failed" }
-  | { billId: string; mode: "processed"; items: LineItem[]; readOnly: boolean };
+type Props = { billId: string; mode: "processed"; items: LineItem[]; readOnly: boolean };
 
 export function BillDetailActions(p: Props) {
   const [editTarget, setEditTarget] = useState<LineItem | null>(null);
-  if (p.mode === "failed") {
-    return (
-      <section className="border-t border-border">
-        <div className="px-4 py-3 flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => retryBill({ billId: p.billId })}
-          >
-            Retry OCR
-          </Button>
-        </div>
-        <h2 className="px-4 py-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Or enter line items manually
-        </h2>
-        <ManualEntryForm billId={p.billId} />
-      </section>
-    );
-  }
+  // Legacy `mode: "failed"` branch (Retry-OCR + manual-entry fallback) was
+  // removed when the GitHub-Issues OCR pipeline was retired in favor of the
+  // /inventory/new "Upload bill" tab. Failed bills now just show their status
+  // badge and reason on the detail header; recovery means re-uploading from
+  // /inventory/new.
   return (
     <>
       <div>

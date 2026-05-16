@@ -3,7 +3,6 @@ import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
 import { MainNav } from "@/components/site/main-nav";
 import { BillDetailHeader } from "@/components/bills/bill-detail-header";
-import { LineItemRow } from "@/components/bills/line-item-row";
 import { BillDetailActions } from "@/components/bills/_detail-actions";
 import { InventoryReviewQueue, type LineRow, type ExistingInvOption } from "./_inventory-queue";
 
@@ -13,7 +12,7 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
   const supabase = await createClient();
   const { data: bill } = await supabase
     .from("bills")
-    .select("id, household_id, status, status_reason, store_name, bill_date, total_amount, currency, image_storage_path, github_issue_url")
+    .select("id, household_id, status, status_reason, store_name, bill_date, total_amount, currency, image_storage_path")
     .eq("id", id)
     .maybeSingle();
   if (!bill) notFound();
@@ -70,7 +69,7 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="bills" />
+      <MainNav active="shopping" />
       <BillDetailHeader
         status={bill.status}
         statusReason={bill.status_reason}
@@ -78,15 +77,12 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
         billDate={bill.bill_date}
         totalAmount={bill.total_amount}
         currency={bill.currency}
-        githubIssueUrl={bill.github_issue_url}
+        githubIssueUrl={null}
       />
       {imageUrl && (
         <div className="border-b border-border px-4 py-3">
           <img src={imageUrl} alt="Bill" className="max-h-96 w-full rounded-md object-contain" />
         </div>
-      )}
-      {bill.status === "failed" && !readOnly && (
-        <BillDetailActions billId={bill.id} mode="failed" />
       )}
       {bill.status === "processing" && (
         <p className="px-4 py-6 text-center text-muted-foreground">
