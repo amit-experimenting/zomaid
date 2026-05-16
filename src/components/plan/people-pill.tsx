@@ -35,15 +35,30 @@ export function PeoplePill({
   };
 
   if (!editing) {
+    // Rendered as <span role="button"> instead of <button> because PeoplePill
+    // is nested inside SlotRow's outer <button> sheet-trigger; <button>
+    // inside <button> is invalid HTML and triggers a Next.js hydration
+    // error. role + tabIndex + keyboard handler preserves accessibility.
     return (
-      <button
-        type="button"
+      <span
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled || undefined}
         onClick={() => { if (!disabled) setEditing(true); }}
-        className="rounded-full border px-2 py-0.5 text-[10px] uppercase disabled:opacity-50"
-        disabled={disabled}
+        onKeyDown={(e) => {
+          if (disabled) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setEditing(true);
+          }
+        }}
+        className={
+          "rounded-full border px-2 py-0.5 text-[10px] uppercase " +
+          (disabled ? "opacity-50 cursor-default" : "cursor-pointer")
+        }
       >
         {effective} people
-      </button>
+      </span>
     );
   }
   return (
