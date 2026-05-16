@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSupabaseClient } from "@/lib/supabase/client";
 import { BillCard } from "@/components/bills/bill-card";
 import type { BillStatus } from "@/components/bills/status-badge";
+import { UploadBillForm } from "@/app/inventory/new/_bill-form";
 
 type BillRow = {
   id: string;
@@ -16,7 +16,7 @@ type BillRow = {
   created_at: string;
 };
 
-export function BillsTab() {
+export function BillsTab({ canUpload }: { canUpload: boolean }) {
   const supabase = useSupabaseClient();
   const [bills, setBills] = useState<BillRow[] | null>(null);
 
@@ -41,51 +41,44 @@ export function BillsTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (bills === null) {
-    return (
-      <div className="flex flex-col gap-2 p-3">
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="flex items-center justify-between rounded-md border border-border p-3"
-          >
-            <div className="flex flex-1 flex-col gap-2">
-              <div className="h-4 w-40 animate-pulse rounded bg-muted" />
-              <div className="h-3 w-24 animate-pulse rounded bg-muted" />
-            </div>
-            <div className="h-5 w-16 animate-pulse rounded bg-muted" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (bills.length === 0) {
-    return (
-      <p className="px-4 py-12 text-center text-muted-foreground">
-        No bills yet. Add one from{" "}
-        <Link href="/inventory/new?mode=bill" className="underline">
-          Inventory
-        </Link>
-        .
-      </p>
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-2 p-3">
-      {bills.map((b) => (
-        <BillCard
-          key={b.id}
-          id={b.id}
-          status={b.status}
-          storeName={b.store_name}
-          billDate={b.bill_date}
-          totalAmount={b.total_amount == null ? null : Number(b.total_amount)}
-          currency={b.currency}
-          createdAt={b.created_at}
-        />
-      ))}
+    <div>
+      {canUpload && <UploadBillForm />}
+      {bills === null ? (
+        <div className="flex flex-col gap-2 p-3">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between rounded-md border border-border p-3"
+            >
+              <div className="flex flex-1 flex-col gap-2">
+                <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+                <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+              </div>
+              <div className="h-5 w-16 animate-pulse rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      ) : bills.length === 0 ? (
+        <p className="px-4 py-12 text-center text-muted-foreground">
+          {canUpload ? "No bills yet. Upload one above." : "No bills yet."}
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2 p-3">
+          {bills.map((b) => (
+            <BillCard
+              key={b.id}
+              id={b.id}
+              status={b.status}
+              storeName={b.store_name}
+              billDate={b.bill_date}
+              totalAmount={b.total_amount == null ? null : Number(b.total_amount)}
+              currency={b.currency}
+              createdAt={b.created_at}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

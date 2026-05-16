@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MainNav } from "@/components/site/main-nav";
 import { BillDetailHeader } from "@/components/bills/bill-detail-header";
 import { BillDetailActions } from "@/components/bills/_detail-actions";
+import { BillImageViewer } from "@/components/bills/bill-image-viewer";
 import { InventoryReviewQueue, type LineRow, type ExistingInvOption } from "./_inventory-queue";
 
 export default async function BillDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -81,7 +82,7 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
       />
       {imageUrl && (
         <div className="border-b border-border px-4 py-3">
-          <img src={imageUrl} alt="Bill" className="max-h-96 w-full rounded-md object-contain" />
+          <BillImageViewer src={imageUrl} alt="Bill" />
         </div>
       )}
       {bill.status === "processing" && (

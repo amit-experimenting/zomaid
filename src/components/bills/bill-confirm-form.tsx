@@ -34,6 +34,8 @@ export type ConfirmFormInitial = {
   currency: string | null;
   total_amount: number | null;
   items: ConfirmFormInitialItem[];
+  /** Storage path in bill-images bucket where the uploaded photo lives. */
+  imageStoragePath?: string;
 };
 
 type Row = {
@@ -138,6 +140,7 @@ export function BillConfirmForm({
         addToInventory: r.addToInventory,
       })),
       ...(attemptId ? { attemptId } : {}),
+      ...(initial.imageStoragePath ? { imageStoragePath: initial.imageStoragePath } : {}),
     };
     if (payload.total_amount != null && !Number.isFinite(payload.total_amount)) {
       setError("Total amount must be a number.");

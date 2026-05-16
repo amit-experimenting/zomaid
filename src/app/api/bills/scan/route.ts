@@ -25,9 +25,16 @@ import { BILL_SCAN_BUCKET, buildBillScanStoragePath } from "./_storage";
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB hard ceiling after client-side compression
+const BILL_IMAGES_BUCKET = "bill-images";
+
+/** Build the persistent storage path for a bill image: <household>/<uuid>.<ext>. */
+function buildBillImagePath(householdId: string, mediaType: SonnetMediaType): string {
+  const ext = mediaType === "image/png" ? "png" : mediaType === "image/webp" ? "webp" : "jpg";
+  return `${householdId}/${randomUUID()}.${ext}`;
+}
 
 export type BillScanResponseBody =
-  | { ok: true; data: ParsedBill }
+  | { ok: true; data: ParsedBill & { imageStoragePath: string } }
   | {
       ok: false;
       error: {
@@ -88,7 +95,30 @@ export async function POST(
   // ── Happy path: try Sonnet synchronously. ──────────────────────────
   const sonnet = await runSonnetBillScan(base64, mediaType, apiKey);
   if (sonnet.ok) {
-    return NextResponse.json({ ok: true, data: sonnet.data });
+    // Persist the image to bill-images so the bill detail page can render
+    // it later (full-screen viewer). The client receives the storage path
+    // and threads it through uploadBillFromScan when the user confirms.
+    const supabase = createServiceClient();
+    const imageStoragePath = buildBillImagePath(ctx.household.id, mediaType);
+    const uploaded = await supabase.storage
+      .from(BILL_IMAGES_BUCKET)
+      .upload(imageStoragePath, buffer, {
+        contentType: mediaType,
+        upsert: false,
+      });
+    if (uploaded.error) {
+      // Non-fatal: surface the parsed bill anyway with an empty image path.
+      // The detail page already tolerates a missing image gracefully.
+      console.error("[bills/scan] failed to persist image", uploaded.error);
+      return NextResponse.json({
+        ok: true,
+        data: { ...sonnet.data, imageStoragePath: "" },
+      });
+    }
+    return NextResponse.json({
+      ok: true,
+      data: { ...sonnet.data, imageStoragePath },
+    });
   }
 
   // ── Failure path: stash the image + queue a retry. ────────────────

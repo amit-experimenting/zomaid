@@ -130,7 +130,8 @@ export function UploadBillForm() {
           )}
           <p className="text-xs text-muted-foreground">
             We read the bill, then show you the parsed result so you can edit
-            before saving. The photo isn&apos;t stored — only the line items.
+            before saving. The photo is stored so you can view it later on
+            the bill detail page.
           </p>
         </div>
       </div>

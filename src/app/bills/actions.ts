@@ -143,6 +143,10 @@ const UploadBillFromScanSchema = z.object({
   // Present when the user is finalising a queued retry from /scans/pending;
   // omitted on the synchronous /inventory/new → confirm flow.
   attemptId: z.string().uuid().optional(),
+  // Storage path in bill-images bucket. Set by the scan API route after a
+  // successful upload; omitted on retry-from-attempt flows (the image lives
+  // in bill-scan-pending and isn't moved on save in v1).
+  imageStoragePath: z.string().min(1).max(500).optional(),
 });
 
 export type UploadBillFromScanInput = z.infer<typeof UploadBillFromScanSchema>;
@@ -263,7 +267,7 @@ export async function uploadBillFromScan(
       bill_date: parsed.data.bill_date,
       currency: parsed.data.currency,
       total_amount: parsed.data.total_amount ?? null,
-      image_storage_path: SENTINEL_IMAGE_PATH,
+      image_storage_path: parsed.data.imageStoragePath ?? SENTINEL_IMAGE_PATH,
     })
     .select("id")
     .single();

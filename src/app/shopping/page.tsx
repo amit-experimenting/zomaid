@@ -166,7 +166,7 @@ export default function ShoppingPage() {
           )}
         </>
       ) : (
-        <BillsTab />
+        <BillsTab canUpload={role === "owner" || role === "maid"} />
       )}
     </main>
   );

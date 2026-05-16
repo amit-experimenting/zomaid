@@ -57,14 +57,20 @@ describe("starter pack seed integrity", () => {
     expect(rows, `These recipes have <3 steps: ${rows.map((r) => r.name).join(", ")}`).toHaveLength(0);
   });
 
-  it("every starter photo_path matches the starter/<slug>.jpg convention", async () => {
+  it("starter photo_path is either null or matches the starter/<slug>.jpg convention", async () => {
+    // Migration 20260701_001 NULLed every starter photo_path because the
+    // referenced files were never uploaded to the public bucket — the UI
+    // renders the deterministic SVG placeholder instead. If the seed is
+    // ever populated with real images this should narrow back to the
+    // strict regex assertion.
     const c = await getClient();
-    const { rows } = await c.query<{ name: string; photo_path: string }>(
+    const { rows } = await c.query<{ name: string; photo_path: string | null }>(
       `select name, photo_path from recipes
          where household_id is null
-           and (photo_path is null or photo_path !~ '^starter/[a-z0-9-]+\\.jpg$')`,
+           and photo_path is not null
+           and photo_path !~ '^starter/[a-z0-9-]+\\.jpg$'`,
     );
-    expect(rows, `Bad photo_path rows: ${rows.map((r) => `${r.name}=${r.photo_path}`).join(", ")}`).toHaveLength(0);
+    expect(rows, `Non-null starter photo_paths must match starter/<slug>.jpg: ${rows.map((r) => `${r.name}=${r.photo_path}`).join(", ")}`).toHaveLength(0);
   });
 
   it("every ingredient has a numeric quantity and non-null unit", async () => {
