@@ -6,15 +6,19 @@ import { insertHousehold, insertMembership, insertProfile } from "../factories";
 // household_memberships_sync_maid_mode AFTER INSERT/UPDATE trigger defined in
 // 20260705_001_household_setup_gates.sql.
 //
-// Semantics (read from the migration):
+// Semantics (read from the migration; tightened in
+// 20260708_001_tighten_maid_mode_guard.sql):
 //   if new.role = 'maid' and new.status = 'active' then
 //     update households set maid_mode = 'invited'
-//       where id = new.household_id and maid_mode <> 'invited';
+//       where id = new.household_id and maid_mode = 'unset';
 //   end if;
 //
 // So the trigger fires on INSERT or UPDATE of any membership row, but only
 // performs a write when the row resolves to (role='maid', status='active'),
-// and only when the household's current maid_mode is not already 'invited'.
+// and only when the household's current maid_mode is still 'unset' (the
+// initial post-creation state). 'family_run' is preserved — an owner who
+// explicitly opted out of maid tracking is not silently overridden by a late
+// maid INSERT.
 
 describe("households_sync_maid_mode_on_join trigger", () => {
   it("flips maid_mode 'unset' -> 'invited' when an active maid membership is inserted", async () => {
@@ -164,9 +168,10 @@ describe("households_sync_maid_mode_on_join trigger", () => {
       ).toBe("invited");
 
       // Touch the membership row (any column) to re-fire the AFTER UPDATE
-      // trigger. The function's `where maid_mode <> 'invited'` guard means
-      // the UPDATE statement matches zero rows — the household row is left
-      // untouched (in particular, no side effects from re-running it).
+      // trigger. The function's `where maid_mode = 'unset'` guard means the
+      // UPDATE statement matches zero rows (maid_mode is already 'invited') —
+      // the household row is left untouched (in particular, no side effects
+      // from re-running it).
       await c.query(
         "update household_memberships set privilege = 'meal_modify' where id = $1",
         [mem.id],
@@ -212,10 +217,12 @@ describe("households_sync_maid_mode_on_join trigger", () => {
     });
   });
 
-  it("overrides 'family_run' back to 'invited' when an active maid joins later", async () => {
-    // The trigger guards on `maid_mode <> 'invited'` — so 'family_run' is
-    // overwritten when an active maid appears. Documented here so anyone who
-    // tightens that guard later breaks this test on purpose.
+  it("preserves 'family_run' when an active maid joins later (does NOT override owner choice)", async () => {
+    // The trigger guards on `maid_mode = 'unset'` — so 'family_run' is
+    // preserved when an active maid appears. The owner's explicit opt-out of
+    // maid tracking is not silently overridden by a late maid INSERT
+    // (e.g. delayed invite redemption). The owner must explicitly switch off
+    // 'family_run' before re-adding a maid.
     await withTransaction(async (c) => {
       const owner = await insertProfile(c);
       const maid = await insertProfile(c);
@@ -236,7 +243,7 @@ describe("households_sync_maid_mode_on_join trigger", () => {
         "select maid_mode from households where id = $1",
         [h.id],
       );
-      expect(rows[0].maid_mode).toBe("invited");
+      expect(rows[0].maid_mode).toBe("family_run");
     });
   });
 });
