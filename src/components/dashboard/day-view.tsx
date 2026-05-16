@@ -94,7 +94,7 @@ export function DayView(props: DayViewProps) {
           {props.headingLabel}
         </h2>
         <div className="flex items-center gap-2">
-          {props.canAddTasks && (
+          {view === "tasks" && props.canAddTasks && (
             <Link href="/tasks/new">
               <Button size="sm">+ New task</Button>
             </Link>
