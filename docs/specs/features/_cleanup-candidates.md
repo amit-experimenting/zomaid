@@ -34,7 +34,7 @@ Filtering notes:
 - [x] `src/components/bills/bill-confirm-form.tsx` — exports type `ConfirmFormInitialItem` — removed `export` keyword; used internally only
 
 ## Unused shadcn primitives
-- [ ] `src/components/ui/dropdown-menu.tsx` — whole file unimported per knip; zero references per `rg`
+- [x] `src/components/ui/dropdown-menu.tsx` — deleted; only self-references in file. HANDOFF mention is historical note about the primitive being added.
 - [ ] `src/components/ui/card.tsx` — exports `CardFooter`, `CardAction` — zero importers per knip
 - [ ] `src/components/ui/sheet.tsx` — exports `SheetClose`, `SheetFooter`, `SheetDescription` — zero importers per knip
 - [ ] `src/components/ui/dialog.tsx` — exports `DialogClose`, `DialogDescription`, `DialogFooter`, `DialogOverlay`, `DialogPortal` — zero importers per knip
