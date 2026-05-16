@@ -21,12 +21,12 @@ export type TaskFormProps = {
 };
 
 const defaultRecurrence: RecurrenceValue = {
-  frequency: "weekly",
+  mode: "one_off",
   interval: 1,
-  byweekday: [0],
+  byweekday: [],
   bymonthday: null,
   startsOn: new Date().toISOString().slice(0, 10),
-  endsOn: null,
+  endsOn: new Date().toISOString().slice(0, 10),
   dueTime: "09:00:00",
 };
 
@@ -43,17 +43,22 @@ export function TaskForm({ mode, taskId, members, initial }: TaskFormProps) {
     e.preventDefault();
     setError(null);
     start(async () => {
+      // Map UI "one_off" to a daily recurrence pinned to a single date so the
+      // existing recurrence generator emits exactly one occurrence.
+      const frequency: "daily" | "weekly" | "monthly" =
+        recurrence.mode === "one_off" ? "daily" : recurrence.mode;
+      const isOneOff = recurrence.mode === "one_off";
       const payload = {
         title: title.trim(),
         notes: notes.trim() || null,
         assignedToProfileId: assignee || null,
         recurrence: {
-          frequency: recurrence.frequency,
-          interval: recurrence.interval,
-          byweekday: recurrence.frequency === "weekly" ? recurrence.byweekday : undefined,
-          bymonthday: recurrence.frequency === "monthly" ? (recurrence.bymonthday ?? undefined) : undefined,
+          frequency,
+          interval: isOneOff ? 1 : recurrence.interval,
+          byweekday: frequency === "weekly" ? recurrence.byweekday : undefined,
+          bymonthday: frequency === "monthly" ? (recurrence.bymonthday ?? undefined) : undefined,
           startsOn: recurrence.startsOn,
-          endsOn: recurrence.endsOn,
+          endsOn: isOneOff ? recurrence.startsOn : recurrence.endsOn,
         },
         dueTime: recurrence.dueTime,
       };

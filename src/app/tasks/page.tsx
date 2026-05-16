@@ -11,7 +11,8 @@ import type { OccurrenceRowItem } from "@/components/tasks/occurrence-row";
 // See docs/specs/2026-05-16-tasks-day-grouping-design.md for the rationale.
 const TZ = "Asia/Singapore";
 const HORIZON_DAYS = 14;
-const NAMED_DAYS = 5; // Today + next 4
+// Day window shown explicitly: Yesterday, Today, Tomorrow, +2.
+const NAMED_FORWARD_DAYS = 3; // Today + next 2
 
 /** Format a Date as YYYY-MM-DD in the household timezone (en-CA gives ISO). */
 function sgYmd(d: Date): string {
@@ -44,10 +45,12 @@ export default async function TasksIndex() {
   const ctx = await requireHousehold();
   const supabase = await createClient();
   const isOwnerOrMaid = ctx.membership.role === "owner" || ctx.membership.role === "maid";
+  // Any active member can add tasks; mark/done remains owner/maid only.
+  const canAddTasks = isOwnerOrMaid || ctx.membership.role === "family_member";
 
   const now = new Date();
   const nowMs = now.getTime();
-  const todayYmd = sgYmd(now);
+  const yesterdayYmd = sgYmd(addDays(now, -1));
 
   // 14-day horizon: enough to power Today + 4 named days + Later. Idempotent
   // RPC; cheap when nothing is missing.
@@ -98,9 +101,12 @@ export default async function TasksIndex() {
   });
 
   // Named day buckets keyed by YYYY-MM-DD in SG.
-  const namedYmds: string[] = [];
-  const dayLabels: { ymd: string; label: string; subLabel?: string }[] = [];
-  for (let i = 0; i < NAMED_DAYS; i++) {
+  // Order: Yesterday, Today, Tomorrow, +2.
+  const namedYmds: string[] = [yesterdayYmd];
+  const dayLabels: { ymd: string; label: string; subLabel?: string }[] = [
+    { ymd: yesterdayYmd, label: "Yesterday", subLabel: sgShortLabel(addDays(now, -1)) },
+  ];
+  for (let i = 0; i < NAMED_FORWARD_DAYS; i++) {
     const d = addDays(now, i);
     const ymd = sgYmd(d);
     namedYmds.push(ymd);
@@ -116,18 +122,21 @@ export default async function TasksIndex() {
 
   for (const r of all) {
     const item = toItem(r);
-    const dueMs = new Date(item.dueAt).getTime();
+    const ymd = sgYmd(new Date(item.dueAt));
     const isPending = item.status === "pending";
 
-    if (isPending && dueMs < nowMs) {
+    // Pending occurrences from 2+ days ago surface in Overdue.
+    // Yesterday's pending items render inside the Yesterday section (still
+    // marked overdue on the row) so the maid can act on them in-context.
+    if (isPending && ymd < yesterdayYmd) {
       overdue.push(item);
       continue;
     }
 
-    const ymd = sgYmd(new Date(item.dueAt));
-    // Drop past completed/skipped occurrences from the view so the page
-    // does not turn into an audit log.
-    if (ymd < todayYmd) continue;
+    // Drop completed/skipped occurrences older than yesterday — keeps the
+    // page from turning into an audit log while preserving yesterday's
+    // history for the maid to reference.
+    if (ymd < yesterdayYmd) continue;
 
     if (namedYmds.includes(ymd)) {
       const bucket = byDay.get(ymd) ?? [];
@@ -163,7 +172,7 @@ export default async function TasksIndex() {
       <header className="border-b border-border px-4 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold">Tasks</h1>
-          {isOwnerOrMaid && (
+          {canAddTasks && (
             <Link href="/tasks/new">
               <Button size="sm">+ New</Button>
             </Link>

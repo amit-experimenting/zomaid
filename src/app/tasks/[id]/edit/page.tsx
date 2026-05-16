@@ -18,8 +18,9 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
     .from("household_memberships")
     .select("profile_id, profiles!inner(id, display_name)")
     .eq("household_id", ctx.household.id)
-    .eq("status", "active");
-  const memberList = ((members ?? []) as any[]).map((m) => ({
+    .eq("status", "active")
+    .overrideTypes<Array<{ profile_id: string; profiles: { id: string; display_name: string } }>>();
+  const memberList = (members ?? []).map((m) => ({
     id: m.profiles.id,
     display_name: m.profiles.display_name,
   }));
@@ -38,7 +39,15 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
           notes: task.notes,
           assignedToProfileId: task.assigned_to_profile_id,
           recurrence: {
-            frequency: task.recurrence_frequency,
+            // Round-trip the UI-only one-off flag: daily/interval=1 with
+            // identical start+end dates was created by the one-off form path.
+            mode:
+              task.recurrence_frequency === "daily"
+              && task.recurrence_interval === 1
+              && task.recurrence_ends_on != null
+              && task.recurrence_ends_on === task.recurrence_starts_on
+                ? "one_off"
+                : task.recurrence_frequency,
             interval: task.recurrence_interval,
             byweekday: task.recurrence_byweekday ?? [],
             bymonthday: task.recurrence_bymonthday,

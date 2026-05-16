@@ -23,7 +23,7 @@ type StandardTask = {
 };
 
 const defaultRecurrence: RecurrenceValue = {
-  frequency: "weekly",
+  mode: "weekly",
   interval: 1,
   byweekday: [0],
   bymonthday: null,
@@ -59,16 +59,22 @@ export function AdminTasksClient({ tasks }: { tasks: StandardTask[] }) {
     e.preventDefault();
     setError(null);
     start(async () => {
+      // "one_off" is a UI-only mode that the household task form maps to a
+      // daily/interval=1 schedule pinned to a single date. Apply the same
+      // mapping here so admins can author a single-day standard task.
+      const frequency: "daily" | "weekly" | "monthly" =
+        recurrence.mode === "one_off" ? "daily" : recurrence.mode;
+      const isOneOff = recurrence.mode === "one_off";
       const res = await createStandardTask({
         title: title.trim(),
         notes: notes.trim() || null,
         recurrence: {
-          frequency: recurrence.frequency,
-          interval: recurrence.interval,
-          byweekday: recurrence.frequency === "weekly" ? recurrence.byweekday : undefined,
-          bymonthday: recurrence.frequency === "monthly" ? (recurrence.bymonthday ?? undefined) : undefined,
+          frequency,
+          interval: isOneOff ? 1 : recurrence.interval,
+          byweekday: frequency === "weekly" ? recurrence.byweekday : undefined,
+          bymonthday: frequency === "monthly" ? (recurrence.bymonthday ?? undefined) : undefined,
           startsOn: recurrence.startsOn,
-          endsOn: recurrence.endsOn,
+          endsOn: isOneOff ? recurrence.startsOn : recurrence.endsOn,
         },
         dueTime: recurrence.dueTime,
       });

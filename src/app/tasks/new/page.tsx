@@ -10,8 +10,9 @@ export default async function NewTaskPage() {
     .from("household_memberships")
     .select("profile_id, profiles!inner(id, display_name)")
     .eq("household_id", ctx.household.id)
-    .eq("status", "active");
-  const memberList = ((members ?? []) as any[]).map((m) => ({
+    .eq("status", "active")
+    .overrideTypes<Array<{ profile_id: string; profiles: { id: string; display_name: string } }>>();
+  const memberList = (members ?? []).map((m) => ({
     id: m.profiles.id,
     display_name: m.profiles.display_name,
   }));
