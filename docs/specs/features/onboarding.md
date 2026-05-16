@@ -94,4 +94,20 @@ Cross-feature mounts and links:
 - **`PickForm`'s `summarise()` re-implements recurrence formatting.** The Stage 1 picker shows each standard's recurrence as a sentence ("Weekly · Mon, Wed 08:00"). This is duplicated in the tasks feature (`features/tasks.md`). If recurrence ever supports new patterns (e.g. last-Friday-of-month), both spots will need to be updated.
 
 ## Test coverage
-_To be filled in Phase 2._
+
+| Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `createHouseholdAsMaid` | `src/app/onboarding/actions.ts:59` | — | — | — | high | `tests/actions/` |
+| `createHouseholdAsOwner` | `src/app/onboarding/actions.ts:20` | — | — | — | high | `tests/actions/` |
+| `households_sync_maid_mode_on_join()` + `household_memberships_sync_maid_mode` trigger | `supabase/migrations/20260705_001_household_setup_gates.sql` | — | — | — | high | `tests/db/` |
+| `resetTaskSetupForEmptyState` | `src/app/onboarding/tasks/actions.ts:206` | — | — | — | high | `tests/actions/` |
+| `saveTaskSetupPicks` | `src/app/onboarding/tasks/actions.ts:15` | — | — | — | high | `tests/actions/` |
+| `submitTaskSetup` | `src/app/onboarding/tasks/actions.ts:77` | — | — | — | high | `tests/actions/` |
+| `task_setup_drafts` RLS + upsert lifecycle | `supabase/migrations/20260705_001_household_setup_gates.sql` | — | — | — | high | `tests/db/` |
+| `MaidOnboardingPage` (`/onboarding/maid`) | `src/app/onboarding/maid/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `OnboardingPage` (`/onboarding`) | `src/app/onboarding/page.tsx` | — | — | partial via `tests/e2e/foundations.spec.ts` (unauth redirect only) | medium | `tests/e2e/` |
+| `OnboardingTasksPickPage` (`/onboarding/tasks`) | `src/app/onboarding/tasks/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `OnboardingTasksTunePage` (`/onboarding/tasks/tune`) | `src/app/onboarding/tasks/tune/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `OwnerOnboardingPage` (`/onboarding/owner`) | `src/app/onboarding/owner/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `PickForm` | `src/app/onboarding/tasks/pick-form.tsx` | — | — | — | medium | `tests/e2e/` |
+| `TuneForm` | `src/app/onboarding/tasks/tune/tune-form.tsx` | — | — | — | medium | `tests/e2e/` |
