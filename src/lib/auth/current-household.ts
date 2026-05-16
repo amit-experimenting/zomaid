@@ -4,8 +4,8 @@ import { tryRedeemPendingEmailInvite } from "./redeem-email-invite";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/db/types";
 
-export type Membership = Database["public"]["Tables"]["household_memberships"]["Row"];
-export type Household  = Database["public"]["Tables"]["households"]["Row"];
+type Membership = Database["public"]["Tables"]["household_memberships"]["Row"];
+type Household  = Database["public"]["Tables"]["households"]["Row"];
 
 export type CurrentHousehold = {
   profile: Awaited<ReturnType<typeof getCurrentProfile>>;
