@@ -5,7 +5,7 @@ import { PeoplePill } from "@/components/plan/people-pill";
 import { SlotWarningBadge, type Warning } from "@/components/plan/slot-warning-badge";
 import { RecipePhoto } from "@/components/recipes/recipe-photo";
 
-export type SlotRowOwnProps = {
+type SlotRowOwnProps = {
   slot: "breakfast" | "lunch" | "snacks" | "dinner";
   recipeId: string | null;
   recipeName: string | null;

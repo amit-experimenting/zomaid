@@ -30,7 +30,7 @@ Filtering notes:
 - [x] `src/app/bills/_dedupe.ts` — exports type `DedupeLine` — removed `export` keyword; used internally only
 - [x] `src/lib/db/types.ts` — exports types `MembershipStatus`, `IntendedRole`, `MaidMode` — removed `export` from MembershipStatus and MaidMode (used in Database type); removed IntendedRole entirely (unused alias)
 - [x] `src/lib/auth/current-household.ts` — exports types `Membership`, `Household` — removed `export` keyword; used internally only in CurrentHousehold
-- [ ] `src/components/plan/slot-row.tsx` — exports type `SlotRowOwnProps` — zero importers per knip (type-only; verify before removal)
+- [x] `src/components/plan/slot-row.tsx` — exports type `SlotRowOwnProps` — removed `export` keyword; used internally only
 - [ ] `src/components/bills/bill-confirm-form.tsx` — exports type `ConfirmFormInitialItem` — zero importers per knip (type-only; verify before removal)
 
 ## Unused shadcn primitives
