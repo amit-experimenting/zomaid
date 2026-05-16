@@ -1,5 +1,7 @@
 # Zomaid — Bills: Upload-Bill Tab + Inventory Linkage — Design
 
+> **Superseded as the living architecture doc for the inventory area by [`features/inventory.md`](features/inventory.md).** This dated spec is retained for historical context.
+
 - **Date**: 2026-05-16
 - **Status**: Approved (no clarifications outstanding) — implementing in same session
 - **Scope**: Adds a third tab on [`/inventory/new`](../../src/app/inventory/new/page.tsx) called **"Upload bill"**. Uploading a photo of a paper grocery bill runs it through Claude Sonnet 4.6 vision (the same pattern as the receipt-scan tab), shows an editable confirmation screen, and on Save creates a `bills` row, `bill_line_items` rows, and an `inventory_items` row per line item the user checked "Add to inventory". A new column on `bill_line_items` records which inventory row each line produced. Duplicate bills (same store + date + same set of items) are rejected before insert.

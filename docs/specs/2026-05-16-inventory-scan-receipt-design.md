@@ -1,5 +1,7 @@
 # Zomaid — Inventory: Scan a Receipt (Claude Vision Pre-fill) — Design
 
+> **Superseded as the living architecture doc for the inventory area by [`features/inventory.md`](features/inventory.md).** This dated spec is retained for historical context.
+
 - **Date**: 2026-05-16
 - **Status**: Approved (no clarifications outstanding) — implementing in same session
 - **Scope**: [src/app/inventory/new/page.tsx](../../src/app/inventory/new/page.tsx) gets a second entry mode ("Scan receipt") alongside the existing manual onboarding form. A new server route accepts the photo, calls Claude Sonnet 4.6 vision, and returns a list of line items that the client renders into an editable pre-filled form. Save goes through the existing inventory-create action — no schema changes, no bills coupling.

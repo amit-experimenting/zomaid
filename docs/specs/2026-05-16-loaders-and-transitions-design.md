@@ -7,6 +7,7 @@
 > **Superseded as the living architecture doc for the meal-plan area by [`features/meal-plan.md`](features/meal-plan.md).** This dated spec is retained for historical context.
 
 > **Superseded as the living architecture doc for the shopping area by [`features/shopping.md`](features/shopping.md).** This dated spec is retained for historical context.
+> **Superseded as the living architecture doc for the inventory area by [`features/inventory.md`](features/inventory.md).** This dated spec is retained for historical context.
 
 Date: 2026-05-16
 

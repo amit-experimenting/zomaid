@@ -1,5 +1,7 @@
 # Zomaid — Inventory Onboarding: Per-Item Default Units + Custom Rows — Design
 
+> **Superseded as the living architecture doc for the inventory area by [`features/inventory.md`](features/inventory.md).** This dated spec is retained for historical context.
+
 - **Date**: 2026-05-14
 - **Status**: Approved (brainstorming) — pending implementation plan
 - **Scope**: [src/app/inventory/new/page.tsx](../../src/app/inventory/new/page.tsx) onboarding form only (`?onboarding=1`). The non-onboarding single-item add path is unchanged.
