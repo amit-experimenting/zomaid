@@ -2,6 +2,8 @@
 
 > **Superseded as the living architecture doc for the recipes area by [`features/recipes.md`](features/recipes.md).** This dated spec is retained for historical context.
 
+> **Superseded as the living architecture doc for the meal-plan area by [`features/meal-plan.md`](features/meal-plan.md).** This dated spec is retained for historical context.
+
 - **Date**: 2026-05-11
 - **Status**: Approved (brainstorming) — pending implementation plan
 - **Slice**: 2a of 7 — see _Decomposition_ in the foundations spec; slice 2 (Recipes + daily meal plan) is split into 2a (this doc — recipes + plan + suggestion) and 2b (shopping list, separate brainstorm later)
