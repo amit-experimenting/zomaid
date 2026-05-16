@@ -3,10 +3,9 @@
 
 export type Role = "owner" | "family_member" | "maid";
 export type Privilege = "full" | "meal_modify" | "view_only";
-export type MembershipStatus = "active" | "pending" | "removed";
-export type IntendedRole = Role;
+type MembershipStatus = "active" | "pending" | "removed";
 export type Diet = "vegan" | "vegetarian" | "eggitarian" | "non_vegetarian";
-export type MaidMode = "unset" | "invited" | "family_run";
+type MaidMode = "unset" | "invited" | "family_run";
 
 export type Database = {
   public: {
