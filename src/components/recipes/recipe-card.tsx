@@ -44,7 +44,6 @@ export function RecipeCard({
                   href={youtubeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-red-600 hover:bg-muted"
                 >
                   <svg aria-hidden="true" viewBox="0 0 16 16" className="size-3 fill-current">
