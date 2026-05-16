@@ -74,4 +74,24 @@ Cross-feature reuse worth noting:
 - **Pre-autofill `mealplan_suggest_for_date` left in place.** The cron-only wrapper still exists for the `mealplan-suggest-tomorrow` job and now just loops households and calls the per-household worker. That's fine; flag here only so future audits don't confuse the two entry points (`mealplan_autofill_date` = user/on-view, `mealplan_suggest_for_date` = cron).
 
 ## Test coverage
-_To be filled in Phase 2._
+
+| Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `regenerateMealPlanSlot` | `src/app/plan/actions.ts:47` | — | — | — | high | `tests/actions/` |
+| `setMealPlanSlot` | `src/app/plan/actions.ts:21` | — | — | — | high | `tests/actions/` |
+| `setPeopleEating` | `src/app/plan/actions.ts:76` | — | — | — | high | `tests/actions/` |
+| `can_modify_meal_plan(p_household)` | `supabase/migrations/20260604_001_meal_plan_family_modify.sql` | — | — | — | medium | `tests/db/` |
+| `current_household_id_for_caller()` | `supabase/migrations/20260522_001_meal_plan_rpcs.sql` | — | — | — | medium | `tests/db/` |
+| `is_meal_slot_locked(p_household, p_date, p_slot)` | `supabase/migrations/20260618_001_meal_plan_inventory_rpcs.sql` | — | — | — | medium | `tests/db/` |
+| `mealplan-suggest-tomorrow` cron job | `supabase/migrations/20260523_001_meal_plan_cron.sql` | — | — | — | medium | `tests/db/` (invoke `mealplan_suggest_for_date`) |
+| `mealplan_autofill_date_for_household(p_household, p_date)` | `supabase/migrations/20260620_001_mealplan_autofill.sql` | — | — | — | medium | `tests/db/` |
+| `mealplan_suggest_for_date(p_date)` | `supabase/migrations/20260522_001_meal_plan_rpcs.sql` (rewritten by `20260620_001_mealplan_autofill.sql`) | — | — | — | medium | `tests/db/` |
+| `PlanForDate` (`/plan/[date]` redirect) | `src/app/plan/[date]/page.tsx` | — | — | — | low | `tests/e2e/` |
+| `PlanIndex` (`/plan` redirect) | `src/app/plan/page.tsx` | — | — | `tests/e2e/recipes-plan.spec.ts` (unauthenticated redirect only) | low | `tests/e2e/` |
+| `PlannedView` (`/recipes` default planner surface) | `src/app/recipes/page.tsx:64` | — | — | `tests/e2e/recipes-plan.spec.ts` (unauthenticated redirect only); `tests/e2e/plan-autofill.spec.ts` | medium | `tests/e2e/` |
+| Orphan null-recipe cleanup invariant | `supabase/migrations/20260619_001_meal_plan_null_recipe_cleanup.sql` | — | `tests/db/mealplan-null-recipe-cleanup.test.ts` | — | none | `tests/db/` |
+| `mealplan_autofill_date(p_date)` | `supabase/migrations/20260620_001_mealplan_autofill.sql` | — | `tests/db/mealplan-autofill.test.ts` | `tests/e2e/plan-autofill.spec.ts` | none | `tests/db/` |
+| `mealplan_recipe_stock_score(p_household, p_recipe_id, p_people)` | `supabase/migrations/20260620_001_mealplan_autofill.sql` | — | `tests/db/inventory-stock-score.test.ts` | — | none | `tests/db/` |
+| `mealplan_regenerate_slot(p_date, p_slot)` | `supabase/migrations/20260522_001_meal_plan_rpcs.sql` (rewritten by `20260620_001_mealplan_autofill.sql`) | — | `tests/db/mealplan-regenerate-scoring.test.ts` | — | none | `tests/db/` |
+| `mealplan_set_people_eating(p_date, p_slot, p_people)` | `supabase/migrations/20260618_001_meal_plan_inventory_rpcs.sql` | — | `tests/db/meal-plan-lock.test.ts` (lock window only) | — | none | `tests/db/` |
+| `mealplan_set_slot(p_date, p_slot, p_recipe_id)` | `supabase/migrations/20260522_001_meal_plan_rpcs.sql` (lock added by `20260618_001_meal_plan_inventory_rpcs.sql`) | — | `tests/db/meal-plan-lock.test.ts` | — | none | `tests/db/` |
