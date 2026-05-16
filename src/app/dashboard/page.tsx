@@ -153,6 +153,7 @@ export default async function DashboardPage({
     { data: occRows },
     { data: rawMealRows },
     { data: mealTimes },
+    { count: rosterCount },
   ] = await Promise.all([
     supabase
       .from("task_occurrences")
@@ -165,13 +166,18 @@ export default async function DashboardPage({
       .order("due_at", { ascending: true }),
     supabase
       .from("meal_plans")
-      .select("slot, recipe_id, recipes(name, kcal_per_serving)")
+      .select("slot, recipe_id, people_eating, recipes(name, kcal_per_serving)")
       .eq("household_id", ctx.household.id)
       .eq("plan_date", selectedYmd),
     supabase
       .from("household_meal_times")
       .select("slot,meal_time")
       .eq("household_id", ctx.household.id),
+    supabase
+      .from("household_memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("household_id", ctx.household.id)
+      .eq("status", "active"),
   ]);
 
   type OccRow = {
@@ -230,6 +236,7 @@ export default async function DashboardPage({
   // configured time (we can't sort them otherwise). The slot picker / autofill
   // / locks live on /recipes now — Home is read-only for meals.
   const timeBySlot = Object.fromEntries((mealTimes ?? []).map((r) => [r.slot, r.meal_time]));
+  const rosterSize = rosterCount ?? 1;
   const meals: MealFeedItem[] = [];
   type Slot = MealFeedItem["slot"];
   for (const r of rawMealRows ?? []) {
@@ -249,6 +256,7 @@ export default async function DashboardPage({
       recipeName: recipe.name,
       slotTimeIso: iso,
       kcalPerServing: recipe.kcal_per_serving == null ? null : Number(recipe.kcal_per_serving),
+      peopleEating: r.people_eating ?? rosterSize,
     });
   }
 

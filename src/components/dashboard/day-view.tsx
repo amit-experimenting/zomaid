@@ -28,6 +28,8 @@ export type MealFeedItem = {
   slotTimeIso: string;
   /** Per-serving calories for the assigned recipe. null hides the suffix. */
   kcalPerServing: number | null;
+  /** Effective number of people eating this slot (peopleEating ?? rosterSize). */
+  peopleEating: number;
 };
 
 export type DayViewProps = {
@@ -164,9 +166,14 @@ function MealInlineRow({ item }: { item: MealFeedItem }) {
         <div className="truncate font-medium">{item.recipeName}</div>
         <div className="text-xs text-primary/80">
           {SLOT_LABEL[item.slot]}
-          {item.kcalPerServing != null && (
-            <span className="tabular-nums"> · {Math.round(item.kcalPerServing)} kcal</span>
-          )}
+          {item.kcalPerServing != null && (() => {
+            const total = Math.round(item.kcalPerServing * item.peopleEating);
+            return (
+              <span className="tabular-nums">
+                {" "}· {total} kcal{item.peopleEating > 1 ? ` (×${item.peopleEating})` : ""}
+              </span>
+            );
+          })()}
         </div>
       </div>
       <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">

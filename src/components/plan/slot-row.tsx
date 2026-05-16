@@ -70,11 +70,18 @@ export const SlotRow = React.forwardRef<HTMLButtonElement, SlotRowProps>(functio
         <div className="text-xs uppercase tracking-wide text-muted-foreground">
           {SLOT_LABEL[slot]}
           {locked && <span className="ml-1 text-[10px] text-muted-foreground">(locked)</span>}
-          {recipeId !== null && kcalPerServing != null && (
-            <span className="ml-1.5 normal-case tracking-normal text-[10px] tabular-nums">
-              · {Math.round(kcalPerServing)} kcal
-            </span>
-          )}
+          {recipeId !== null && kcalPerServing != null && (() => {
+            // Per-serving values are stored on the recipe; scale by how
+            // many people are eating this slot (defaults to household
+            // roster size when peopleEating is null — matches PeoplePill).
+            const eaters = peopleEating ?? rosterSize;
+            const total = Math.round(kcalPerServing * eaters);
+            return (
+              <span className="ml-1.5 normal-case tracking-normal text-[10px] tabular-nums">
+                · {total} kcal{eaters > 1 ? ` (×${eaters})` : ""}
+              </span>
+            );
+          })()}
         </div>
         {recipeId === null ? (
           <div className="italic text-muted-foreground">{emptyCopy(rowExists, setBySystem)}</div>
