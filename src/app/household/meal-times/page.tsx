@@ -1,7 +1,10 @@
 // src/app/household/meal-times/page.tsx
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { Button } from "@/components/ui/button";
 import { updateMealTime } from "./actions";
 
@@ -29,10 +32,16 @@ export default async function MealTimesPage() {
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="home" />
+      <TopAppBar
+        title="Meal times"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/household/settings" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+      />
       <header className="px-4 py-3">
-        <h1 className="text-lg font-semibold">Meal times</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Used to decide when cooked meals deduct from inventory and when each slot locks for edits (1 hour before its start).
         </p>
       </header>

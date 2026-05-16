@@ -9,9 +9,9 @@ import { createServiceClient } from "@/lib/supabase/service";
  * Slim "you have N bill scans waiting" banner shown above pages that
  * want to surface the bill-scan-retry queue (today: /inventory).
  *
- * MainNav cannot host this because some pages import MainNav from a
- * client component context; this is opt-in per server page instead.
- * Best-effort: any failure renders nothing.
+ * Opt-in per server page rather than hosted in the chrome — keeps the
+ * dependency on the bill-scan tables narrow. Best-effort: any failure
+ * renders nothing.
  */
 export async function PendingScansBanner() {
   let count = 0;

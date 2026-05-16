@@ -1,9 +1,9 @@
-import { MainNav } from "@/components/site/main-nav";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 
 export default function DashboardLoading() {
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="home" />
+      <TopAppBar title="Home" />
       <div className="px-4 py-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col gap-2">

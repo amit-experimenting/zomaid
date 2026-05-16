@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
-import { MainNav } from "@/components/site/main-nav";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { OwnerInviteMaidCard } from "@/components/site/owner-invite-maid-card";
 import { HouseholdModeCard } from "@/components/site/household-mode-card";
 import { TaskSetupPromptCard } from "@/components/site/task-setup-prompt-card";
@@ -322,7 +322,7 @@ export default async function DashboardPage({
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="home" />
+      <TopAppBar title="Home" />
       <div className="px-4 py-6">
         {dietChip ? (
           <Link

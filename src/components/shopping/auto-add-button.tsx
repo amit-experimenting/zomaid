@@ -24,7 +24,7 @@ export function AutoAddButton() {
         {pending ? "Pulling…" : "+ Auto-add 7d"}
       </Button>
       {toast && (
-        <div role="status" className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-md bg-foreground px-3 py-2 text-sm text-background shadow">
+        <div role="status" className="fixed left-1/2 -translate-x-1/2 rounded-md bg-foreground px-3 py-2 text-sm text-background shadow" style={{ bottom: 72 }}>
           {toast}
         </div>
       )}

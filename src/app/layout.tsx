@@ -2,7 +2,16 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { IBM_Plex_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Home, ShoppingCart, Utensils, Package } from "lucide-react";
+import { TabBar, type Tab } from "@/components/ui/tab-bar";
 import { cn } from "@/lib/utils";
+
+const TABS: Tab[] = [
+  { href: "/dashboard", label: "Home", icon: <Home /> },
+  { href: "/recipes", label: "Meals", icon: <Utensils /> },
+  { href: "/shopping", label: "Shop", icon: <ShoppingCart /> },
+  { href: "/inventory", label: "Inventory", icon: <Package /> },
+];
 
 const plex = IBM_Plex_Sans({
   subsets: ["latin", "latin-ext"],
@@ -41,7 +50,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className={cn("font-sans", plex.variable)}>
-        <body className="min-h-dvh antialiased">
+        <body className="min-h-dvh antialiased pb-14">
           {process.env.NODE_ENV === "development" && (
             // TEMP DIAGNOSTIC: react-server-dom-turbopack's flushComponentPerformance
             // can call performance.measure(name, { start: 0, end: -Infinity }) when an
@@ -55,6 +64,7 @@ export default function RootLayout({
             />
           )}
           {children}
+          <TabBar tabs={TABS} />
         </body>
       </html>
     </ClerkProvider>

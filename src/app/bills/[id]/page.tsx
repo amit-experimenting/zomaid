@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { BillDetailHeader } from "@/components/bills/bill-detail-header";
 import { BillDetailActions } from "@/components/bills/_detail-actions";
 import { BillImageViewer } from "@/components/bills/bill-image-viewer";
@@ -85,7 +88,14 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="shopping" />
+      <TopAppBar
+        title="Bill details"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/shopping?view=bills" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+      />
       <BillDetailHeader
         status={bill.status}
         statusReason={bill.status_reason}

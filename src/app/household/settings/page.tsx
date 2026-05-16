@@ -1,7 +1,10 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import {
   createInvite, removeMembership,
   updateHouseholdDiet, updateMembershipDiet, updateMembershipPrivilege,
@@ -97,11 +100,17 @@ export default async function HouseholdSettingsPage() {
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="home" />
+      <TopAppBar
+        title="Household settings"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/dashboard" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+      />
       <div className="px-4 py-6 space-y-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{ctx.household.name}</h1>
-        <p className="text-sm text-muted-foreground">Household settings</p>
       </header>
 
       {(isOwner || isMaid) && (

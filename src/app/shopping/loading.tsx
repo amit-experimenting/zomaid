@@ -1,13 +1,9 @@
-import { MainNav } from "@/components/site/main-nav";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 
 export default function ShoppingLoading() {
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="shopping" />
-      <header className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="h-5 w-24 animate-pulse rounded bg-muted" />
-        <div className="h-7 w-28 animate-pulse rounded-md bg-muted" />
-      </header>
+      <TopAppBar title="Shopping" />
       <div className="border-b border-border px-4 py-3">
         <div className="flex gap-2">
           <div className="h-8 flex-1 animate-pulse rounded-md bg-muted" />

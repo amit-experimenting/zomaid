@@ -11,9 +11,12 @@
 // Linked from the /inventory/new bill tab's queued-notice banner and
 // from the inventory-tab dot badge in the main nav.
 
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createServiceClient } from "@/lib/supabase/service";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { BILL_SCAN_BUCKET } from "@/app/api/bills/scan/_storage";
 import type { ParsedBill } from "@/app/api/bills/scan/_parse";
 import type { ConfirmFormInitial } from "@/components/bills/bill-confirm-form";
@@ -49,10 +52,14 @@ export default async function PendingScansPage() {
   if (error) {
     return (
       <main className="mx-auto max-w-md">
-        <MainNav active="inventory" />
-        <header className="px-4 py-3">
-          <h1 className="text-lg font-semibold">Pending scans</h1>
-        </header>
+        <TopAppBar
+          title="Scans"
+          leading={
+            <IconButton variant="ghost" aria-label="Back" render={<Link href="/inventory" />}>
+              <ChevronLeft />
+            </IconButton>
+          }
+        />
         <p className="px-4 py-6 text-sm text-destructive">
           Couldn&apos;t load your scans: {error.message}
         </p>
@@ -83,10 +90,16 @@ export default async function PendingScansPage() {
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="inventory" />
+      <TopAppBar
+        title="Scans"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/inventory" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+      />
       <header className="px-4 py-3">
-        <h1 className="text-lg font-semibold">Pending scans</h1>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Bill scans that need attention. Successful retries land here for you
           to review before they become a bill.
         </p>

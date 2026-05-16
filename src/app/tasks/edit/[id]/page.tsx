@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { TaskForm } from "@/components/tasks/task-form";
 
 export default async function EditTaskPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,10 +29,14 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
   }));
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="home" />
-      <header className="border-b border-border px-4 py-3">
-        <h1 className="text-lg font-semibold">Edit task</h1>
-      </header>
+      <TopAppBar
+        title="Edit task"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/dashboard" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+      />
       <TaskForm
         mode="edit"
         taskId={id}
