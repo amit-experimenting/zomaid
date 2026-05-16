@@ -50,17 +50,6 @@ export async function updateBillLineItem(input: z.infer<typeof UpdateLineItemInp
   return { ok: true, data: { lineItemId: parsed.data.lineItemId } };
 }
 
-export async function deleteBill(input: { billId: string }): Promise<BillActionResult<{ billId: string }>> {
-  const parsed = z.object({ billId: z.string().uuid() }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: { code: "BILL_INVALID_FILE", message: "Invalid input" } };
-  await requireHousehold();
-  const supabase = await createClient();
-  const { error } = await supabase.from("bills").delete().eq("id", parsed.data.billId);
-  if (error) return { ok: false, error: { code: "BILL_FORBIDDEN", message: error.message } };
-  revalidatePath("/shopping");
-  return { ok: true, data: { billId: parsed.data.billId } };
-}
-
 const BillIngestSchema = z.object({
   line_item_id: z.string().uuid(),
   inventory_id: z.string().uuid().nullable(),
