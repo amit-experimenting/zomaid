@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
 import { MainNav } from "@/components/site/main-nav";
+import { PendingScansBanner } from "@/components/site/pending-scans-banner";
 import { InventoryItemCard } from "@/components/inventory/item-card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ export default async function InventoryListPage() {
   return (
     <main className="mx-auto max-w-md">
       <MainNav active="inventory" />
+      <PendingScansBanner />
       <header className="flex items-center justify-between px-4 py-3">
         <h1 className="text-lg font-semibold">Inventory</h1>
         {canWrite && (

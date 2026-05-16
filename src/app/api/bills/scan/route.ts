@@ -1,90 +1,42 @@
 // Bill-photo scan endpoint.
 //
 // POST /api/bills/scan with multipart form-data containing `image`.
-// Calls Claude Sonnet 4.6 vision and returns a parsed bill object
-// (store header + line items, including per-line price) that the
-// /inventory/new "Upload bill" tab renders into an editable
-// confirmation form. The user reviews + saves; the actual DB write
-// happens in the uploadBillFromScan server action.
+// Tries Claude Sonnet 4.6 vision synchronously. On success returns the
+// parsed bill (store header + line items, including per-line price) that
+// the /inventory/new "Upload bill" tab renders into the editable
+// confirmation form (handled by the uploadBillFromScan server action).
+//
+// On any failure (Sonnet 5xx, timeout, malformed JSON), we stash the
+// uploaded photo in the private bill-scan-pending bucket, insert a
+// bill_scan_attempts row (status=pending, attempts=1), and respond
+// with code BILL_SCAN_QUEUED so the client can point the user at
+// /scans/pending. The /api/cron/retry-bill-scans worker picks the
+// row up on the next */15 tick and retries up to 3 times.
 //
 // Server-only. ANTHROPIC_API_KEY must never be imported by client code.
-// The uploaded image is held in memory for the duration of the request
-// and never persisted (no Supabase storage, no on-disk copy).
 
-import Anthropic from "@anthropic-ai/sdk";
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { requireHousehold } from "@/lib/auth/require";
-import { parseBillScanResponse, type ParsedBill } from "./_parse";
+import { createServiceClient } from "@/lib/supabase/service";
+import type { ParsedBill } from "./_parse";
+import { runSonnetBillScan, type SonnetMediaType } from "./_sonnet";
+import { BILL_SCAN_BUCKET, buildBillScanStoragePath } from "./_storage";
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB hard ceiling after client-side compression
-const REQUEST_TIMEOUT_MS = 30_000;
-
-// Frozen — placed before the (variable) image so it benefits from
-// Anthropic's prefix prompt cache on repeated scans.
-const BILL_SYSTEM_PROMPT = `You extract grocery-bill data from a photo of a paper retail receipt or invoice.
-
-Return a JSON object with these top-level fields:
-- store_name (string or null): the merchant name as printed at the top
-  of the bill. Strip address lines, phone numbers, GST/UEN codes. Title
-  Case is fine. Null if unreadable.
-- bill_date (string YYYY-MM-DD, or null): the bill / transaction date.
-  Null if not clearly printed.
-- currency (string ISO 4217, e.g. "SGD", "USD", "INR", "EUR", or null):
-  the currency symbol or code. Use "SGD" for "$" with a Singapore-context
-  bill, "USD" if clearly American, "INR" for ₹ or "Rs". Null if unsure.
-- total_amount (number or null): the grand total the customer paid.
-  Excludes "subtotal" — use the final number after tax. Null if unclear.
-- items (array): each entry has:
-    - item_name (string, lowercase, no brand prefixes / SKU codes;
-      e.g. "basmati rice", "toor dal", "milk").
-    - quantity (number or null): purchased amount.
-    - unit (string or null): one of "kg", "g", "l", "ml", "piece".
-    - price (number or null): the line total in the bill's currency
-      (not the per-unit price).
-
-Rules:
-- Output only the JSON object. No prose, no markdown fence.
-- Skip non-grocery lines in items: subtotal, tax, GST, discount,
-  loyalty points, store address, payment method, change, "thank you".
-- Skip items you cannot confidently identify. Missing items are better
-  than hallucinated items.
-- If the image is not a grocery bill, return:
-  {"store_name": null, "bill_date": null, "currency": null,
-   "total_amount": null, "items": []}.
-- Keep names short (under 60 chars) and lowercase.`;
-
-const BILL_USER_PROMPT = "Extract the bill header and grocery line items from this bill.";
-
-const JSON_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  required: ["store_name", "bill_date", "currency", "total_amount", "items"],
-  properties: {
-    store_name: { type: ["string", "null"] },
-    bill_date: { type: ["string", "null"] },
-    currency: { type: ["string", "null"] },
-    total_amount: { type: ["number", "null"] },
-    items: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["item_name", "quantity", "unit", "price"],
-        properties: {
-          item_name: { type: "string" },
-          quantity: { type: ["number", "null"] },
-          unit: { type: ["string", "null"] },
-          price: { type: ["number", "null"] },
-        },
-      },
-    },
-  },
-} as const;
 
 export type BillScanResponseBody =
   | { ok: true; data: ParsedBill }
-  | { ok: false; error: { code: string; message: string } };
+  | {
+      ok: false;
+      error: {
+        code: string;
+        message: string;
+        // Present when code === "BILL_SCAN_QUEUED".
+        attemptId?: string;
+      };
+    };
 
 function bad(
   status: number,
@@ -97,6 +49,8 @@ function bad(
 export async function POST(
   request: Request,
 ): Promise<NextResponse<BillScanResponseBody>> {
+  // requireHousehold redirects (throws) for unauthenticated callers, so
+  // we never queue for an anonymous upload.
   const ctx = await requireHousehold();
   if (ctx.membership.role !== "owner" && ctx.membership.role !== "maid") {
     return bad(403, "BILL_FORBIDDEN", "You don't have permission to upload bills.");
@@ -129,68 +83,69 @@ export async function POST(
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const base64 = buffer.toString("base64");
-  const mediaType = file.type as "image/jpeg" | "image/png" | "image/webp";
+  const mediaType = file.type as SonnetMediaType;
 
-  const client = new Anthropic({ apiKey });
-  let response;
-  try {
-    response = await Promise.race([
-      client.messages.create({
-        model: "claude-sonnet-4-6",
-        max_tokens: 4096,
-        system: [
-          {
-            type: "text",
-            text: BILL_SYSTEM_PROMPT,
-            cache_control: { type: "ephemeral" },
-          },
-        ],
-        output_config: {
-          format: { type: "json_schema", schema: JSON_SCHEMA },
-        },
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image",
-                source: { type: "base64", media_type: mediaType, data: base64 },
-              },
-              { type: "text", text: BILL_USER_PROMPT },
-            ],
-          },
-        ],
-      }),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error("Bill scan timed out — try a smaller image.")),
-          REQUEST_TIMEOUT_MS,
-        ),
-      ),
-    ]);
-  } catch (err) {
-    const message =
-      err instanceof Error && err.message.includes("timed out")
-        ? err.message
-        : "Couldn't read that bill. Try a clearer photo.";
-    // Log full detail server-side; never echo SDK error text to the client.
-    console.error("[bills/scan] anthropic call failed", err);
-    return bad(502, "BILL_SCAN_FAILED", message);
+  // ── Happy path: try Sonnet synchronously. ──────────────────────────
+  const sonnet = await runSonnetBillScan(base64, mediaType, apiKey);
+  if (sonnet.ok) {
+    return NextResponse.json({ ok: true, data: sonnet.data });
   }
 
-  const textBlock = response.content.find(
-    (b): b is Anthropic.TextBlock => b.type === "text",
+  // ── Failure path: stash the image + queue a retry. ────────────────
+  const supabase = createServiceClient();
+  const attemptId = randomUUID();
+  const storagePath = buildBillScanStoragePath(
+    ctx.household.id,
+    attemptId,
+    mediaType,
   );
-  if (!textBlock) {
-    return bad(502, "BILL_SCAN_FAILED", "Couldn't read that bill. Try a clearer photo.");
+
+  const uploaded = await supabase.storage
+    .from(BILL_SCAN_BUCKET)
+    .upload(storagePath, buffer, {
+      contentType: mediaType,
+      upsert: false,
+    });
+  if (uploaded.error) {
+    // If we can't persist the image we have nothing to retry against;
+    // surface the original Sonnet message so the user can re-pick.
+    console.error("[bills/scan] failed to stash image for retry", uploaded.error);
+    return bad(502, "BILL_SCAN_FAILED", sonnet.message);
   }
 
-  let raw: unknown;
-  try {
-    raw = JSON.parse(textBlock.text);
-  } catch {
-    return bad(502, "BILL_SCAN_FAILED", "Couldn't read that bill. Try a clearer photo.");
+  const inserted = await supabase
+    .from("bill_scan_attempts")
+    .insert({
+      id: attemptId,
+      household_id: ctx.household.id,
+      uploaded_by_profile_id: ctx.profile.id,
+      storage_path: storagePath,
+      mime_type: mediaType,
+      status: "pending",
+      attempts: 1,
+      last_attempted_at: new Date().toISOString(),
+      last_error: sonnet.message,
+    })
+    .select("id")
+    .single();
+
+  if (inserted.error || !inserted.data) {
+    console.error("[bills/scan] failed to enqueue retry row", inserted.error);
+    // Clean up the orphaned image best-effort.
+    await supabase.storage.from(BILL_SCAN_BUCKET).remove([storagePath]);
+    return bad(502, "BILL_SCAN_FAILED", sonnet.message);
   }
-  const data = parseBillScanResponse(raw);
-  return NextResponse.json({ ok: true, data });
+
+  return NextResponse.json(
+    {
+      ok: false,
+      error: {
+        code: "BILL_SCAN_QUEUED",
+        attemptId: inserted.data.id,
+        message:
+          "We couldn't read the bill on the first try. We'll retry automatically — you'll get a push notification when it's ready (usually under an hour).",
+      },
+    },
+    { status: 202 },
+  );
 }

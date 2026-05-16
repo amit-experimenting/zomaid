@@ -139,6 +139,10 @@ const UploadBillFromScanSchema = z.object({
   currency: z.string().regex(/^[A-Z]{3}$/),
   total_amount: z.number().nonnegative().nullable(),
   items: z.array(ScanLineSchema).min(1).max(200),
+  // Optional bill_scan_attempts row to stamp once the bill is created.
+  // Present when the user is finalising a queued retry from /scans/pending;
+  // omitted on the synchronous /inventory/new → confirm flow.
+  attemptId: z.string().uuid().optional(),
 });
 
 export type UploadBillFromScanInput = z.infer<typeof UploadBillFromScanSchema>;
@@ -327,6 +331,31 @@ export async function uploadBillFromScan(
   if (lineErr) {
     await supabase.from("bills").delete().eq("id", billId);
     return { ok: false, error: { code: "BILL_DB", message: lineErr.message } };
+  }
+
+  // If the caller is finalising a queued retry, stamp the attempt row so
+  // it stops showing on /scans/pending and the inventory-tab badge. Best
+  // effort — failure to stamp is logged but does not roll back the bill.
+  // We use the service-role client because bill_scan_attempts has no
+  // user-writable RLS policy by design.
+  if (parsed.data.attemptId) {
+    const { createServiceClient } = await import("@/lib/supabase/service");
+    const svc = createServiceClient();
+    const stamp = await svc
+      .from("bill_scan_attempts")
+      .update({
+        reviewed_at: new Date().toISOString(),
+        produced_bill_id: billId,
+      })
+      .eq("id", parsed.data.attemptId)
+      .eq("uploaded_by_profile_id", ctx.profile.id);
+    if (stamp.error) {
+      console.error(
+        "[uploadBillFromScan] failed to stamp bill_scan_attempts",
+        stamp.error,
+      );
+    }
+    revalidatePath("/scans/pending");
   }
 
   revalidatePath("/shopping");

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/dispatch-task-pushes",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/retry-bill-scans",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

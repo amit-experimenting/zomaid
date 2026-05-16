@@ -303,6 +303,44 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["bills"]["Insert"]>;
         Relationships: [];
       };
+      bill_scan_attempts: {
+        Row: {
+          id: string;
+          household_id: string;
+          uploaded_by_profile_id: string | null;
+          storage_path: string;
+          mime_type: string;
+          status: "pending" | "succeeded" | "failed";
+          attempts: number;
+          max_attempts: number;
+          last_error: string | null;
+          last_attempted_at: string | null;
+          parsed_payload: unknown | null;
+          produced_bill_id: string | null;
+          reviewed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          uploaded_by_profile_id?: string | null;
+          storage_path: string;
+          mime_type: string;
+          status?: "pending" | "succeeded" | "failed";
+          attempts?: number;
+          max_attempts?: number;
+          last_error?: string | null;
+          last_attempted_at?: string | null;
+          parsed_payload?: unknown | null;
+          produced_bill_id?: string | null;
+          reviewed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["bill_scan_attempts"]["Insert"]>;
+        Relationships: [];
+      };
       bill_line_items: {
         Row: {
           id: string;
