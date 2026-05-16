@@ -110,4 +110,22 @@ External RPCs **not** owned here but worth naming for the boundary:
 - **No test coverage tracker yet** for the household feature surface. Phase 2 will populate this section.
 
 ## Test coverage
-_To be filled in Phase 2._
+
+| Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `removeMembership` | `src/app/household/settings/actions.ts:181` | — | — | — | high | `tests/actions/` |
+| `seed_default_meal_times` trigger | `supabase/migrations/20260609_001_household_meal_times.sql` | — | — | — | high | `tests/db/` |
+| `tryRedeemPendingEmailInvite` | `src/lib/auth/redeem-email-invite.ts` | — | — | — | high | `tests/actions/` |
+| `updateMealTime` | `src/app/household/meal-times/actions.ts:20` | — | — | — | high | `tests/actions/` |
+| `updateMembershipDiet` | `src/app/household/settings/actions.ts:228` | — | — | — | high | `tests/actions/` |
+| `updateMembershipPrivilege` | `src/app/household/settings/actions.ts:265` | — | — | — | high | `tests/actions/` |
+| `HouseholdDietForm` | `src/components/household/household-diet-form.tsx` | — | — | — | medium | `tests/e2e/` |
+| `HouseholdSettingsPage` (`/household/settings`) | `src/app/household/settings/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `JoinCodePage` (`/join/code`) | `src/app/join/code/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `JoinTokenPage` (`/join/[token]`) | `src/app/join/[token]/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `MealTimesPage` (`/household/meal-times`) | `src/app/household/meal-times/page.tsx` | — | — | partial via `tests/e2e/inventory.spec.ts` (unauth redirect only) | medium | `tests/e2e/` |
+| `createInvite` | `src/app/household/settings/actions.ts:20` | — | `tests/actions/invites-actions.test.ts` | — | none | — |
+| `household_effective_diet(p_household)` RPC | `supabase/migrations/20260706_001_household_diet_preference.sql` | — | `tests/db/household-diet-preference.test.ts` | — | none | — |
+| `redeemInvite` | `src/app/household/settings/actions.ts:145` | — | `tests/actions/invites-actions.test.ts` | — | none | — |
+| `revokeInvite` | `src/app/household/settings/actions.ts:111` | — | `tests/actions/invites-actions.test.ts` | — | none | — |
+| `updateHouseholdDiet` | `src/app/household/settings/actions.ts:300` | `tests/actions/household-diet.test.ts` | — | — | none | — |
