@@ -327,21 +327,21 @@ Replace the entire body of [src/app/globals.css](../../../src/app/globals.css) (
     --secondary: #EFE9E1;
     --secondary-foreground: #111111;
     --muted: #EFE9E1;
-    --muted-foreground: #767676;
+    --muted-foreground: #6F6F6F;   /* aligned with --text-muted; was #767676 in spec */
     --accent: #E8EAF6;
     --accent-foreground: #3949AB;
 
     /* Text */
     --text-primary: #111111;
     --text-secondary: #555555;
-    --text-muted: #767676;
+    --text-muted: #6F6F6F;       /* corrected from #767676 in Task 1.3 — failed AA on cream */
     --text-disabled: #B0AFAA;
 
     /* Semantic */
-    --destructive: #C62828;
+    --destructive: #C62828;       /* alias of --danger for shadcn compat */
     --success: #1F7A3B;
     --success-subtle: #E9F8EE;
-    --warning: #B26100;
+    --warning: #A55A00;           /* corrected from #B26100 in Task 1.3 — failed AA on warning-subtle */
     --warning-subtle: #FFF1E0;
     --danger: #C62828;
     --danger-subtle: #FEEAEA;
@@ -1621,7 +1621,9 @@ const SIZES = { sm: 24, md: 32, lg: 48 } as const;
 type AvatarSize = keyof typeof SIZES;
 
 // Six saturated backgrounds, all AA against white text (verified manually before merge).
-const HASH_PALETTE = ["#3949AB", "#5C6BC0", "#1F7A3B", "#0E6E6E", "#B26100", "#6A1B9A"] as const;
+// `#A55A00` aligns with the corrected `--warning` token (originally `#B26100` in the brainstorm
+// but darkened in Task 1.3 to clear AA 4.5:1 on warning-subtle).
+const HASH_PALETTE = ["#3949AB", "#5C6BC0", "#1F7A3B", "#0E6E6E", "#A55A00", "#6A1B9A"] as const;
 
 function hashIndex(name: string): number {
   let h = 0;

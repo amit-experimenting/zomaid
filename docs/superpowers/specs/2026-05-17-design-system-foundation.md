@@ -103,12 +103,12 @@ All tokens are CSS custom properties on `:root` in [src/app/globals.css](../../.
 # Text
 --text-primary:     #111111     /* ~16:1 on surface-0, AAA */
 --text-secondary:   #555555     /* ~8:1, AA+ */
---text-muted:       #767676     /* ~4.6:1, AA body (NOT lighter) */
+--text-muted:       #6F6F6F     /* AA body 4.70:1 (was #767676 — failed AA at 4.25) */
 --text-disabled:    #B0AFAA     /* non-text-content only */
 
 # Semantic
 --success:          #1F7A3B    --success-subtle: #E9F8EE
---warning:          #B26100    --warning-subtle: #FFF1E0
+--warning:          #A55A00    --warning-subtle: #FFF1E0   /* was #B26100 — failed AA at 4.11 */
 --danger:           #C62828    --danger-subtle:  #FEEAEA
 --info:             #1859D1    --info-subtle:    #E8F3FF
 ```
