@@ -155,33 +155,43 @@ export async function submitTaskSetup(input: unknown) {
       recurrence_starts_on: new Date().toISOString().slice(0, 10),
     };
   });
-  const insRes = await svc.from("tasks").insert(inserts);
-  if (insRes.error) throw new Error(insRes.error.message);
 
-  // Hide ALL standards for this household (so even un-picked standards
-  // never seed occurrences).
-  const allStd = await svc.from("tasks").select("id").is("household_id", null).is("archived_at", null);
-  if (allStd.error) throw new Error(allStd.error.message);
-  const hideRows = allStd.data.map((r) => ({
-    household_id: ctx.household.id,
-    task_id: r.id,
-    hidden_by_profile_id: ctx.profile.id,
-  }));
-  if (hideRows.length > 0) {
-    const hideRes = await svc
-      .from("household_task_hides")
-      .upsert(hideRows, { onConflict: "household_id,task_id" });
-    if (hideRes.error) throw new Error(hideRes.error.message);
+  try {
+    const insRes = await svc.from("tasks").insert(inserts);
+    if (insRes.error) throw new Error(insRes.error.message);
+
+    // Hide ALL standards for this household (so even un-picked standards
+    // never seed occurrences).
+    const allStd = await svc.from("tasks").select("id").is("household_id", null).is("archived_at", null);
+    if (allStd.error) throw new Error(allStd.error.message);
+    const hideRows = allStd.data.map((r) => ({
+      household_id: ctx.household.id,
+      task_id: r.id,
+      hidden_by_profile_id: ctx.profile.id,
+    }));
+    if (hideRows.length > 0) {
+      const hideRes = await svc
+        .from("household_task_hides")
+        .upsert(hideRows, { onConflict: "household_id,task_id" });
+      if (hideRes.error) throw new Error(hideRes.error.message);
+    }
+
+    // Drop the draft.
+    await svc.from("task_setup_drafts").delete().eq("household_id", ctx.household.id);
+
+    // Materialise today/this week so Home is non-empty on next render.
+    const horizon = new Date();
+    horizon.setDate(horizon.getDate() + 7);
+    const horizonYmd = horizon.toISOString().slice(0, 10);
+    await svc.rpc("tasks_generate_occurrences", { p_horizon_date: horizonYmd });
+  } catch (err) {
+    // Rollback the CAS claim so the user can retry the wizard.
+    await svc
+      .from("households")
+      .update({ task_setup_completed_at: null })
+      .eq("id", ctx.household.id);
+    throw err;
   }
-
-  // Drop the draft.
-  await svc.from("task_setup_drafts").delete().eq("household_id", ctx.household.id);
-
-  // Materialise today/this week so Home is non-empty on next render.
-  const horizon = new Date();
-  horizon.setDate(horizon.getDate() + 7);
-  const horizonYmd = horizon.toISOString().slice(0, 10);
-  await svc.rpc("tasks_generate_occurrences", { p_horizon_date: horizonYmd });
 
   revalidatePath("/dashboard");
   redirect("/dashboard");

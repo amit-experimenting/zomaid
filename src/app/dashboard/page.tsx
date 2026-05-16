@@ -109,9 +109,10 @@ export default async function DashboardPage({
     } else if (inviteRes.data?.length) {
       const inv = inviteRes.data[0];
       ownerCard = { state: "pending", origin, code: inv.code, token: inv.token, inviteId: inv.id };
-    } else {
+    } else if (ctx.household.maid_mode === "invited") {
       ownerCard = { state: "empty" };
     }
+    // family_run + no maid + no invite → no card; invite via /household/settings
   }
 
   let showInventoryCard = false;
@@ -143,6 +144,63 @@ export default async function DashboardPage({
   const onDay: OccurrenceRowItem[] = [];
   const meals: MealFeedItem[] = [];
 
+  // Always fetch meal data regardless of task setup status (spec §7).
+  const [
+    { data: rawMealRows },
+    { data: mealTimes },
+    { count: rosterCount },
+  ] = await Promise.all([
+    supabase
+      .from("meal_plans")
+      .select(
+        "slot, recipe_id, people_eating, recipes(name, kcal_per_serving, carbs_g_per_serving, fat_g_per_serving, protein_g_per_serving)",
+      )
+      .eq("household_id", ctx.household.id)
+      .eq("plan_date", selectedYmd),
+    supabase
+      .from("household_meal_times")
+      .select("slot,meal_time")
+      .eq("household_id", ctx.household.id),
+    supabase
+      .from("household_memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("household_id", ctx.household.id)
+      .eq("status", "active"),
+  ]);
+
+  const timeBySlot = Object.fromEntries((mealTimes ?? []).map((r) => [r.slot, r.meal_time]));
+  const rosterSize = rosterCount ?? 1;
+  type Slot = MealFeedItem["slot"];
+  for (const r of rawMealRows ?? []) {
+    if (!r.recipe_id) continue;
+    const t = timeBySlot[r.slot];
+    if (!t) continue;
+    type RecipeShape = {
+      name: string;
+      kcal_per_serving: number | string | null;
+      carbs_g_per_serving: number | string | null;
+      fat_g_per_serving: number | string | null;
+      protein_g_per_serving: number | string | null;
+    };
+    const recipeRaw = r.recipes as unknown as RecipeShape | RecipeShape[] | null;
+    const recipe = Array.isArray(recipeRaw) ? recipeRaw[0] ?? null : recipeRaw;
+    if (!recipe?.name) continue;
+    const [hh, mm] = (t as string).split(":").map(Number);
+    const iso = `${selectedYmd}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:00+08:00`;
+    const num = (v: number | string | null) => (v == null ? null : Number(v));
+    meals.push({
+      slot: r.slot as Slot,
+      recipeName: recipe.name,
+      slotTimeIso: iso,
+      kcalPerServing: num(recipe.kcal_per_serving),
+      carbsGPerServing: num(recipe.carbs_g_per_serving),
+      fatGPerServing: num(recipe.fat_g_per_serving),
+      proteinGPerServing: num(recipe.protein_g_per_serving),
+      peopleEating: r.people_eating ?? rosterSize,
+    });
+  }
+
+  // Task occurrences are only fetched when task setup is complete.
   if (setupCompleted) {
     const horizonDate = addDays(new Date(`${selectedYmd}T12:00:00+08:00`), 1);
     await supabase.rpc("tasks_generate_occurrences", {
@@ -154,38 +212,15 @@ export default async function DashboardPage({
     targetEnd.setDate(targetEnd.getDate() + 1);
     const leftEdge = isToday ? new Date("1970-01-01T00:00:00Z") : targetStart;
 
-    const [
-      { data: occRows },
-      { data: rawMealRows },
-      { data: mealTimes },
-      { count: rosterCount },
-    ] = await Promise.all([
-      supabase
-        .from("task_occurrences")
-        .select(
-          "id, due_at, status, household_id, tasks!inner(id, title, household_id, assigned_to_profile_id, profiles!assigned_to_profile_id(display_name))",
-        )
-        .eq("household_id", ctx.household.id)
-        .gte("due_at", leftEdge.toISOString())
-        .lt("due_at", targetEnd.toISOString())
-        .order("due_at", { ascending: true }),
-      supabase
-        .from("meal_plans")
-        .select(
-          "slot, recipe_id, people_eating, recipes(name, kcal_per_serving, carbs_g_per_serving, fat_g_per_serving, protein_g_per_serving)",
-        )
-        .eq("household_id", ctx.household.id)
-        .eq("plan_date", selectedYmd),
-      supabase
-        .from("household_meal_times")
-        .select("slot,meal_time")
-        .eq("household_id", ctx.household.id),
-      supabase
-        .from("household_memberships")
-        .select("id", { count: "exact", head: true })
-        .eq("household_id", ctx.household.id)
-        .eq("status", "active"),
-    ]);
+    const { data: occRows } = await supabase
+      .from("task_occurrences")
+      .select(
+        "id, due_at, status, household_id, tasks!inner(id, title, household_id, assigned_to_profile_id, profiles!assigned_to_profile_id(display_name))",
+      )
+      .eq("household_id", ctx.household.id)
+      .gte("due_at", leftEdge.toISOString())
+      .lt("due_at", targetEnd.toISOString())
+      .order("due_at", { ascending: true });
 
     type OccRow = {
       id: string;
@@ -233,38 +268,6 @@ export default async function DashboardPage({
       });
     sortItems(overdue);
     sortItems(onDay);
-
-    const timeBySlot = Object.fromEntries((mealTimes ?? []).map((r) => [r.slot, r.meal_time]));
-    const rosterSize = rosterCount ?? 1;
-    type Slot = MealFeedItem["slot"];
-    for (const r of rawMealRows ?? []) {
-      if (!r.recipe_id) continue;
-      const t = timeBySlot[r.slot];
-      if (!t) continue;
-      type RecipeShape = {
-        name: string;
-        kcal_per_serving: number | string | null;
-        carbs_g_per_serving: number | string | null;
-        fat_g_per_serving: number | string | null;
-        protein_g_per_serving: number | string | null;
-      };
-      const recipeRaw = r.recipes as unknown as RecipeShape | RecipeShape[] | null;
-      const recipe = Array.isArray(recipeRaw) ? recipeRaw[0] ?? null : recipeRaw;
-      if (!recipe?.name) continue;
-      const [hh, mm] = (t as string).split(":").map(Number);
-      const iso = `${selectedYmd}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:00+08:00`;
-      const num = (v: number | string | null) => (v == null ? null : Number(v));
-      meals.push({
-        slot: r.slot as Slot,
-        recipeName: recipe.name,
-        slotTimeIso: iso,
-        kcalPerServing: num(recipe.kcal_per_serving),
-        carbsGPerServing: num(recipe.carbs_g_per_serving),
-        fatGPerServing: num(recipe.fat_g_per_serving),
-        proteinGPerServing: num(recipe.protein_g_per_serving),
-        peopleEating: r.people_eating ?? rosterSize,
-      });
-    }
   }
 
   return (

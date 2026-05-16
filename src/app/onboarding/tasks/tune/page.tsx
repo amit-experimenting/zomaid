@@ -64,11 +64,9 @@ export default async function OnboardingTasksTunePage() {
   const maidRow = rows.find((r) => r.role === "maid");
   const maid: AssigneeOption | null = (() => {
     if (ctx.household.maid_mode !== "invited") return null;
-    if (maidRow) {
-      const p = Array.isArray(maidRow.profile) ? maidRow.profile[0] : maidRow.profile;
-      return { value: maidRow.profile_id, label: `Maid (${p?.display_name || p?.email || "joined"})` };
-    }
-    return { value: "anyone", label: "Maid (pending — assigned to Anyone)" };
+    if (!maidRow) return null;
+    const p = Array.isArray(maidRow.profile) ? maidRow.profile[0] : maidRow.profile;
+    return { value: maidRow.profile_id, label: `Maid (${p?.display_name || p?.email || "joined"})` };
   })();
 
   const assignees: AssigneeOption[] = [

@@ -32,7 +32,7 @@ export function HouseholdModeCard() {
           disabled={busy}
           onClick={() => startFamily(async () => { await setHouseholdFamilyRun(); })}
         >
-          We're family-run
+          We&apos;re family-run
         </Button>
       </CardContent>
     </Card>
