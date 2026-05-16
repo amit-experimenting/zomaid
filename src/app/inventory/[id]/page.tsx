@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
@@ -28,6 +29,11 @@ export default async function InventoryItemDetail({ params }: { params: Promise<
   return (
     <main className="mx-auto max-w-md">
       <MainNav active="inventory" />
+      <div className="px-4 pt-3">
+        <Link href="/inventory" className="text-xs text-muted-foreground hover:text-foreground">
+          ← Inventory
+        </Link>
+      </div>
       <header className="px-4 py-3">
         <h1 className="text-lg font-semibold">{item.item_name}</h1>
         <div className="text-sm text-muted-foreground">

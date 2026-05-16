@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
 import { MainNav } from "@/components/site/main-nav";
@@ -22,6 +23,11 @@ export default async function ConversionsPage() {
   return (
     <main className="mx-auto max-w-md">
       <MainNav active="inventory" />
+      <div className="px-4 pt-3">
+        <Link href="/inventory" className="text-xs text-muted-foreground hover:text-foreground">
+          ← Inventory
+        </Link>
+      </div>
       <header className="px-4 py-3">
         <h1 className="text-lg font-semibold">Unit conversions</h1>
         <p className="mt-1 text-sm text-muted-foreground">

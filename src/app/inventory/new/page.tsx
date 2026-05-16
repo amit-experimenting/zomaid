@@ -38,6 +38,13 @@ export default async function NewInventoryItemPage({
   return (
     <main className="mx-auto max-w-md">
       <MainNav active="inventory" />
+      {!isOnboarding && (
+        <div className="px-4 pt-3">
+          <Link href="/inventory" className="text-xs text-muted-foreground hover:text-foreground">
+            ← Inventory
+          </Link>
+        </div>
+      )}
       <header className="px-4 py-3">
         <h1 className="text-lg font-semibold">
           {isOnboarding ? "Set up your inventory" : "Add an item"}
