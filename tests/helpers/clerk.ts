@@ -63,7 +63,8 @@ export function mockClerk(opts: MockClerkOptions): MockClerkHandle {
       orgSlug: null,
       actor: null,
       // Ignore the template arg; one JWT covers all callsites in tests.
-      getToken: async (_args?: unknown) => token,
+      // Mock ignores the template arg — one JWT covers all callsites in tests.
+      getToken: async () => token,
       has: () => false,
       debug: () => ({}),
       redirectToSignIn: () => {
@@ -97,7 +98,7 @@ export function mockClerkUnauthed(): void {
       orgRole: null,
       orgSlug: null,
       actor: null,
-      getToken: async (_args?: unknown) => null,
+      getToken: async () => null,
       has: () => false,
       debug: () => ({}),
       redirectToSignIn: () => {

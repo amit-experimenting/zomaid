@@ -64,6 +64,11 @@ export function RecipePhoto({ src, alt, width, height, className }: RecipePhotoP
     return <PlaceholderSvg name={alt} width={width} height={height} className={className} />;
   }
   return (
+    // next/image would require adding every signed-URL host (Supabase Storage
+    // domains rotate per project) to remotePatterns in next.config. The plain
+    // <img> is intentional here — the only optimisation it skips is automatic
+    // resizing, which doesn't matter for the small thumbnail use case.
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
       alt={alt}

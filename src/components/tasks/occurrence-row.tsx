@@ -16,6 +16,11 @@ export function OccurrenceRow({
   item, readOnly, onTap,
 }: { item: OccurrenceRowItem; readOnly: boolean; onTap: () => void }) {
   const due = new Date(item.dueAt);
+  // Overdue is a "right now vs. due time" comparison — we want it to recompute
+  // whenever the parent re-renders (e.g. after a status toggle, when a new
+  // occurrence list arrives). The alternative (state + interval) adds re-render
+  // churn for purely cosmetic styling. Acceptable tradeoff per react-hooks/purity docs.
+  // eslint-disable-next-line react-hooks/purity
   const isOverdue = item.status === "pending" && due.getTime() < Date.now();
   return (
     <button

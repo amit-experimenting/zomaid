@@ -10,6 +10,9 @@ import { SlotRow } from "@/components/plan/slot-row";
 import { SlotActionSheet } from "@/components/plan/slot-action-sheet";
 import type { Recipe } from "@/components/plan/recipe-picker";
 import type { Warning } from "@/components/plan/slot-warning-badge";
+import type { Database } from "@/lib/db/types";
+
+type RecipeRow = Database["public"]["Tables"]["recipes"]["Row"];
 
 type Slot = "breakfast" | "lunch" | "snacks" | "dinner";
 const ALL_SLOTS: Slot[] = ["breakfast", "lunch", "snacks", "dinner"];
@@ -115,6 +118,9 @@ async function PlannedView({ ctxDate }: { ctxDate: string | undefined }) {
 
   // Meal locks: 1 hour before each slot's configured start.
   const timeBySlot = Object.fromEntries((mealTimes ?? []).map((r) => [r.slot, r.meal_time]));
+  // Server component — Date.now() is fine here (runs once per request, not in
+  // client render). The react-hooks/purity rule is targeted at client components.
+  // eslint-disable-next-line react-hooks/purity
   const nowMs = Date.now();
   function isLocked(slot: string): boolean {
     const t = timeBySlot[slot];
@@ -283,10 +289,10 @@ async function LibraryView({
     // 500ing the page when the RPC chokes (e.g., schema drift mid-deploy).
     console.error("[/recipes] effective_recipes failed:", effectiveErr);
   }
-  const filtered = (effective ?? [])
-    .filter((r: any) => !slot || r.slot === slot)
-    .filter((r: any) => !q || r.name.toLowerCase().includes(q.toLowerCase()))
-    .filter((r: any) => r.archived_at === null);
+  const filtered = ((effective ?? []) as RecipeRow[])
+    .filter((r) => !slot || r.slot === slot)
+    .filter((r) => !q || r.name.toLowerCase().includes(q.toLowerCase()))
+    .filter((r) => r.archived_at === null);
 
   const role = ctx.membership.role;
   const priv = ctx.membership.privilege;
@@ -296,7 +302,7 @@ async function LibraryView({
   // Compute photo URL per row. Each row is independently try/catch'd so a bad
   // photo_path on one recipe (missing file, malformed key, etc.) can never
   // crash the whole index — the SVG placeholder takes over for that card.
-  const cards = await Promise.all(filtered.map(async (r: any) => {
+  const cards = await Promise.all(filtered.map(async (r) => {
     let photoUrl: string | null = null;
     if (r.photo_path) {
       try {

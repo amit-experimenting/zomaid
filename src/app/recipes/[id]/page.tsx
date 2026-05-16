@@ -56,14 +56,17 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
       </div>
       <RecipeDetail
         name={recipe.name}
-        slot={recipe.slot as any}
+        slot={recipe.slot as "breakfast" | "lunch" | "snacks" | "dinner"}
         prepTimeMinutes={recipe.prep_time_minutes}
         defaultServings={recipe.default_servings}
         photoUrl={photoUrl}
         notes={recipe.notes}
         youtubeUrl={recipe.youtube_url}
         nutrition={nutrition}
-        ingredients={(ingredients ?? []).map((i: any) => ({ ...i, quantity: i.quantity?.toString() ?? null }))}
+        ingredients={(ingredients ?? []).map((i) => ({
+          ...i,
+          quantity: i.quantity?.toString() ?? null,
+        }))}
         steps={steps ?? []}
       />
     </main>

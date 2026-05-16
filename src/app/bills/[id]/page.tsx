@@ -24,14 +24,29 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
     .eq("bill_id", id)
     .order("position");
 
-  const items = (lines ?? []).map((l: any) => ({
+  // PostgREST embed shape (shopping_list_items) isn't captured by the generated
+  // types, so we narrow it locally rather than reach for `any`.
+  type LineRowFromDb = {
+    id: string;
+    position: number;
+    item_name: string;
+    quantity: number | string | null;
+    unit: string | null;
+    unit_price: number | string | null;
+    line_total: number | string | null;
+    shopping_list_items:
+      | { item_name: string }
+      | { item_name: string }[]
+      | null;
+  };
+  const items = ((lines ?? []) as unknown as LineRowFromDb[]).map((l) => ({
     id: l.id,
     position: l.position,
     item_name: l.item_name,
-    quantity: l.quantity,
+    quantity: l.quantity == null ? null : Number(l.quantity),
     unit: l.unit,
-    unit_price: l.unit_price,
-    line_total: l.line_total,
+    unit_price: l.unit_price == null ? null : Number(l.unit_price),
+    line_total: l.line_total == null ? null : Number(l.line_total),
     matchedShoppingItemName: Array.isArray(l.shopping_list_items)
       ? (l.shopping_list_items[0]?.item_name ?? null)
       : (l.shopping_list_items?.item_name ?? null),

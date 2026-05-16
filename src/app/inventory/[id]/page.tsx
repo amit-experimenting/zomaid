@@ -55,7 +55,12 @@ export default async function InventoryItemDetail({ params }: { params: Promise<
             id: t.id,
             delta: Number(t.delta),
             unit: t.unit,
-            reason: t.reason as any,
+            reason: t.reason as
+              | "onboarding"
+              | "manual_adjust"
+              | "cook_deduct"
+              | "bill_ingest"
+              | "undo",
             notes: t.notes,
             created_at: t.created_at,
           }))}

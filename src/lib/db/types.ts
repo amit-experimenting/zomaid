@@ -619,9 +619,7 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: {
-      // No views yet.
-    };
+    Views: Record<string, never>;
     Enums: {
       meal_slot: "breakfast" | "lunch" | "snacks" | "dinner";
       bill_status: "pending" | "processing" | "processed" | "failed";

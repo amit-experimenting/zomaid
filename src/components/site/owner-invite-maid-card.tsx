@@ -46,6 +46,10 @@ function PendingCard({ origin, code, token, inviteId }: Extract<Props, { state: 
   const [revoking, startRevoke] = useTransition();
 
   useEffect(() => {
+    // Deliberately set in effect (not via useState lazy initializer) so SSR
+    // and the first client render agree (`false`), preventing a hydration
+    // mismatch. The effect then upgrades to the real value after mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
   }, []);
 

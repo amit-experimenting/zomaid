@@ -4,6 +4,14 @@ import { setJwtClaims, withTransaction } from "../setup";
 import { insertHousehold, insertMembership, insertProfile } from "../factories";
 import type { Client } from "pg";
 
+type DeductResult = {
+  inventory_cook_deduct: {
+    status: "deducted" | "partial" | "skipped";
+    warnings: { reason: string; [k: string]: unknown }[];
+    [k: string]: unknown;
+  };
+};
+
 async function setupInventoryAndRecipe(c: Client) {
   const me = await insertProfile(c);
   const h = await insertHousehold(c, { created_by_profile_id: me.id });
@@ -68,7 +76,7 @@ describe("inventory_cook_deduct", () => {
       // Drain to 50g so 97.5g needed is short.
       await c.query(`update inventory_items set quantity = 50 where id = $1`, [invId]);
 
-      const { rows } = await c.query<{ inventory_cook_deduct: any }>(
+      const { rows } = await c.query<DeductResult>(
         `select public.inventory_cook_deduct($1)`,
         [mealPlanId],
       );
@@ -102,7 +110,7 @@ describe("inventory_cook_deduct", () => {
          values ($1, $2, current_date, 'breakfast', null, $3)`,
         [mpId, householdId, profileId],
       );
-      const { rows } = await c.query<{ inventory_cook_deduct: any }>(
+      const { rows } = await c.query<DeductResult>(
         `select public.inventory_cook_deduct($1)`,
         [mpId],
       );
@@ -131,7 +139,7 @@ describe("inventory_cook_deduct", () => {
         [mpId, householdId, recipeId, profileId],
       );
 
-      const { rows } = await c.query<{ inventory_cook_deduct: any }>(
+      const { rows } = await c.query<DeductResult>(
         `select public.inventory_cook_deduct($1)`,
         [mpId],
       );

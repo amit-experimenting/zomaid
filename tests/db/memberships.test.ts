@@ -120,7 +120,7 @@ describe("household_memberships invariants & RLS", () => {
       const f = await insertProfile(c);
       const h = await insertHousehold(c, { created_by_profile_id: o.id });
       await insertMembership(c, { household_id: h.id, profile_id: o.id, role: "owner" });
-      const fm = await insertMembership(c, {
+      await insertMembership(c, {
         household_id: h.id,
         profile_id: f.id,
         role: "family_member",

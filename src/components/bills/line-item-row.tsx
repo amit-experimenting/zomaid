@@ -35,7 +35,7 @@ export function LineItemRow({ item, readOnly, onEdit, onDelete }: LineItemRowPro
         <div className="text-xs text-muted-foreground">{meta.join(" · ") || " "}</div>
         {item.matchedShoppingItemName && (
           <div className="mt-1 inline-block rounded-sm bg-secondary px-1.5 py-0.5 text-[10px] uppercase">
-            marked "{item.matchedShoppingItemName}" bought
+            marked &quot;{item.matchedShoppingItemName}&quot; bought
           </div>
         )}
       </div>

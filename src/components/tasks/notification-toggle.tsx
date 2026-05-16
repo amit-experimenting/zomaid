@@ -26,6 +26,11 @@ export function NotificationToggle() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // The 4 derived states ("unsupported"/"denied"/"on"/"off") depend on
+    // browser-only APIs (Notification, ServiceWorker, PushManager) that don't
+    // exist during SSR. Setting them in an effect keeps the initial SSR
+    // render === first client render ("loading"), avoiding hydration drift.
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
       setState("unsupported");
       return;
@@ -38,6 +43,7 @@ export function NotificationToggle() {
       const sub = await reg.pushManager.getSubscription();
       setState(sub ? "on" : "off");
     });
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   async function enable() {

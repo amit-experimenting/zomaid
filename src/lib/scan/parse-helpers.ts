@@ -6,6 +6,10 @@ export type ParsedItem = {
   unit: ScanUnit | null;
 };
 
+// The array literal is the single source of truth for the runtime allowlist
+// (UNIT_MAP values below) and the `ScanUnit` static type. The const reads as
+// "unused" to ESLint because we only reference it via `typeof`.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const SCAN_UNITS = ["kg", "g", "l", "ml", "piece"] as const;
 export type ScanUnit = (typeof SCAN_UNITS)[number];
 

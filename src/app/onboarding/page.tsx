@@ -17,8 +17,8 @@ export default async function OnboardingPage() {
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>I'm an FDW</CardTitle>
-            <CardDescription>Free. Add your owner's details to begin.</CardDescription>
+            <CardTitle>I&apos;m an FDW</CardTitle>
+            <CardDescription>Free. Add your owner&apos;s details to begin.</CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/onboarding/maid" className={cn(buttonVariants(), "w-full")}>
@@ -28,7 +28,7 @@ export default async function OnboardingPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>I'm an owner</CardTitle>
+            <CardTitle>I&apos;m an owner</CardTitle>
             <CardDescription>Start a household and invite your FDW + family.</CardDescription>
           </CardHeader>
           <CardContent>

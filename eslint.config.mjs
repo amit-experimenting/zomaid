@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Serwist-built service worker (minified, generated).
+    "public/sw.js",
   ]),
 ]);
 
