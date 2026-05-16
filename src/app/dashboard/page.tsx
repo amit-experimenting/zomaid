@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
@@ -9,9 +10,20 @@ import { InventoryPromptCard } from "@/components/site/inventory-prompt-card";
 import { DayView, type MealFeedItem } from "@/components/dashboard/day-view";
 import type { OccurrenceRowItem } from "@/components/tasks/occurrence-row";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Diet } from "@/lib/db/types";
 
 const TZ = "Asia/Singapore";
 const YMD_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+const DIET_LABELS: Record<Diet, string> = {
+  vegan: "Vegan",
+  vegetarian: "Vegetarian",
+  eggitarian: "Eggitarian",
+  non_vegetarian: "Non-vegetarian",
+};
+function dietLabel(d: Diet): string {
+  return DIET_LABELS[d];
+}
 
 function sgYmd(d: Date): string {
   return new Intl.DateTimeFormat("en-CA", {
@@ -129,6 +141,30 @@ export default async function DashboardPage({
   // --- Day view fetch (gated on task_setup_completed_at) -----------------
 
   const supabase = await createClient();
+  const [effectiveDietRes, memberPrefCountRes] = await Promise.all([
+    supabase.rpc("household_effective_diet", { p_household: ctx.household.id }),
+    supabase
+      .from("household_memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("household_id", ctx.household.id)
+      .eq("status", "active")
+      .neq("role", "maid")
+      .not("diet_preference", "is", null),
+  ]);
+  const effectiveDiet = (effectiveDietRes.data ?? null) as Diet | null;
+  const hasMemberPref = (memberPrefCountRes.count ?? 0) > 0;
+
+  const dietChip: { label: string; source: "household" | "members" } | null = (() => {
+    if (!effectiveDiet) return null;
+    if (ctx.household.diet_preference !== null) {
+      return { label: dietLabel(effectiveDiet), source: "household" };
+    }
+    if (hasMemberPref) {
+      return { label: dietLabel(effectiveDiet), source: "members" };
+    }
+    return null;
+  })();
+
   const now = new Date();
   const todayYmd = sgYmd(now);
   const yesterdayYmd = sgYmd(addDays(now, -1));
@@ -274,6 +310,15 @@ export default async function DashboardPage({
     <main className="mx-auto max-w-md">
       <MainNav active="home" />
       <div className="px-4 py-6">
+        {dietChip ? (
+          <Link
+            href="/household/settings"
+            className="mb-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Meal preference: {dietChip.label} · {dietChip.source}
+          </Link>
+        ) : null}
+
         {pendingOwnerInviteToken ? (
           <Card>
             <CardHeader>
