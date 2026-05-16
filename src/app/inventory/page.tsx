@@ -3,7 +3,6 @@ import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
 import { MainNav } from "@/components/site/main-nav";
 import { PendingScansBanner } from "@/components/site/pending-scans-banner";
-import { InventoryItemCard } from "@/components/inventory/item-card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -41,18 +40,40 @@ export default async function InventoryListPage() {
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-2 px-4 py-2">
-          {items?.map((i) => (
-            <InventoryItemCard
-              key={i.id}
-              id={i.id}
-              name={i.item_name}
-              quantity={Number(i.quantity)}
-              unit={i.unit}
-              lowStockThreshold={i.low_stock_threshold === null ? null : Number(i.low_stock_threshold)}
-            />
-          ))}
-        </div>
+        <table className="w-full text-sm">
+          <thead className="text-xs uppercase tracking-wide text-muted-foreground">
+            <tr className="border-b border-border">
+              <th className="px-4 py-2 text-left font-medium">Name</th>
+              <th className="px-4 py-2 text-right font-medium">Qty</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items?.map((i) => {
+              const qty = Number(i.quantity);
+              const threshold = i.low_stock_threshold === null ? null : Number(i.low_stock_threshold);
+              const isLow = threshold !== null && qty <= threshold;
+              return (
+                <tr key={i.id} className="border-b border-border hover:bg-muted/40">
+                  <td className="px-4 py-2">
+                    <Link href={`/inventory/${i.id}`} className="block">
+                      <span className="font-medium">{i.item_name}</span>
+                      {isLow && (
+                        <span className="ml-2 rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] uppercase text-yellow-800">
+                          Low
+                        </span>
+                      )}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-2 text-right tabular-nums">
+                    <Link href={`/inventory/${i.id}`} className="block">
+                      {qty} {i.unit}
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       )}
       <div className="px-4 py-3">
         <Link href="/inventory/conversions" className="text-sm text-muted-foreground underline">Unit conversions</Link>
