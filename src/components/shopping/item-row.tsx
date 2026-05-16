@@ -60,6 +60,7 @@ export function ItemRow(p: ItemRowProps) {
         type="button"
         disabled={p.readOnly}
         onClick={() => p.onEdit?.()}
+        aria-label={`Edit ${p.name}`}
         className={cn("min-w-0 flex-1 text-left", p.readOnly && "cursor-default")}
       >
         <div className={cn("truncate font-medium", p.checked && "line-through text-muted-foreground")}>{p.name}</div>

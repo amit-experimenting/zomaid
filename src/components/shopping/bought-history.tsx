@@ -21,6 +21,8 @@ export function BoughtHistory({ items }: { items: BoughtItem[]; readOnly?: boole
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-label={open ? "Hide bought items" : "Show bought items"}
         className="flex w-full items-center justify-between px-4 py-3 text-sm text-muted-foreground hover:bg-muted/30"
       >
         <span>Show bought (last 7d) · {items.length} item{items.length === 1 ? "" : "s"}</span>

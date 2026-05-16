@@ -52,10 +52,12 @@ export const SlotRow = React.forwardRef<HTMLButtonElement, SlotRowProps>(functio
   const totalFat = scale(fatGPerServing);
   const totalProtein = scale(proteinGPerServing);
   const showMacros = recipeId !== null && (totalCarbs != null || totalFat != null || totalProtein != null);
+  const ariaLabel = `${SLOT_LABEL[slot]}: ${recipeName ?? emptyCopy(rowExists, setBySystem)}`;
   return (
     <button
       ref={ref}
       type="button"
+      aria-label={ariaLabel}
       {...rest}
       className={cn(
         "flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left",
@@ -80,9 +82,16 @@ export const SlotRow = React.forwardRef<HTMLButtonElement, SlotRowProps>(functio
       <div className="min-w-0 flex-1">
         <div className="text-xs uppercase tracking-wide text-muted-foreground">
           {SLOT_LABEL[slot]}
-          {locked && <span className="ml-1 text-[10px] text-muted-foreground">(locked)</span>}
+          {locked && (
+            <span className="ml-1 text-muted-foreground" style={{ fontSize: 10 }}>
+              (locked)
+            </span>
+          )}
           {recipeId !== null && totalKcal != null && (
-            <span className="ml-1.5 normal-case tracking-normal text-[10px] tabular-nums">
+            <span
+              className="ml-1.5 normal-case tracking-normal tabular-nums"
+              style={{ fontSize: 10 }}
+            >
               · {totalKcal} kcal{eaters > 1 ? ` (×${eaters})` : ""}
             </span>
           )}
@@ -96,7 +105,10 @@ export const SlotRow = React.forwardRef<HTMLButtonElement, SlotRowProps>(functio
           </div>
         )}
         {showMacros && (
-          <div className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">
+          <div
+            className="mt-0.5 text-muted-foreground tabular-nums"
+            style={{ fontSize: 10 }}
+          >
             {totalCarbs != null && <>C {totalCarbs}g</>}
             {totalCarbs != null && totalFat != null && " · "}
             {totalFat != null && <>F {totalFat}g</>}

@@ -186,6 +186,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       aria-current={active ? "page" : undefined}
+      aria-label={typeof children === "string" ? children : undefined}
       className={cn(
         "border-b-2 px-3 py-2 text-sm",
         active

@@ -59,7 +59,10 @@ export default async function InventoryListPage() {
                     <Link href={`/inventory/${i.id}`} className="block">
                       <span className="font-medium">{i.item_name}</span>
                       {isLow && (
-                        <span className="ml-2 rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] uppercase text-yellow-800">
+                        <span
+                          className="ml-2 rounded bg-yellow-100 px-1.5 py-0.5 uppercase text-yellow-800"
+                          style={{ fontSize: 10 }}
+                        >
                           Low
                         </span>
                       )}

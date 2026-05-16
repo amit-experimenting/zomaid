@@ -27,6 +27,7 @@ export function OccurrenceRow({
       type="button"
       onClick={onTap}
       disabled={readOnly}
+      aria-label={`${item.title} (${item.status}${isOverdue ? ", overdue" : ""})`}
       className={cn(
         "flex w-full items-center justify-between gap-3 border-b border-border px-4 py-3 text-left",
         !readOnly && "hover:bg-muted/50",

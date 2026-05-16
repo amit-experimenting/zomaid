@@ -39,7 +39,12 @@ export default async function InventoryItemDetail({ params }: { params: Promise<
         <div className="text-sm text-muted-foreground">
           {item.quantity} {item.unit}
           {item.low_stock_threshold !== null && Number(item.quantity) <= Number(item.low_stock_threshold) && (
-            <span className="ml-2 rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] uppercase text-yellow-800">Low</span>
+            <span
+              className="ml-2 rounded bg-yellow-100 px-1.5 py-0.5 uppercase text-yellow-800"
+              style={{ fontSize: 10 }}
+            >
+              Low
+            </span>
           )}
         </div>
       </header>

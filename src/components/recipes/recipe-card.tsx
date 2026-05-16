@@ -37,13 +37,21 @@ export function RecipeCard({
                 {SLOT[slot]}{prepTimeMinutes ? ` · ${prepTimeMinutes}m` : ""}
               </span>
               {kcalPerServing != null && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] tabular-nums">
+                <span
+                  className="rounded-full bg-muted px-1.5 py-0.5 tabular-nums"
+                  style={{ fontSize: 10 }}
+                >
                   {Math.round(kcalPerServing)} kcal
                 </span>
               )}
             </div>
             {isFork && (
-              <div className="mt-1 inline-block rounded-sm bg-secondary px-1.5 py-0.5 text-[10px] uppercase">Customized</div>
+              <div
+                className="mt-1 inline-block rounded-sm bg-secondary px-1.5 py-0.5 uppercase"
+                style={{ fontSize: 10 }}
+              >
+                Customized
+              </div>
             )}
           </Link>
           {(youtubeUrl || canAddToPlan) && (

@@ -27,14 +27,14 @@ type Entry = {
   assigneeProfileId: string;
 };
 
-const WEEKDAYS: { value: number; short: string }[] = [
-  { value: 0, short: "S" },
-  { value: 1, short: "M" },
-  { value: 2, short: "T" },
-  { value: 3, short: "W" },
-  { value: 4, short: "T" },
-  { value: 5, short: "F" },
-  { value: 6, short: "S" },
+const WEEKDAYS: { value: number; short: string; long: string }[] = [
+  { value: 0, short: "S", long: "Sunday" },
+  { value: 1, short: "M", long: "Monday" },
+  { value: 2, short: "T", long: "Tuesday" },
+  { value: 3, short: "W", long: "Wednesday" },
+  { value: 4, short: "T", long: "Thursday" },
+  { value: 5, short: "F", long: "Friday" },
+  { value: 6, short: "S", long: "Saturday" },
 ];
 
 function initialEntry(s: StandardForTune): Entry {
@@ -120,6 +120,8 @@ export function TuneForm({
                       <button
                         key={d.value}
                         type="button"
+                        aria-label={d.long}
+                        aria-pressed={on}
                         className={
                           "h-8 w-8 rounded-md border text-xs " +
                           (on ? "bg-foreground text-background" : "bg-background")

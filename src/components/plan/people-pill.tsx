@@ -53,9 +53,10 @@ export function PeoplePill({
           }
         }}
         className={
-          "rounded-full border px-2 py-0.5 text-[10px] uppercase " +
+          "rounded-full border px-2 py-0.5 uppercase " +
           (disabled ? "opacity-50 cursor-default" : "cursor-pointer")
         }
+        style={{ fontSize: 10 }}
       >
         {effective} people
       </span>
@@ -69,11 +70,26 @@ export function PeoplePill({
         max={50}
         value={people}
         onChange={(e) => setPeople(Number(e.target.value))}
-        className="w-12 rounded border px-1 py-0.5 text-[11px]"
+        className="w-12 rounded border px-1 py-0.5"
+        style={{ fontSize: 11 }}
       />
-      <button onClick={() => submit(people)} disabled={pending} className="text-[11px] text-emerald-700">save</button>
-      <button onClick={() => { setEditing(false); setErr(null); }} className="text-[11px] text-muted-foreground">×</button>
-      {err && <span className="text-[10px] text-red-600">{err}</span>}
+      <button
+        onClick={() => submit(people)}
+        disabled={pending}
+        className="text-emerald-700"
+        style={{ fontSize: 11 }}
+      >
+        save
+      </button>
+      <button
+        aria-label="Cancel"
+        onClick={() => { setEditing(false); setErr(null); }}
+        className="text-muted-foreground"
+        style={{ fontSize: 11 }}
+      >
+        ×
+      </button>
+      {err && <span className="text-red-600" style={{ fontSize: 10 }}>{err}</span>}
     </span>
   );
 }

@@ -76,7 +76,7 @@ export function DayStrip({
             )}
           >
             {d.primary}
-            <div className="text-[10px] opacity-80">{d.secondary}</div>
+            <div className="opacity-80" style={{ fontSize: 10 }}>{d.secondary}</div>
           </Link>
         );
       })}

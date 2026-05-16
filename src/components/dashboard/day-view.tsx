@@ -182,7 +182,10 @@ function MealInlineRow({ item }: { item: MealFeedItem }) {
           )}
         </div>
         {showMacros && (
-          <div className="mt-0.5 text-[10px] text-primary/70 tabular-nums">
+          <div
+            className="mt-0.5 text-primary/70 tabular-nums"
+            style={{ fontSize: 10 }}
+          >
             {totalCarbs != null && <>C {totalCarbs}g</>}
             {totalCarbs != null && totalFat != null && " · "}
             {totalFat != null && <>F {totalFat}g</>}
@@ -191,7 +194,10 @@ function MealInlineRow({ item }: { item: MealFeedItem }) {
           </div>
         )}
       </div>
-      <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
+      <span
+        className="rounded-full bg-primary/15 px-2 py-0.5 uppercase tracking-wide text-primary"
+        style={{ fontSize: 10 }}
+      >
         Meal
       </span>
     </Link>
