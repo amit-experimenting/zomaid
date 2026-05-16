@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { PendingButton } from "@/components/ui/pending-button";
 import { Input } from "@/components/ui/input";
 import {
   addShoppingItem,
@@ -159,12 +158,12 @@ export function QuickAdd({ onChanged }: { onChanged?: () => void }) {
             <option key={u} value={u}>{u}</option>
           ))}
         </select>
-        <PendingButton
+        <Button
           type="button"
           onClick={() => onEnter()}
-          pending={pending}
+          loading={pending}
           disabled={!canSubmit}
-        >+</PendingButton>
+        >+</Button>
         {showDropdown && (
           <div
             className="absolute left-0 right-0 top-full z-20 mt-1 rounded-md border border-border bg-background shadow-md"

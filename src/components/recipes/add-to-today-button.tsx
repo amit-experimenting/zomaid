@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { PendingButton } from "@/components/ui/pending-button";
+import { Button } from "@/components/ui/button";
 import { addRecipeToTodayPlan } from "@/app/recipes/actions";
 
 /**
@@ -30,11 +30,11 @@ export function AddToTodayButton({ recipeId, slotLabel }: { recipeId: string; sl
 
   return (
     <>
-      <PendingButton
+      <Button
         type="button"
         size="sm"
         variant="secondary"
-        pending={pending}
+        loading={pending}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -42,7 +42,7 @@ export function AddToTodayButton({ recipeId, slotLabel }: { recipeId: string; sl
         }}
       >
         + Today&apos;s {slotLabel}
-      </PendingButton>
+      </Button>
       {error && <span className="text-xs text-destructive">{error}</span>}
     </>
   );

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { PendingButton } from "@/components/ui/pending-button";
+import { Button } from "@/components/ui/button";
 import { resetBillScan, resolveBillScan } from "./actions";
 
 export type AdminScanRow = {
@@ -99,25 +99,23 @@ export function AdminBillScansClient({ rows }: { rows: AdminScanRow[] }) {
               </div>
             </div>
             <div className="mt-3 flex justify-end gap-2">
-              <PendingButton
+              <Button
                 type="button"
-                pending={busy}
-                pendingLabel="Resolving…"
+                loading={busy}
                 onClick={() => resolve(row.id)}
                 variant="ghost"
                 size="sm"
               >
-                Mark resolved
-              </PendingButton>
-              <PendingButton
+                {busy ? "Resolving…" : "Mark resolved"}
+              </Button>
+              <Button
                 type="button"
-                pending={busy}
-                pendingLabel="Resetting…"
+                loading={busy}
                 onClick={() => reset(row.id)}
                 size="sm"
               >
-                Reset to pending
-              </PendingButton>
+                {busy ? "Resetting…" : "Reset to pending"}
+              </Button>
             </div>
           </div>
         );

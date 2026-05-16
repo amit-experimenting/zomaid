@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PendingButton } from "@/components/ui/pending-button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import type { Diet } from "@/lib/db/types";
 
 type MemberSummary = { displayName: string; dietPreference: Diet | null };
@@ -86,9 +86,9 @@ export function HouseholdDietForm({ currentValue, members, action }: Props) {
         <option value="eggitarian">Eggitarian</option>
         <option value="non_vegetarian">Non-vegetarian</option>
       </select>
-      <PendingButton type="submit" size="sm" variant="secondary" disabled={isUnchanged}>
+      <SubmitButton size="sm" variant="secondary" disabled={isUnchanged}>
         Save
-      </PendingButton>
+      </SubmitButton>
     </form>
   );
 }

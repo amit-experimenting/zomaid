@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { requireHousehold } from "@/lib/auth/require";
 import { createInventoryItem } from "@/app/inventory/actions";
 import { MainNav } from "@/components/site/main-nav";
-import { PendingButton } from "@/components/ui/pending-button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { cn } from "@/lib/utils";
 import { OnboardingInventoryForm } from "./_onboarding-form";
 import { UploadBillForm } from "./_bill-form";
@@ -102,7 +102,7 @@ export default async function NewInventoryItemPage({
               placeholder="e.g. kg, g, l, ml, piece"
             />
           </label>
-          <PendingButton type="submit">Save</PendingButton>
+          <SubmitButton>Save</SubmitButton>
         </form>
       )}
     </main>

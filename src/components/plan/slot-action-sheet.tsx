@@ -2,7 +2,6 @@
 import React, { useState, useTransition } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { PendingButton } from "@/components/ui/pending-button";
 import { RecipePicker, type Recipe } from "./recipe-picker";
 import { setMealPlanSlot, regenerateMealPlanSlot } from "@/app/plan/actions";
 
@@ -65,8 +64,8 @@ export function SlotActionSheet(props: SlotActionSheetProps) {
                 pending={pending}
                 trigger={<Button variant="secondary" disabled={pending}>Pick different</Button>}
               />
-              <PendingButton variant="secondary" pending={pending} onClick={onRegenerate}>Regenerate</PendingButton>
-              <PendingButton variant="ghost" pending={pending} onClick={onClear}>Clear</PendingButton>
+              <Button variant="secondary" loading={pending} onClick={onRegenerate}>Regenerate</Button>
+              <Button variant="ghost" loading={pending} onClick={onClear}>Clear</Button>
             </>
           )}
         </div>

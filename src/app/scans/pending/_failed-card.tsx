@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { PendingButton } from "@/components/ui/pending-button";
+import { Button } from "@/components/ui/button";
 import { cancelFailedScan } from "../actions";
 
 export type FailedAttemptCardProps = {
@@ -69,16 +69,15 @@ export function FailedAttemptCard({
         </div>
       </div>
       <div className="mt-2 flex justify-end">
-        <PendingButton
+        <Button
           type="button"
-          pending={pending}
-          pendingLabel="Cancelling…"
+          loading={pending}
           onClick={onCancel}
           variant="ghost"
           size="sm"
         >
-          Cancel
-        </PendingButton>
+          {pending ? "Cancelling…" : "Cancel"}
+        </Button>
       </div>
       {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
     </div>

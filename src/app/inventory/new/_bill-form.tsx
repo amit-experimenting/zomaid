@@ -8,8 +8,7 @@ import {
   BillConfirmForm,
   type ConfirmFormInitial,
 } from "@/components/bills/bill-confirm-form";
-import { PendingButton } from "@/components/ui/pending-button";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type ScanResponse =
@@ -129,16 +128,15 @@ export function UploadBillForm() {
               )}
             </div>
           </div>
-          <PendingButton
+          <Button
             type="button"
-            pending={busy}
-            pendingLabel={phase === "compressing" ? "Compressing…" : "Scanning…"}
+            loading={busy}
             onClick={onScan}
             disabled={!file || busy}
             className="self-start"
           >
-            Scan
-          </PendingButton>
+            {busy ? (phase === "compressing" ? "Compressing…" : "Scanning…") : "Scan"}
+          </Button>
           {error && <p className="text-sm text-destructive">{error}</p>}
           {queuedNotice && (
             <div className="rounded border border-amber-500/40 bg-amber-100/40 p-2 text-sm">
