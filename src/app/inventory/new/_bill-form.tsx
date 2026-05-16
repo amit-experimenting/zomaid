@@ -9,6 +9,8 @@ import {
   type ConfirmFormInitial,
 } from "@/components/bills/bill-confirm-form";
 import { PendingButton } from "@/components/ui/pending-button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type ScanResponse =
   | { ok: true; data: ConfirmFormInitial }
@@ -92,18 +94,41 @@ export function UploadBillForm() {
     const busy = phase === "compressing" || phase === "scanning";
     return (
       <div className="flex flex-col gap-3 px-4 py-2">
-        <div className="flex flex-col gap-2 rounded border border-dashed p-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Bill photo</span>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              capture="environment"
-              onChange={onFileChange}
-              disabled={busy}
-              className="text-sm"
-            />
-          </label>
+        <div className="flex flex-col gap-3 rounded border border-dashed p-3">
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium">Bill or receipt photo</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <label
+                className={cn(
+                  buttonVariants({
+                    variant: file ? "outline" : "default",
+                    size: "sm",
+                  }),
+                  "cursor-pointer",
+                  busy && "pointer-events-none opacity-50",
+                )}
+              >
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  onChange={onFileChange}
+                  disabled={busy}
+                  className="sr-only"
+                />
+                {file ? "Change photo" : "Take or choose photo"}
+              </label>
+              {file ? (
+                <span className="truncate text-xs text-muted-foreground">
+                  {file.name}
+                </span>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  Camera on mobile, file picker on desktop.
+                </span>
+              )}
+            </div>
+          </div>
           <PendingButton
             type="button"
             pending={busy}
@@ -112,7 +137,7 @@ export function UploadBillForm() {
             disabled={!file || busy}
             className="self-start"
           >
-            Scan bill
+            Scan
           </PendingButton>
           {error && <p className="text-sm text-destructive">{error}</p>}
           {queuedNotice && (
@@ -129,9 +154,9 @@ export function UploadBillForm() {
             </div>
           )}
           <p className="text-xs text-muted-foreground">
-            We read the bill, then show you the parsed result so you can edit
-            before saving. The photo is stored so you can view it later on
-            the bill detail page.
+            We read the photo, then show you the parsed result so you can edit
+            before saving. The photo is kept so you can view it later on the
+            bill detail page.
           </p>
         </div>
       </div>
