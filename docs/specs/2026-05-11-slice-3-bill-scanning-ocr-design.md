@@ -1,6 +1,7 @@
 # Zomaid — Slice 3: Bill Scanning + OCR via GitHub-Mediated Claude — Design
 
 > **Superseded as the living architecture doc for the bills area by [`features/bills.md`](features/bills.md).** This dated spec is retained for historical context.
+> **Superseded as the living architecture doc for the scans area by [`features/scans.md`](features/scans.md).** This dated spec is retained for historical context.
 
 - **Date**: 2026-05-11
 - **Status**: Approved (brainstorming) — pending implementation plan
