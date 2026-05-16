@@ -1,4 +1,5 @@
 import { buttonSizes } from "@/components/ui/button";
+import { inputSizes } from "@/components/ui/input";
 
 export type PrimitiveSize = {
   height: number;
@@ -11,4 +12,5 @@ export type PrimitiveSizeMap = Record<string, PrimitiveSize>;
 /** Aggregated sizes for every interactive primitive. Each primitive contributes its own map. */
 export const primitiveSizes: Record<string, PrimitiveSizeMap> = {
   button: buttonSizes,
+  input: inputSizes,
 };
