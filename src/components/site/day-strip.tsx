@@ -14,18 +14,21 @@ function sgYmd(d: Date): string {
 }
 
 /**
- * Date navigation strip for /tasks and /tasks/[date].
+ * Date navigation strip used by the unified `/dashboard` Day view.
  *
- * Shows 5 pills: Yesterday, Today, Tomorrow, +2, +3. Each pill links to
- * /tasks/<ymd> for the single-day view. The strip on the /tasks index page
- * highlights Today; the per-day page highlights the selected date.
- *
- * `activeYmd` is the currently-viewed date (YYYY-MM-DD in SG). Pass
- * `undefined` from the index (so the "active" highlight is just today).
+ * Shows 5 pills: Yest, Today, Tom, +2, +3. Each pill links to
+ * `/dashboard?date=<ymd>` and preserves the active `view` (Tasks vs Meal).
+ * Replaces the older `WeekStrip` (next-4) and `TasksWeekStrip` (yest..+3) —
+ * the yest..+3 window is the more useful triage range.
  */
-export function TasksWeekStrip({ activeYmd }: { activeYmd?: string }) {
+export function DayStrip({
+  activeYmd,
+  view,
+}: {
+  activeYmd: string;
+  view: "tasks" | "meal";
+}) {
   const today = sgYmd(new Date());
-  // Anchor Date at SG midnight so day arithmetic stays in the same zone.
   const anchor = new Date(`${today}T00:00:00+08:00`);
   const days: { ymd: string; primary: string; secondary: string }[] = [];
 
@@ -42,6 +45,17 @@ export function TasksWeekStrip({ activeYmd }: { activeYmd?: string }) {
     days.push({ ymd, primary, secondary });
   }
 
+  function hrefFor(ymd: string): string {
+    // Encode params in a stable order: view first (when meal), then date.
+    // Tasks is the default view → omit it from the URL to keep links shorter
+    // and match the contract documented in the design doc.
+    const sp = new URLSearchParams();
+    if (view === "meal") sp.set("view", "meal");
+    if (ymd !== today) sp.set("date", ymd);
+    const qs = sp.toString();
+    return `/dashboard${qs ? `?${qs}` : ""}`;
+  }
+
   return (
     <nav aria-label="Days" className="flex gap-1 border-b border-border px-2 py-2">
       {days.map((d) => {
@@ -50,8 +64,9 @@ export function TasksWeekStrip({ activeYmd }: { activeYmd?: string }) {
         return (
           <Link
             key={d.ymd}
-            href={`/tasks/${d.ymd}`}
+            href={hrefFor(d.ymd)}
             aria-current={isActive ? "page" : undefined}
+            scroll={false}
             className={cn(
               "flex-1 rounded-md px-1 py-2 text-center text-xs",
               isActive

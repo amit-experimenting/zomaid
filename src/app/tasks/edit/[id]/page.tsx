@@ -26,7 +26,7 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
   }));
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="tasks" />
+      <MainNav active="home" />
       <header className="border-b border-border px-4 py-3">
         <h1 className="text-lg font-semibold">Edit task</h1>
       </header>

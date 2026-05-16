@@ -5,13 +5,17 @@ import { siteUrl } from "@/lib/site-url";
 import { MainNav } from "@/components/site/main-nav";
 import { OwnerInviteMaidCard } from "@/components/site/owner-invite-maid-card";
 import { InventoryPromptCard } from "@/components/site/inventory-prompt-card";
-import { TodayView, type MealItem } from "@/components/dashboard/today-view";
+import { DayView, type MealSlotRow } from "@/components/dashboard/day-view";
 import type { OccurrenceRowItem } from "@/components/tasks/occurrence-row";
+import type { Recipe } from "@/components/plan/recipe-picker";
+import type { Warning } from "@/components/plan/slot-warning-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const TZ = "Asia/Singapore";
+const ALL_SLOTS: MealSlotRow["slot"][] = ["breakfast", "lunch", "snacks", "dinner"];
+const YMD_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function sgYmd(d: Date): string {
   return new Intl.DateTimeFormat("en-CA", {
@@ -22,14 +26,46 @@ function sgYmd(d: Date): string {
   }).format(d);
 }
 
+function addDays(d: Date, days: number): Date {
+  const r = new Date(d);
+  r.setDate(r.getDate() + days);
+  return r;
+}
+
+function sgLongLabel(ymd: string): string {
+  // Anchor noon SG to dodge DST edges (SG has none, harmless).
+  return new Intl.DateTimeFormat("en-SG", {
+    timeZone: TZ,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(`${ymd}T12:00:00+08:00`));
+}
+
+/** Validate a `?date=` query param. Invalid → returns today's SG date. */
+function resolveSelectedYmd(raw: string | undefined, todayYmd: string): string {
+  if (!raw || !YMD_RE.test(raw)) return todayYmd;
+  // Round-trip via sgYmd to catch rolls (e.g. 2026-13-40).
+  const probe = new Date(`${raw}T12:00:00+08:00`);
+  if (Number.isNaN(probe.getTime()) || sgYmd(probe) !== raw) return todayYmd;
+  return raw;
+}
+
 type OwnerCardProps =
   | { state: "empty" }
   | { state: "pending"; origin: string; code: string; token: string; inviteId: string }
   | { state: "joined"; maidName: string };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string; view?: string }>;
+}) {
   const ctx = await requireHousehold();
   const origin = await siteUrl();
+  const sp = await searchParams;
+
+  // --- onboarding cards (unchanged) ----------------------------------------
 
   let pendingOwnerInviteToken: string | null = null;
   if (ctx.membership.role === "maid") {
@@ -100,34 +136,82 @@ export default async function DashboardPage() {
       ctx.household.inventory_card_dismissed_at == null && (count ?? 0) < 5;
   }
 
-  // Today's tasks + meal plan for the new "Today" section. Both queries are
-  // cheap (single date) and run for every household member regardless of role
-  // — family members see read-only views.
+  // --- Day view fetch ------------------------------------------------------
+
   const supabase = await createClient();
-  const todayYmd = sgYmd(new Date());
-  const dayStart = new Date(`${todayYmd}T00:00:00+08:00`).toISOString();
-  const dayEnd = new Date(`${todayYmd}T00:00:00+08:00`);
-  dayEnd.setDate(dayEnd.getDate() + 1);
-  const dayEndIso = dayEnd.toISOString();
+  const now = new Date();
+  const todayYmd = sgYmd(now);
+  const yesterdayYmd = sgYmd(addDays(now, -1));
+  const selectedYmd = resolveSelectedYmd(sp?.date, todayYmd);
+  const isToday = selectedYmd === todayYmd;
 
-  // Generate occurrences out to tomorrow (idempotent; cheap when nothing missing).
-  await supabase.rpc("tasks_generate_occurrences", { p_horizon_date: todayYmd });
+  // Permission flags — mirror /tasks/page.tsx and /plan/[date]/page.tsx.
+  const isOwnerOrMaid =
+    ctx.membership.role === "owner" || ctx.membership.role === "maid";
+  const canAddTasks = isOwnerOrMaid || ctx.membership.role === "family_member";
+  const showNotificationToggle = isOwnerOrMaid;
+  const taskActionsEnabled = isOwnerOrMaid;
+  // can_modify_meal_plan() in the DB: not (family_member ∧ view_only).
+  const mealPlanReadOnly =
+    ctx.membership.role === "family_member" && ctx.membership.privilege === "view_only";
 
-  const [{ data: occRows }, { data: planRows }] = await Promise.all([
+  // Materialise occurrences up to the selected date (idempotent).
+  const horizonDate = addDays(new Date(`${selectedYmd}T12:00:00+08:00`), 1);
+  await supabase.rpc("tasks_generate_occurrences", {
+    p_horizon_date: sgYmd(horizonDate),
+  });
+
+  // Autofill meal slots when viewing today/future and caller can write. Cheap
+  // when slots are already filled (RPC is idempotent).
+  if (!mealPlanReadOnly && selectedYmd >= todayYmd) {
+    const { error: autofillError } = await supabase.rpc("mealplan_autofill_date", {
+      p_date: selectedYmd,
+    });
+    if (autofillError) {
+      // Non-fatal: log and continue rendering whatever rows do exist.
+      console.error("mealplan_autofill_date failed:", autofillError.message);
+    }
+  }
+
+  // Window for task_occurrences: when viewing today, pull from the epoch so
+  // overdue surfaces; otherwise just the target day. Same shape as
+  // /tasks/[date]/page.tsx.
+  const targetStart = new Date(`${selectedYmd}T00:00:00+08:00`);
+  const targetEnd = new Date(`${selectedYmd}T00:00:00+08:00`);
+  targetEnd.setDate(targetEnd.getDate() + 1);
+  const leftEdge = isToday ? new Date("1970-01-01T00:00:00Z") : targetStart;
+
+  const [
+    { data: occRows },
+    { data: rawMealRows },
+    { data: mealTimes },
+    { count: rosterCount },
+    { data: effectiveRecipes },
+  ] = await Promise.all([
     supabase
       .from("task_occurrences")
       .select(
         "id, due_at, status, household_id, tasks!inner(id, title, household_id, assigned_to_profile_id, profiles!assigned_to_profile_id(display_name))",
       )
       .eq("household_id", ctx.household.id)
-      .gte("due_at", dayStart)
-      .lt("due_at", dayEndIso)
+      .gte("due_at", leftEdge.toISOString())
+      .lt("due_at", targetEnd.toISOString())
       .order("due_at", { ascending: true }),
     supabase
       .from("meal_plans")
-      .select("slot, recipe:recipes(id, name)")
+      .select("slot, recipe_id, set_by_profile_id, people_eating, deduction_warnings, recipes(name, photo_path, household_id)")
       .eq("household_id", ctx.household.id)
-      .eq("plan_date", todayYmd),
+      .eq("plan_date", selectedYmd),
+    supabase
+      .from("household_meal_times")
+      .select("slot,meal_time")
+      .eq("household_id", ctx.household.id),
+    supabase
+      .from("household_memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("household_id", ctx.household.id)
+      .eq("status", "active"),
+    supabase.rpc("effective_recipes", { p_household: ctx.household.id }),
   ]);
 
   type OccRow = {
@@ -141,7 +225,11 @@ export default async function DashboardPage() {
       profiles: { display_name: string } | { display_name: string }[] | null;
     };
   };
-  const todayTasks: OccurrenceRowItem[] = ((occRows ?? []) as unknown as OccRow[]).map((r) => ({
+  // Supabase's generated types don't surface the task_occurrences→tasks
+  // relation, so we cast via unknown — same pattern the original pages use.
+  const all = ((occRows ?? []) as unknown) as OccRow[];
+
+  const toItem = (r: OccRow): OccurrenceRowItem => ({
     occurrenceId: r.id,
     taskId: r.tasks.id,
     title: r.tasks.title,
@@ -151,22 +239,100 @@ export default async function DashboardPage() {
       : (r.tasks.profiles?.display_name ?? null),
     status: r.status,
     isStandard: r.tasks.household_id === null,
-  }));
-
-  type PlanRow = {
-    slot: "breakfast" | "lunch" | "snacks" | "dinner";
-    recipe: { id: string; name: string } | { id: string; name: string }[] | null;
-  };
-  const todayMeals: MealItem[] = ((planRows ?? []) as unknown as PlanRow[]).map((r) => {
-    const rec = Array.isArray(r.recipe) ? r.recipe[0] ?? null : r.recipe;
-    return {
-      slot: r.slot,
-      recipeId: rec?.id ?? null,
-      recipeName: rec?.name ?? null,
-    };
   });
 
-  const taskReadOnly = ctx.membership.role !== "owner" && ctx.membership.role !== "maid";
+  const overdue: OccurrenceRowItem[] = [];
+  const onDay: OccurrenceRowItem[] = [];
+  for (const r of all) {
+    const item = toItem(r);
+    const itemYmd = sgYmd(new Date(item.dueAt));
+    if (itemYmd === selectedYmd) {
+      onDay.push(item);
+      continue;
+    }
+    // Only when viewing today: < yesterday pending items become Overdue.
+    if (isToday && item.status === "pending" && itemYmd < yesterdayYmd) {
+      overdue.push(item);
+    }
+  }
+
+  const sortItems = (xs: OccurrenceRowItem[]) =>
+    xs.sort((a, b) => {
+      const da = new Date(a.dueAt).getTime();
+      const db = new Date(b.dueAt).getTime();
+      if (da !== db) return da - db;
+      return a.title.localeCompare(b.title);
+    });
+  sortItems(overdue);
+  sortItems(onDay);
+
+  // Meal locks: 1 hour before each slot's configured start.
+  const timeBySlot = Object.fromEntries((mealTimes ?? []).map((r) => [r.slot, r.meal_time]));
+  const nowMs = Date.now();
+  function isLocked(slot: string): boolean {
+    const t = timeBySlot[slot];
+    if (!t) return false;
+    const [hh, mm] = (t as string).split(":").map(Number);
+    const slotDt = new Date(`${selectedYmd}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:00+08:00`);
+    return nowMs >= slotDt.getTime() - 60 * 60 * 1000;
+  }
+
+  // Resolve photo URLs (signed for household, public for system). Sequential
+  // awaits — same as /plan/[date]/page.tsx.
+  const meals: MealSlotRow[] = [];
+  for (const s of ALL_SLOTS) {
+    const r = rawMealRows?.find((x) => x.slot === s);
+    const recipeRaw = r?.recipes as unknown as
+      | { name: string; photo_path: string | null; household_id: string | null }
+      | { name: string; photo_path: string | null; household_id: string | null }[]
+      | null;
+    const recipe = Array.isArray(recipeRaw) ? recipeRaw[0] ?? null : recipeRaw;
+    let photoUrl: string | null = null;
+    if (recipe?.photo_path) {
+      if (recipe.household_id === null) {
+        photoUrl = supabase.storage
+          .from("recipe-images-public")
+          .getPublicUrl(recipe.photo_path).data.publicUrl;
+      } else {
+        const { data } = await supabase.storage
+          .from("recipe-images-household")
+          .createSignedUrl(recipe.photo_path, 3600);
+        photoUrl = data?.signedUrl ?? null;
+      }
+    }
+    meals.push({
+      slot: s,
+      recipeId: r?.recipe_id ?? null,
+      recipeName: recipe?.name ?? null,
+      photoUrl,
+      setBySystem: r != null && r.set_by_profile_id === null,
+      rowExists: r != null,
+      peopleEating: r?.people_eating ?? null,
+      locked: isLocked(s),
+      deductionWarnings: (r?.deduction_warnings ?? []) as Warning[],
+    });
+  }
+
+  const rosterSize = rosterCount ?? 1;
+  const recipes: Recipe[] = (effectiveRecipes ?? []).map(
+    (r: { id: string; name: string; slot: string }) => ({
+      id: r.id,
+      name: r.name,
+      slot: r.slot,
+      photo_url: null,
+    }),
+  );
+  const recipeLibraryEmpty = recipes.length === 0;
+
+  // Heading label: "Today" / "Yesterday" / "Tomorrow" / "Monday, 18 May".
+  const tomorrowYmd = sgYmd(addDays(now, 1));
+  const headingLabel = isToday
+    ? "Today"
+    : selectedYmd === yesterdayYmd
+      ? "Yesterday"
+      : selectedYmd === tomorrowYmd
+        ? "Tomorrow"
+        : sgLongLabel(selectedYmd);
 
   return (
     <main className="mx-auto max-w-md">
@@ -202,11 +368,20 @@ export default async function DashboardPage() {
 
         {showInventoryCard && <InventoryPromptCard />}
 
-        <TodayView
-          dateYmd={todayYmd}
-          tasks={todayTasks}
-          meals={todayMeals}
-          readOnly={taskReadOnly}
+        <DayView
+          selectedYmd={selectedYmd}
+          todayYmd={todayYmd}
+          headingLabel={headingLabel}
+          overdue={overdue}
+          tasks={onDay}
+          meals={meals}
+          recipes={recipes}
+          rosterSize={rosterSize}
+          taskActionsEnabled={taskActionsEnabled}
+          canAddTasks={canAddTasks}
+          showNotificationToggle={showNotificationToggle}
+          mealPlanReadOnly={mealPlanReadOnly}
+          recipeLibraryEmpty={recipeLibraryEmpty}
         />
       </div>
     </main>

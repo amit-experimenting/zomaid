@@ -18,7 +18,7 @@ export default async function NewTaskPage() {
   }));
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="tasks" />
+      <MainNav active="home" />
       <header className="border-b border-border px-4 py-3">
         <h1 className="text-lg font-semibold">New task</h1>
       </header>
