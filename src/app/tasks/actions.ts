@@ -131,7 +131,7 @@ export async function updateTask(input: z.infer<typeof UpdateInput>): Promise<Ta
   }
 
   revalidatePath("/tasks");
-  revalidatePath(`/tasks/${parsed.data.taskId}/edit`);
+  revalidatePath(`/tasks/edit/${parsed.data.taskId}`);
   return { ok: true, data: { taskId: parsed.data.taskId } };
 }
 

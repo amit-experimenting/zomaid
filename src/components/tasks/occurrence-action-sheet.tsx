@@ -49,7 +49,7 @@ export function OccurrenceActionSheet(p: OccurrenceActionSheetProps) {
               </Button>
             )
           ) : (
-            <Button type="button" variant="ghost" render={<Link href={`/tasks/${p.taskId}/edit`} />}>
+            <Button type="button" variant="ghost" render={<Link href={`/tasks/edit/${p.taskId}`} />}>
               Edit task
             </Button>
           )}

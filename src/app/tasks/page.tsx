@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MainNav } from "@/components/site/main-nav";
 import { NotificationToggle } from "@/components/tasks/notification-toggle";
 import { DaySections, type DaySection } from "@/components/tasks/_day-sections";
+import { TasksWeekStrip } from "@/components/tasks/tasks-week-strip";
 import type { OccurrenceRowItem } from "@/components/tasks/occurrence-row";
 
 // Match the SG-centric assumption baked into /plan and the rest of the app.
@@ -184,6 +185,8 @@ export default async function TasksIndex() {
           </div>
         )}
       </header>
+
+      <TasksWeekStrip />
 
       <DaySections
         overdue={overdue}
