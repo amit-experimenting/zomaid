@@ -78,6 +78,7 @@ describe("updateHouseholdDiet", () => {
     })));
     await updateHouseholdDiet({ diet: "eggitarian" });
     expect(called).toBe(true);
+    expect(revalidatePathMock).toHaveBeenCalledWith("/household/settings");
   });
 
   it("empty string clears the override to null", async () => {
@@ -90,6 +91,7 @@ describe("updateHouseholdDiet", () => {
     })));
     await updateHouseholdDiet({ diet: "" });
     expect(patch).toEqual({ diet_preference: null });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/household/settings");
   });
 
   it("omitted diet clears the override to null", async () => {
@@ -102,11 +104,12 @@ describe("updateHouseholdDiet", () => {
     })));
     await updateHouseholdDiet({});
     expect(patch).toEqual({ diet_preference: null });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/household/settings");
   });
 
   it("rejects unknown diet values", async () => {
     getCurrentHouseholdMock.mockResolvedValue(makeCtx("owner"));
     await expect(updateHouseholdDiet({ diet: "carnivore" }))
-      .rejects.toThrow(); // zod parse error
+      .rejects.toThrow(/invalid|enum/i); // zod parse error
   });
 });
