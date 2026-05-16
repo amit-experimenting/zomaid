@@ -4,7 +4,7 @@ import * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { IconButton } from "@/components/ui/icon-button"
 import { XIcon } from "lucide-react"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -62,10 +62,10 @@ function SheetContent({
           <SheetPrimitive.Close
             data-slot="sheet-close"
             render={
-              <Button
+              <IconButton
                 variant="ghost"
-                className="size-9 p-0 absolute top-3 right-3"
-                // TODO(IconButton): replace with <IconButton variant="ghost"> in Task 6.2 (and remove the size-9 p-0 interim)
+                aria-label="Close"
+                className="absolute top-3 right-3"
               />
             }
           >

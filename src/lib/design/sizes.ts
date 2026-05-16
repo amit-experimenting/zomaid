@@ -1,4 +1,5 @@
 import { buttonSizes } from "@/components/ui/button";
+import { iconButtonSizes } from "@/components/ui/icon-button";
 import { inputSizes } from "@/components/ui/input";
 
 export type PrimitiveSize = {
@@ -13,4 +14,5 @@ export type PrimitiveSizeMap = Record<string, PrimitiveSize>;
 export const primitiveSizes: Record<string, PrimitiveSizeMap> = {
   button: buttonSizes,
   input: inputSizes,
+  iconButton: iconButtonSizes,
 };

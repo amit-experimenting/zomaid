@@ -4,7 +4,7 @@ import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { IconButton } from "@/components/ui/icon-button"
 import { XIcon } from "lucide-react"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -59,10 +59,10 @@ function DialogContent({
           <DialogPrimitive.Close
             data-slot="dialog-close"
             render={
-              <Button
+              <IconButton
                 variant="ghost"
-                className="size-9 p-0 absolute top-2 right-2"
-                // TODO(IconButton): replace with <IconButton variant="ghost"> in Task 6.2 (and remove the size-9 p-0 interim)
+                aria-label="Close"
+                className="absolute top-2 right-2"
               />
             }
           >
