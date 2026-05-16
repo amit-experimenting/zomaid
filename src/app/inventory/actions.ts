@@ -45,44 +45,6 @@ export async function createInventoryItem(
   return { ok: true, data: { id: data.id } };
 }
 
-const UpdateSchema = z.object({
-  id: z.string().uuid(),
-  item_name: z.string().min(1).max(120).optional(),
-  unit: z.string().min(1).max(24).optional(),
-  low_stock_threshold: z.number().min(0).nullable().optional(),
-  notes: z.string().max(500).nullable().optional(),
-});
-
-export async function updateInventoryItem(
-  input: z.infer<typeof UpdateSchema>,
-): Promise<InventoryActionResult<{ id: string }>> {
-  const parsed = UpdateSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: { code: "INV_INVALID", message: "Invalid input" } };
-  await requireHousehold();
-  const supabase = await createClient();
-  const { id, ...rest } = parsed.data;
-  const { error } = await supabase.from("inventory_items").update(rest).eq("id", id);
-  if (error) return { ok: false, error: { code: "INV_DB", message: error.message } };
-  revalidatePath("/inventory");
-  revalidatePath(`/inventory/${id}`);
-  return { ok: true, data: { id } };
-}
-
-const DeleteSchema = z.object({ id: z.string().uuid() });
-
-export async function deleteInventoryItem(
-  input: z.infer<typeof DeleteSchema>,
-): Promise<InventoryActionResult<{ id: string }>> {
-  const parsed = DeleteSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: { code: "INV_INVALID", message: "Invalid input" } };
-  await requireHousehold();
-  const supabase = await createClient();
-  const { error } = await supabase.from("inventory_items").delete().eq("id", parsed.data.id);
-  if (error) return { ok: false, error: { code: "INV_DB", message: error.message } };
-  revalidatePath("/inventory");
-  return { ok: true, data: { id: parsed.data.id } };
-}
-
 const AdjustSchema = z.object({
   id: z.string().uuid(),
   delta: z.number(),
