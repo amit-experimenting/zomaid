@@ -1,5 +1,7 @@
 # Zomaid — Foundations Design
 
+> **Superseded as the living architecture doc for the household area by [`features/household.md`](features/household.md).** This dated spec is retained for historical context.
+
 - **Date**: 2026-05-10
 - **Status**: Approved (brainstorming) — pending implementation plan
 - **Slice**: 1 of 7 (foundations) — see _Decomposition_ below
