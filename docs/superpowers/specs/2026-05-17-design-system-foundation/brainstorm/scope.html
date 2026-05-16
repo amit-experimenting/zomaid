@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — scope</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#111;max-width:1100px;margin:0 auto;}
+h2{font-size:24px;margin:0 0 8px;}.subtitle{color:#666;font-size:14px;margin:0 0 24px;}
+.option,.vibe,.pal,.font,.tier,.slice{position:relative;}
+.option:after,.vibe:after,.pal:after,.font:after,.tier:after{content:"";display:block;}
+code{font-family:ui-monospace,monospace;font-size:0.92em;background:#f3f3f3;padding:1px 5px;border-radius:3px;}
+</style></head><body>
+<p style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 16px;">Brainstorm artifact · scope.html · 2026-05-17</p>
+<h2>Your ask is actually 4 specs in a trenchcoat</h2>
+<p class="subtitle">Each is meaningful on its own. Sequencing matters because some depend on others.</p>
+
+<style>
+  .scope-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 24px 0; }
+  .slice { border: 1px solid var(--border, #ddd); border-radius: 12px; padding: 18px; background: #fff; }
+  .slice .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
+  .slice h3 { margin: 4px 0 8px 0; font-size: 17px; }
+  .slice p { margin: 0 0 10px 0; color: #555; font-size: 14px; line-height: 1.45; }
+  .slice ul { margin: 0; padding-left: 18px; font-size: 13px; color: #444; }
+  .slice li { margin: 3px 0; }
+  .dep { margin-top: 10px; font-size: 12px; color: #888; font-style: italic; }
+  .badge-a { background: #E8F3FF; color: #1859D1; }
+  .badge-b { background: #FFF1E0; color: #B26100; }
+  .badge-c { background: #E9F8EE; color: #1F7A3B; }
+  .badge-d { background: #F5E9FA; color: #6A2E94; }
+  .seq { background: #fafafa; border: 1px dashed #ccc; border-radius: 10px; padding: 14px; margin-top: 20px; font-size: 13px; color: #444; }
+  .seq strong { color: #222; }
+</style>
+
+<div class="scope-grid">
+  <div class="slice">
+    <span class="badge badge-a">A · Foundation</span>
+    <h3>Design system (mobile-first)</h3>
+    <p>Color, typography, spacing, touch targets, accessibility tokens — applied across the existing PWA.</p>
+    <ul>
+      <li>Light/dark color tokens (currently all neutral gray)</li>
+      <li>Type scale tuned for small screens + multilingual scripts</li>
+      <li>Min 48px touch targets, AA contrast everywhere</li>
+      <li>Reusable patterns (cards, lists, sheets)</li>
+    </ul>
+    <div class="dep">Depends on: nothing. Unblocks B.</div>
+  </div>
+
+  <div class="slice">
+    <span class="badge badge-b">B · Persona UX</span>
+    <h3>Maid-tailored experience</h3>
+    <p>A different home, simpler nav, task-of-the-day focus — based on what a maid actually does (cook, shop, log bills, update inventory).</p>
+    <ul>
+      <li>Maid home screen vs owner dashboard</li>
+      <li>Big-button, icon-forward navigation</li>
+      <li>Voice/photo-first inputs where possible</li>
+      <li>Tone, density, complexity tuned per role</li>
+    </ul>
+    <div class="dep">Depends on: A (design tokens). Owner UX can be a lighter pass.</div>
+  </div>
+
+  <div class="slice">
+    <span class="badge badge-c">C · Infrastructure</span>
+    <h3>i18n framework + locale plumbing</h3>
+    <p>How translation works: message catalogs, locale picker, persistence, server-side rendering, fallback. No translated content yet — just the wiring.</p>
+    <ul>
+      <li>Library choice (next-intl, lingui, react-i18next…)</li>
+      <li>URL/cookie strategy, locale on user vs household</li>
+      <li>Date/number formatting, pluralization rules</li>
+      <li>Build-time vs runtime catalog loading</li>
+    </ul>
+    <div class="dep">Depends on: nothing. Unblocks D.</div>
+  </div>
+
+  <div class="slice">
+    <span class="badge badge-d">D · Content</span>
+    <h3>Mizo + Manipuri translations</h3>
+    <p>The actual translated strings. Low-resource languages — needs native speakers, glossary, review process.</p>
+    <ul>
+      <li>String extraction from English UI</li>
+      <li>Translator workflow (who, how, review)</li>
+      <li>Script considerations (Latin Mizo, Meitei Mayek vs Bengali for Manipuri)</li>
+      <li>Domain glossary (cooking, household, money terms)</li>
+    </ul>
+    <div class="dep">Depends on: C (infrastructure). Mostly a content/people problem, not engineering.</div>
+  </div>
+</div>
+
+<div class="seq">
+  <strong>Suggested sequence:</strong> A → B in parallel with C → D once C ships.
+  Each slice gets its own spec. Brainstorming all four at once would be 4–6 hours of design questions and a 50-page document nobody reads.
+</div>
+</body></html>

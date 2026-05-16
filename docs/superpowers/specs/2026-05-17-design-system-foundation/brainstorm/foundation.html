@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — foundation</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#111;max-width:1100px;margin:0 auto;}
+h2{font-size:24px;margin:0 0 8px;}.subtitle{color:#666;font-size:14px;margin:0 0 24px;}
+.option,.vibe,.pal,.font,.tier,.slice{position:relative;}
+.option:after,.vibe:after,.pal:after,.font:after,.tier:after{content:"";display:block;}
+code{font-family:ui-monospace,monospace;font-size:0.92em;background:#f3f3f3;padding:1px 5px;border-radius:3px;}
+</style></head><body>
+<p style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 16px;">Brainstorm artifact · foundation.html · 2026-05-17</p>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+  .ds { font-family: 'IBM Plex Sans', -apple-system, sans-serif; color: #111; }
+  .ds h2 { font-size: 22px; font-weight: 600; margin: 24px 0 4px 0; letter-spacing: -0.005em; }
+  .ds h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin: 18px 0 8px 0; }
+  .ds .sub { font-size: 12.5px; color: #666; margin: 0 0 12px 0; }
+
+  /* Color tokens */
+  .swatch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .sw { background: #fff; border: 1px solid #EFE9E1; border-radius: 6px; overflow: hidden; }
+  .sw .chip { height: 56px; }
+  .sw .meta { padding: 8px 10px; }
+  .sw .name { font-size: 12px; font-weight: 600; color: #111; }
+  .sw .val { font-size: 10.5px; color: #888; font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+  /* Type scale */
+  .type-row { display: grid; grid-template-columns: 80px 80px 1fr; gap: 12px; align-items: baseline; padding: 8px 12px; border-bottom: 1px dashed #EFE9E1; }
+  .type-row:last-child { border: none; }
+  .type-row .tag { font-size: 11px; color: #888; font-weight: 500; }
+  .type-row .meta { font-size: 10.5px; color: #aaa; font-variant-numeric: tabular-nums; }
+  .type-row .sample { color: #111; }
+
+  /* Spacing scale */
+  .space-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .space-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; background: #fff; border: 1px solid #EFE9E1; border-radius: 6px; padding: 12px 8px; }
+  .space-bar { background: #3949AB; height: 8px; border-radius: 2px; }
+  .space-label { font-size: 10.5px; color: #666; font-variant-numeric: tabular-nums; }
+
+  /* Sizing demo */
+  .size-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .size-cell { background: #fff; border: 1px solid #EFE9E1; border-radius: 6px; padding: 14px; }
+  .size-cell .lbl { font-size: 10.5px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 8px; }
+  .size-cell .demo { display: flex; align-items: center; gap: 12px; }
+  .size-cell .annot { font-size: 11px; color: #555; font-variant-numeric: tabular-nums; margin-top: 6px; }
+
+  .btn-s { height: 36px; padding: 0 16px; background: #3949AB; color: #fff; border-radius: 6px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; }
+  .btn-m { height: 44px; padding: 0 20px; background: #3949AB; color: #fff; border-radius: 6px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; }
+  .btn-lg { height: 52px; padding: 0 24px; background: #3949AB; color: #fff; border-radius: 6px; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; }
+  .icon-btn { width: 44px; height: 44px; background: #fff; border: 1px solid #EFE9E1; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: #3949AB; font-size: 18px; font-weight: 600; }
+
+  .list-row-demo { background: #fff; border: 1px solid #EFE9E1; border-radius: 6px; min-height: 56px; padding: 10px 14px; display: flex; flex-direction: column; justify-content: center; }
+  .list-row-demo .t { font-size: 14px; font-weight: 500; color: #111; }
+  .list-row-demo .s { font-size: 12px; color: #555; margin-top: 2px; }
+
+  /* Radius scale */
+  .radius-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .radius-cell { background: #3949AB; color: #fff; padding: 14px 0; text-align: center; font-size: 10.5px; font-weight: 600; }
+</style>
+
+<div class="ds">
+
+<h2>Design system foundation — concrete tokens</h2>
+<p class="sub">All values shown here are the proposed defaults. Reply with edits and I'll iterate before writing the spec.</p>
+
+<h3>Color · primary</h3>
+<div class="swatch-grid">
+  <div class="sw"><div class="chip" style="background:#E8EAF6"></div><div class="meta"><div class="name">primary-subtle</div><div class="val">#E8EAF6 · oklch(.94 .03 273)</div></div></div>
+  <div class="sw"><div class="chip" style="background:#5C6BC0"></div><div class="meta"><div class="name">primary-soft</div><div class="val">#5C6BC0</div></div></div>
+  <div class="sw"><div class="chip" style="background:#3949AB"></div><div class="meta"><div class="name">primary &nbsp;★</div><div class="val">#3949AB</div></div></div>
+  <div class="sw"><div class="chip" style="background:#283593"></div><div class="meta"><div class="name">primary-pressed</div><div class="val">#283593</div></div></div>
+</div>
+
+<h3>Color · surfaces + borders</h3>
+<div class="swatch-grid">
+  <div class="sw"><div class="chip" style="background:#FAF7F2"></div><div class="meta"><div class="name">surface-0 (page)</div><div class="val">#FAF7F2</div></div></div>
+  <div class="sw"><div class="chip" style="background:#FFFFFF;box-shadow:inset 0 0 0 1px #EFE9E1"></div><div class="meta"><div class="name">surface-1 (card)</div><div class="val">#FFFFFF</div></div></div>
+  <div class="sw"><div class="chip" style="background:#EFE9E1"></div><div class="meta"><div class="name">border</div><div class="val">#EFE9E1</div></div></div>
+  <div class="sw"><div class="chip" style="background:#D9D2C5"></div><div class="meta"><div class="name">border-strong</div><div class="val">#D9D2C5</div></div></div>
+</div>
+
+<h3>Color · text</h3>
+<div class="swatch-grid">
+  <div class="sw"><div class="chip" style="background:#111111"></div><div class="meta"><div class="name">text-primary</div><div class="val">#111 · ~16:1 on surface</div></div></div>
+  <div class="sw"><div class="chip" style="background:#555555"></div><div class="meta"><div class="name">text-secondary</div><div class="val">#555 · ~8:1</div></div></div>
+  <div class="sw"><div class="chip" style="background:#767676"></div><div class="meta"><div class="name">text-muted</div><div class="val">#767676 · ~4.6:1 (AA body)</div></div></div>
+  <div class="sw"><div class="chip" style="background:#B0AFAA"></div><div class="meta"><div class="name">text-disabled</div><div class="val">#B0AFAA · non-text only</div></div></div>
+</div>
+
+<h3>Color · semantic</h3>
+<div class="swatch-grid">
+  <div class="sw"><div class="chip" style="background:#1F7A3B"></div><div class="meta"><div class="name">success</div><div class="val">#1F7A3B · paid, done</div></div></div>
+  <div class="sw"><div class="chip" style="background:#B26100"></div><div class="meta"><div class="name">warning</div><div class="val">#B26100 · due soon</div></div></div>
+  <div class="sw"><div class="chip" style="background:#C62828"></div><div class="meta"><div class="name">danger</div><div class="val">#C62828 · overdue, errors</div></div></div>
+  <div class="sw"><div class="chip" style="background:#1859D1"></div><div class="meta"><div class="name">info</div><div class="val">#1859D1 · neutral notices</div></div></div>
+</div>
+
+<h2 style="margin-top:32px;">Type scale</h2>
+<p class="sub">IBM Plex Sans across all scripts. Weights loaded: 400, 500, 600, 700. <code>numeric</code> variant uses <code>font-variant-numeric: tabular-nums</code> for money/dates.</p>
+<div style="background:#fff;border:1px solid #EFE9E1;border-radius:8px;padding:6px 4px;">
+  <div class="type-row"><span class="tag">display</span><span class="meta">32 / 38 / 700</span><span class="sample" style="font-size:32px;line-height:38px;font-weight:700;letter-spacing:-0.01em;">₹12,840</span></div>
+  <div class="type-row"><span class="tag">h1</span><span class="meta">24 / 30 / 700</span><span class="sample" style="font-size:24px;line-height:30px;font-weight:700;letter-spacing:-0.005em;">Bills this month</span></div>
+  <div class="type-row"><span class="tag">h2</span><span class="meta">20 / 26 / 600</span><span class="sample" style="font-size:20px;line-height:26px;font-weight:600;">Today's meal</span></div>
+  <div class="type-row"><span class="tag">h3</span><span class="meta">17 / 24 / 600</span><span class="sample" style="font-size:17px;line-height:24px;font-weight:600;">Inventory low</span></div>
+  <div class="type-row"><span class="tag">body-lg</span><span class="meta">16 / 24 / 400</span><span class="sample" style="font-size:16px;line-height:24px;">Onions are running low — about 200g left.</span></div>
+  <div class="type-row"><span class="tag">body &nbsp;★</span><span class="meta">15 / 22 / 400</span><span class="sample" style="font-size:15px;line-height:22px;">Electricity bill due in 3 days. Asha to log when paid.</span></div>
+  <div class="type-row"><span class="tag">body-sm</span><span class="meta">13 / 18 / 400</span><span class="sample" style="font-size:13px;line-height:18px;color:#555;">Meta · captions only · not for primary content</span></div>
+  <div class="type-row"><span class="tag">label</span><span class="meta">11 / 14 / 600</span><span class="sample" style="font-size:11px;line-height:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Upcoming</span></div>
+  <div class="type-row"><span class="tag">numeric</span><span class="meta">15 / 22 / 600</span><span class="sample" style="font-size:15px;line-height:22px;font-weight:600;font-variant-numeric:tabular-nums;">₹2,840.00 &nbsp; · &nbsp; 17 May 2026</span></div>
+</div>
+
+<h2 style="margin-top:32px;">Spacing scale</h2>
+<p class="sub">4px base. Anything that isn't a multiple of 4 gets pushed back at review.</p>
+<div class="space-grid">
+  <div class="space-cell"><div class="space-bar" style="width:4px;"></div><div class="space-label">1 · 4px</div></div>
+  <div class="space-cell"><div class="space-bar" style="width:8px;"></div><div class="space-label">2 · 8px</div></div>
+  <div class="space-cell"><div class="space-bar" style="width:12px;"></div><div class="space-label">3 · 12px</div></div>
+  <div class="space-cell"><div class="space-bar" style="width:16px;"></div><div class="space-label">4 · 16px ★</div></div>
+  <div class="space-cell"><div class="space-bar" style="width:20px;"></div><div class="space-label">5 · 20px</div></div>
+  <div class="space-cell"><div class="space-bar" style="width:24px;"></div><div class="space-label">6 · 24px ★</div></div>
+  <div class="space-cell"><div class="space-bar" style="width:32px;"></div><div class="space-label">7 · 32px</div></div>
+  <div class="space-cell"><div class="space-bar" style="width:40px;"></div><div class="space-label">8 · 40px</div></div>
+  <div class="space-cell"><div class="space-bar" style="width:48px;"></div><div class="space-label">9 · 48px</div></div>
+  <div class="space-cell"><div class="space-bar" style="width:64px;"></div><div class="space-label">10 · 64px</div></div>
+</div>
+<p class="sub" style="margin-top:8px;">★ = default page padding (16) and default card-to-card gap (24).</p>
+
+<h2 style="margin-top:32px;">Sizing &amp; touch targets</h2>
+<p class="sub">Per accessibility tier 1: 44px minimum. Small buttons (36px) are allowed only when wrapped in a row that gives them 44px effective tap area via vertical spacing.</p>
+<div class="size-grid">
+  <div class="size-cell">
+    <div class="lbl">Buttons</div>
+    <div class="demo"><span class="btn-s">Small 36</span><span class="btn-m">Medium 44 ★</span><span class="btn-lg">Large 52</span></div>
+    <div class="annot">Default = medium. Large reserved for primary on-page CTAs.</div>
+  </div>
+  <div class="size-cell">
+    <div class="lbl">Icon-only button</div>
+    <div class="demo"><span class="icon-btn">+</span><span class="icon-btn">⌕</span><span class="icon-btn">⋯</span></div>
+    <div class="annot">44 × 44. Must have aria-label.</div>
+  </div>
+  <div class="size-cell">
+    <div class="lbl">Inputs</div>
+    <div class="demo"><input style="height:44px;width:100%;border:1px solid #EFE9E1;border-radius:6px;padding:0 12px;font-family:inherit;font-size:15px;color:#111;background:#fff;" placeholder="Bill amount"></div>
+    <div class="annot">44px height, 6px radius, surface-1 fill.</div>
+  </div>
+  <div class="size-cell">
+    <div class="lbl">List row</div>
+    <div class="list-row-demo">
+      <div class="t">Electricity bill</div>
+      <div class="s">Due in 3 days · ₹2,840</div>
+    </div>
+    <div class="annot">56px min — accommodates two lines of body.</div>
+  </div>
+  <div class="size-cell">
+    <div class="lbl">Top app bar</div>
+    <div style="background:#fff;border:1px solid #EFE9E1;border-radius:6px;height:52px;display:flex;align-items:center;padding:0 16px;font-size:17px;font-weight:600;">Bills</div>
+    <div class="annot">52px + safe area inset on iOS.</div>
+  </div>
+  <div class="size-cell">
+    <div class="lbl">Bottom tab bar</div>
+    <div style="background:#fff;border:1px solid #EFE9E1;border-radius:6px;height:56px;display:flex;align-items:center;justify-content:space-around;font-size:11px;font-weight:600;color:#3949AB;">
+      <span>Home</span><span style="color:#888;">Meals</span><span style="color:#888;">Bills</span><span style="color:#888;">Shop</span>
+    </div>
+    <div class="annot">56px + safe area inset. New primitive (not in repo today).</div>
+  </div>
+</div>
+
+<h2 style="margin-top:32px;">Radius scale</h2>
+<p class="sub">Direction D = small radii. Defaults: buttons sm (6), inputs sm (6), cards md (8), sheets/modals lg (12).</p>
+<div class="radius-grid">
+  <div class="radius-cell" style="border-radius:2px">xs · 2</div>
+  <div class="radius-cell" style="border-radius:4px">sm-1 · 4</div>
+  <div class="radius-cell" style="border-radius:6px">sm · 6 ★</div>
+  <div class="radius-cell" style="border-radius:8px">md · 8 ★</div>
+  <div class="radius-cell" style="border-radius:12px">lg · 12 ★</div>
+  <div class="radius-cell" style="border-radius:9999px">full</div>
+</div>
+
+</div>
+</body></html>
