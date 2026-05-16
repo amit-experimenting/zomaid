@@ -42,6 +42,7 @@ export type Database = {
           inventory_card_dismissed_at: string | null;
           maid_mode: MaidMode;
           task_setup_completed_at: string | null;
+          diet_preference: Diet | null;
         };
         Insert: {
           name: string;
@@ -51,6 +52,7 @@ export type Database = {
           inventory_card_dismissed_at?: string | null;
           maid_mode?: MaidMode;
           task_setup_completed_at?: string | null;
+          diet_preference?: Diet | null;
         };
         Update: Partial<Database["public"]["Tables"]["households"]["Row"]>;
         Relationships: [];
@@ -705,6 +707,10 @@ export type Database = {
       inventory_bill_unskip: {
         Args: { p_line_item_id: string };
         Returns: void;
+      };
+      household_effective_diet: {
+        Args: { p_household: string };
+        Returns: Diet;
       };
     };
   };
