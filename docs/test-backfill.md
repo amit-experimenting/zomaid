@@ -4,6 +4,8 @@ Aggregated from the 2026-05-16 codebase audit. Phase 2 produced per-feature test
 coverage tables in `docs/specs/features/<feature>.md`; this file is the priority-1
 extract for "what to test next."
 
+> **Phase 5 update (2026-05-16):** Tasks + Onboarding features now have full test coverage on the items listed below. See the "Covered in Phase 5" section at the bottom for the moved rows.
+
 ## How to read
 
 - **High** — data-loss path, mutation with no coverage at any tier, or load-bearing
@@ -20,27 +22,9 @@ extract for "what to test next."
 
 ---
 
-## Tasks (highest gap density — entire feature has zero coverage)
+## Tasks
 
-Mutations:
-
-- `archiveStandardTask` (admin) — `src/app/admin/tasks/actions.ts:81` → `tests/actions/`
-- `createStandardTask` (admin) — `src/app/admin/tasks/actions.ts:51` → `tests/actions/`
-- `createTask` — `src/app/tasks/actions.ts:48` → `tests/actions/`
-- `updateTask` — `src/app/tasks/actions.ts:90` → `tests/actions/`
-
-RPCs / triggers:
-
-- `tasks_generate_occurrences` RPC + `tasks-generate-and-prune` pg_cron —
-  `supabase/migrations/20260601_001_task_generation_cron.sql`,
-  `20260602_001_standard_tasks.sql`,
-  `20260705_001_household_setup_gates.sql` → `tests/db/`
-- `tasks_prune_old` RPC — `supabase/migrations/20260601_001_task_generation_cron.sql` → `tests/db/`
-
-Cron routes:
-
-- `GET /api/cron/dispatch-task-pushes` — `src/app/api/cron/dispatch-task-pushes/route.ts` →
-  `tests/actions/` (or dedicated route test)
+_Fully covered in Phase 5 — see "Covered in Phase 5" at the bottom._
 
 ## Inventory
 
@@ -150,21 +134,7 @@ Triggers:
 
 ## Onboarding
 
-Mutations:
-
-- `createHouseholdAsMaid` — `src/app/onboarding/actions.ts:59` → `tests/actions/`
-- `createHouseholdAsOwner` — `src/app/onboarding/actions.ts:20` → `tests/actions/`
-- `resetTaskSetupForEmptyState` — `src/app/onboarding/tasks/actions.ts:206` →
-  `tests/actions/`
-- `saveTaskSetupPicks` — `src/app/onboarding/tasks/actions.ts:15` → `tests/actions/`
-- `submitTaskSetup` — `src/app/onboarding/tasks/actions.ts:77` → `tests/actions/`
-
-RPCs / triggers:
-
-- `households_sync_maid_mode_on_join()` + `household_memberships_sync_maid_mode`
-  trigger — `supabase/migrations/20260705_001_household_setup_gates.sql` → `tests/db/`
-- `task_setup_drafts` RLS + upsert lifecycle —
-  `supabase/migrations/20260705_001_household_setup_gates.sql` → `tests/db/`
+_Fully covered in Phase 5 — see "Covered in Phase 5" at the bottom._
 
 ## Infrastructure
 
@@ -222,3 +192,47 @@ Push transport:
 - `updateInventoryItem`, `deleteInventoryItem` (inventory) — see `docs/product-todos.md` for re-add note
 - `deleteBill` (bills)
 - `ingest_bill_ocr` RPC (dropped in migration `20260707_001_drop_dead_db_surface.sql`)
+
+## Covered in Phase 5
+
+8 new test files (84 tests) landed on 2026-05-16. Suite is now 241/241 passing.
+
+### Tasks
+
+Mutations:
+
+- `archiveStandardTask` (admin) — `src/app/admin/tasks/actions.ts:81` → `tests/actions/admin-standard-tasks.test.ts`
+- `createStandardTask` (admin) — `src/app/admin/tasks/actions.ts:51` → `tests/actions/admin-standard-tasks.test.ts`
+- `createTask` — `src/app/tasks/actions.ts:48` → `tests/actions/tasks.test.ts`
+- `updateTask` — `src/app/tasks/actions.ts:90` → `tests/actions/tasks.test.ts`
+
+RPCs / triggers:
+
+- `tasks_generate_occurrences` RPC + `tasks-generate-and-prune` pg_cron —
+  `supabase/migrations/20260601_001_task_generation_cron.sql`,
+  `20260602_001_standard_tasks.sql`,
+  `20260705_001_household_setup_gates.sql` → `tests/db/task-occurrences.test.ts`
+- `tasks_prune_old` RPC — `supabase/migrations/20260601_001_task_generation_cron.sql` → `tests/db/task-occurrences.test.ts`
+
+Cron routes:
+
+- `GET /api/cron/dispatch-task-pushes` — `src/app/api/cron/dispatch-task-pushes/route.ts` →
+  `tests/actions/cron-dispatch-task-pushes.test.ts`
+
+### Onboarding
+
+Mutations:
+
+- `createHouseholdAsMaid` — `src/app/onboarding/actions.ts:59` → `tests/actions/onboarding-create.test.ts`
+- `createHouseholdAsOwner` — `src/app/onboarding/actions.ts:20` → `tests/actions/onboarding-create.test.ts`
+- `resetTaskSetupForEmptyState` — `src/app/onboarding/tasks/actions.ts:206` →
+  `tests/actions/task-setup-wizard.test.ts`
+- `saveTaskSetupPicks` — `src/app/onboarding/tasks/actions.ts:15` → `tests/actions/task-setup-wizard.test.ts`
+- `submitTaskSetup` — `src/app/onboarding/tasks/actions.ts:77` → `tests/actions/task-setup-wizard.test.ts`
+
+RPCs / triggers:
+
+- `households_sync_maid_mode_on_join()` + `household_memberships_sync_maid_mode`
+  trigger — `supabase/migrations/20260705_001_household_setup_gates.sql` → `tests/db/maid-mode-sync-trigger.test.ts`
+- `task_setup_drafts` RLS + upsert lifecycle —
+  `supabase/migrations/20260705_001_household_setup_gates.sql` → `tests/db/task-setup-drafts.test.ts`

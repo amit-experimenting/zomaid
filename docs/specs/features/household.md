@@ -108,6 +108,7 @@ External RPCs **not** owned here but worth naming for the boundary:
 - **No anchor convention for settings cards in general.** Same issue would bite any future cross-feature link into a specific card.
 - **`HouseholdDietForm` re-implements `household_effective_diet`'s strictness ranking client-side.** If the SQL helper's ordering ever changes (e.g. a new enum value), the in-browser warning will drift silently. Could either (a) export the ranking from a single source-of-truth module shared by SQL + TS, or (b) accept the drift and document the convention.
 - **No test coverage tracker yet** for the household feature surface. Phase 2 will populate this section.
+- **`households_sync_maid_mode_on_join` trigger can override `family_run`.** The trigger's guard is `<> 'invited'`, so an active maid INSERT (e.g. via late maid invite redemption) on a `family_run` household silently flips `maid_mode` back to `'invited'`. Test pinned in `tests/db/maid-mode-sync-trigger.test.ts`. Decide: tighten guard to also skip `'family_run'` to respect the owner's choice, or document as intentional override.
 
 ## Test coverage
 

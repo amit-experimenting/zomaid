@@ -138,7 +138,7 @@ Cron-driver entries below are listed here because the routes themselves (bearer-
 | `createServiceClient` | `src/lib/supabase/server.ts`, `src/lib/supabase/service.ts` | — | — | — | high | `tests/auth/` |
 | `getCurrentHousehold()` (incl. lost-membership fallthrough) | `src/lib/auth/current-household.ts` | — | — | — | high | `tests/auth/` |
 | `getCurrentProfile()` (lazy upsert race with webhook) | `src/lib/auth/current-profile.ts` | — | — | — | high | `tests/auth/` |
-| `GET /api/cron/dispatch-task-pushes` (driver: bearer gate, return shape) | `src/app/api/cron/dispatch-task-pushes/route.ts` | — | — | — | high | `tests/actions/` (route test) |
+| `GET /api/cron/dispatch-task-pushes` (driver: bearer gate, return shape) | `src/app/api/cron/dispatch-task-pushes/route.ts` | — | `tests/actions/cron-dispatch-task-pushes.test.ts` | — | none | — |
 | `GET /api/cron/retry-bill-scans` (driver: bearer gate, return shape) | `src/app/api/cron/retry-bill-scans/route.ts` | — | — | — | high | `tests/actions/` (route test) |
 | `GET /api/cron/sweep-checked-shopping` (driver: bearer gate, return shape) | `src/app/api/cron/sweep-checked-shopping/route.ts` | — | — | — | high | `tests/actions/` (route test) |
 | `POST /api/webhooks/clerk` (Svix verify, user.created/updated/deleted) | `src/app/api/webhooks/clerk/route.ts` | — | — | — | high | `tests/actions/` (route test) |

@@ -97,13 +97,13 @@ Cross-feature mounts and links:
 
 | Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
 | --- | --- | --- | --- | --- | --- | --- |
-| `createHouseholdAsMaid` | `src/app/onboarding/actions.ts:59` | — | — | — | high | `tests/actions/` |
-| `createHouseholdAsOwner` | `src/app/onboarding/actions.ts:20` | — | — | — | high | `tests/actions/` |
-| `households_sync_maid_mode_on_join()` + `household_memberships_sync_maid_mode` trigger | `supabase/migrations/20260705_001_household_setup_gates.sql` | — | — | — | high | `tests/db/` |
-| `resetTaskSetupForEmptyState` | `src/app/onboarding/tasks/actions.ts:206` | — | — | — | high | `tests/actions/` |
-| `saveTaskSetupPicks` | `src/app/onboarding/tasks/actions.ts:15` | — | — | — | high | `tests/actions/` |
-| `submitTaskSetup` | `src/app/onboarding/tasks/actions.ts:77` | — | — | — | high | `tests/actions/` |
-| `task_setup_drafts` RLS + upsert lifecycle | `supabase/migrations/20260705_001_household_setup_gates.sql` | — | — | — | high | `tests/db/` |
+| `createHouseholdAsMaid` | `src/app/onboarding/actions.ts:59` | — | `tests/actions/onboarding-create.test.ts` | — | none | — |
+| `createHouseholdAsOwner` | `src/app/onboarding/actions.ts:20` | — | `tests/actions/onboarding-create.test.ts` | — | none | — |
+| `households_sync_maid_mode_on_join()` + `household_memberships_sync_maid_mode` trigger | `supabase/migrations/20260705_001_household_setup_gates.sql` | — | `tests/db/maid-mode-sync-trigger.test.ts` | — | none | — |
+| `resetTaskSetupForEmptyState` | `src/app/onboarding/tasks/actions.ts:206` | — | `tests/actions/task-setup-wizard.test.ts` | — | none | — |
+| `saveTaskSetupPicks` | `src/app/onboarding/tasks/actions.ts:15` | — | `tests/actions/task-setup-wizard.test.ts` | — | none | — |
+| `submitTaskSetup` | `src/app/onboarding/tasks/actions.ts:77` | — | `tests/actions/task-setup-wizard.test.ts` | — | none | — |
+| `task_setup_drafts` RLS + upsert lifecycle | `supabase/migrations/20260705_001_household_setup_gates.sql` | — | `tests/db/task-setup-drafts.test.ts` | — | none | — |
 | `MaidOnboardingPage` (`/onboarding/maid`) | `src/app/onboarding/maid/page.tsx` | — | — | — | medium | `tests/e2e/` |
 | `OnboardingPage` (`/onboarding`) | `src/app/onboarding/page.tsx` | — | — | partial via `tests/e2e/foundations.spec.ts` (unauth redirect only) | medium | `tests/e2e/` |
 | `OnboardingTasksPickPage` (`/onboarding/tasks`) | `src/app/onboarding/tasks/page.tsx` | — | — | — | medium | `tests/e2e/` |
