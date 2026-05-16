@@ -8,6 +8,17 @@ export type RecipeDetailProps = {
   photoUrl: string | null;
   notes: string | null;
   youtubeUrl: string | null;
+  /**
+   * Per-serving nutrition. `null` (or all-null fields) renders nothing.
+   * We only render the row when `kcal` is present — partial macros without
+   * a kcal anchor would look incomplete.
+   */
+  nutrition: {
+    kcal: number | null;
+    carbsG: number | null;
+    fatG: number | null;
+    proteinG: number | null;
+  } | null;
   ingredients: { position: number; item_name: string; quantity: string | null; unit: string | null }[];
   steps: { position: number; instruction: string }[];
 };
@@ -29,6 +40,19 @@ export function RecipeDetail(p: RecipeDetailProps) {
           {p.prepTimeMinutes ? ` · ${p.prepTimeMinutes}m prep` : ""}
           {` · serves ${p.defaultServings}`}
         </div>
+        {p.nutrition?.kcal != null && (
+          <div className="mt-1 text-xs text-muted-foreground">
+            {[
+              `${Math.round(p.nutrition.kcal)} kcal`,
+              p.nutrition.carbsG != null ? `C ${Math.round(p.nutrition.carbsG)}g` : null,
+              p.nutrition.fatG != null ? `F ${Math.round(p.nutrition.fatG)}g` : null,
+              p.nutrition.proteinG != null ? `P ${Math.round(p.nutrition.proteinG)}g` : null,
+            ]
+              .filter(Boolean)
+              .join("  ·  ")}
+            {" per serving"}
+          </div>
+        )}
         {p.youtubeUrl && (
           <a
             href={p.youtubeUrl}

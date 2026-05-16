@@ -25,6 +25,10 @@ export type RecipeFormProps = {
     ingredients: { item_name: string; quantity: number | null; unit: string | null }[];
     steps: { instruction: string }[];
     youtubeUrl?: string | null;
+    kcalPerServing?: number | null;
+    carbsGPerServing?: number | null;
+    fatGPerServing?: number | null;
+    proteinGPerServing?: number | null;
   };
 };
 
@@ -42,6 +46,10 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
   const [steps, setSteps] = useState(initial?.steps ?? [{ instruction: "" }]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState(initial?.youtubeUrl ?? "");
+  const [kcal, setKcal] = useState<string>(initial?.kcalPerServing?.toString() ?? "");
+  const [carbs, setCarbs] = useState<string>(initial?.carbsGPerServing?.toString() ?? "");
+  const [fat, setFat] = useState<string>(initial?.fatGPerServing?.toString() ?? "");
+  const [protein, setProtein] = useState<string>(initial?.proteinGPerServing?.toString() ?? "");
 
   async function compressAndSet(file: File) {
     const out = await imageCompression(file, { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true });
@@ -63,6 +71,13 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
       fd.append("ingredients", JSON.stringify(ingredients.filter((i) => i.item_name.trim().length > 0)));
       fd.append("steps", JSON.stringify(steps.filter((s) => s.instruction.trim().length > 0)));
       fd.append("youtubeUrl", youtubeUrl.trim());
+      // Always send the nutrition fields. Empty string → null in the action,
+      // which is what we want both for "user didn't fill it in" and for
+      // "user cleared a previously-set value" on the edit form.
+      fd.append("kcalPerServing", kcal.trim());
+      fd.append("carbsGPerServing", carbs.trim());
+      fd.append("fatGPerServing", fat.trim());
+      fd.append("proteinGPerServing", protein.trim());
       if (photoFile) fd.append("photoFile", photoFile);
       const res = await (mode === "create" ? createRecipe(fd) : updateRecipe(fd));
       if (!res.ok) { setError(res.error.message); return; }
@@ -125,6 +140,31 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
           </a>
         )}
       </div>
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium">Nutrition (per serving)</legend>
+        <div className="grid grid-cols-4 gap-2">
+          <div>
+            <Label htmlFor="kcal" className="text-xs">kcal</Label>
+            <Input id="kcal" type="number" min={0} step="any" value={kcal}
+              onChange={(e) => setKcal(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="carbs" className="text-xs">Carbs g</Label>
+            <Input id="carbs" type="number" min={0} step="any" value={carbs}
+              onChange={(e) => setCarbs(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="fat" className="text-xs">Fat g</Label>
+            <Input id="fat" type="number" min={0} step="any" value={fat}
+              onChange={(e) => setFat(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="protein" className="text-xs">Protein g</Label>
+            <Input id="protein" type="number" min={0} step="any" value={protein}
+              onChange={(e) => setProtein(e.target.value)} />
+          </div>
+        </div>
+      </fieldset>
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Ingredients</legend>
         {ingredients.map((ing, i) => (

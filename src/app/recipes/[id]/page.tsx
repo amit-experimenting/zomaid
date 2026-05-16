@@ -12,7 +12,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
   const ctx = await requireHousehold();
   const supabase = await createClient();
   const { data: recipe } = await supabase.from("recipes")
-    .select("id,name,slot,photo_path,prep_time_minutes,notes,household_id,parent_recipe_id,archived_at,youtube_url,default_servings")
+    .select("id,name,slot,photo_path,prep_time_minutes,notes,household_id,parent_recipe_id,archived_at,youtube_url,default_servings,kcal_per_serving,carbs_g_per_serving,fat_g_per_serving,protein_g_per_serving")
     .eq("id", id).maybeSingle();
   if (!recipe) notFound();
   const { data: ingredients } = await supabase.from("recipe_ingredients")
@@ -32,9 +32,23 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 
   const canEdit = ctx.membership.role === "owner" || ctx.membership.role === "maid";
 
+  // Supabase returns `numeric` columns as JS strings — coerce here so the
+  // detail component can format with Math.round without surprises.
+  const nutrition = {
+    kcal: recipe.kcal_per_serving == null ? null : Number(recipe.kcal_per_serving),
+    carbsG: recipe.carbs_g_per_serving == null ? null : Number(recipe.carbs_g_per_serving),
+    fatG: recipe.fat_g_per_serving == null ? null : Number(recipe.fat_g_per_serving),
+    proteinG: recipe.protein_g_per_serving == null ? null : Number(recipe.protein_g_per_serving),
+  };
+
   return (
     <main className="mx-auto max-w-md">
       <MainNav active="recipes" />
+      <div className="px-4 pt-3">
+        <Link href="/recipes?view=library" className="text-xs text-muted-foreground hover:text-foreground">
+          ← Recipes
+        </Link>
+      </div>
       <div className="flex items-center justify-end border-b border-border px-4 py-2">
         {canEdit && (
           <Link href={`/recipes/${id}/edit`} className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>Edit</Link>
@@ -48,6 +62,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
         photoUrl={photoUrl}
         notes={recipe.notes}
         youtubeUrl={recipe.youtube_url}
+        nutrition={nutrition}
         ingredients={(ingredients ?? []).map((i: any) => ({ ...i, quantity: i.quantity?.toString() ?? null }))}
         steps={steps ?? []}
       />

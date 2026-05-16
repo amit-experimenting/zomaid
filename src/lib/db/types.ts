@@ -120,6 +120,10 @@ export type Database = {
           updated_at: string;
           youtube_url: string | null;
           default_servings: number;
+          kcal_per_serving: number | null;
+          carbs_g_per_serving: number | null;
+          fat_g_per_serving: number | null;
+          protein_g_per_serving: number | null;
         };
         Insert: {
           id?: string;
@@ -137,6 +141,10 @@ export type Database = {
           updated_at?: string;
           youtube_url?: string | null;
           default_servings?: number;
+          kcal_per_serving?: number | null;
+          carbs_g_per_serving?: number | null;
+          fat_g_per_serving?: number | null;
+          protein_g_per_serving?: number | null;
         };
         Update: Partial<Database["public"]["Tables"]["recipes"]["Insert"]>;
         Relationships: [];

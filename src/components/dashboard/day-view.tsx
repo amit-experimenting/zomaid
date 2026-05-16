@@ -26,6 +26,8 @@ export type MealFeedItem = {
   recipeName: string;
   /** Slot start time projected onto the selected date, ISO string. */
   slotTimeIso: string;
+  /** Per-serving calories for the assigned recipe. null hides the suffix. */
+  kcalPerServing: number | null;
 };
 
 export type DayViewProps = {
@@ -160,7 +162,12 @@ function MealInlineRow({ item }: { item: MealFeedItem }) {
     >
       <div className="min-w-0 flex-1">
         <div className="truncate font-medium">{item.recipeName}</div>
-        <div className="text-xs text-primary/80">{SLOT_LABEL[item.slot]}</div>
+        <div className="text-xs text-primary/80">
+          {SLOT_LABEL[item.slot]}
+          {item.kcalPerServing != null && (
+            <span className="tabular-nums"> · {Math.round(item.kcalPerServing)} kcal</span>
+          )}
+        </div>
       </div>
       <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
         Meal

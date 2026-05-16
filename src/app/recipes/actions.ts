@@ -60,7 +60,31 @@ const CreateRecipeSchema = z.object({
   ingredients: z.array(IngredientSchema),
   steps: z.array(StepSchema),
   youtubeUrl: YoutubeUrlSchema.optional().nullable(),
+  kcalPerServing: z.number().nonnegative().optional().nullable(),
+  carbsGPerServing: z.number().nonnegative().optional().nullable(),
+  fatGPerServing: z.number().nonnegative().optional().nullable(),
+  proteinGPerServing: z.number().nonnegative().optional().nullable(),
 });
+
+/** Read a nullable numeric field from a form. Empty string → null. */
+function numField(fd: FormData, key: string): number | null {
+  const v = fd.get(key);
+  if (v === null) return null;
+  const s = String(v).trim();
+  if (s === "") return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Same as numField but distinguishes "not submitted" (undefined) from "cleared" (null). */
+function numFieldOptional(fd: FormData, key: string): number | null | undefined {
+  const v = fd.get(key);
+  if (v === null) return undefined;
+  const s = String(v).trim();
+  if (s === "") return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
 
 export async function createRecipe(formData: FormData): Promise<RecipeActionResult<{ recipeId: string }>> {
   const ctx = await requireHousehold();
@@ -80,6 +104,10 @@ export async function createRecipe(formData: FormData): Promise<RecipeActionResu
     ingredients: JSON.parse((formData.get("ingredients") as string) || "[]"),
     steps: JSON.parse((formData.get("steps") as string) || "[]"),
     youtubeUrl: ytRaw.trim() === "" ? null : ytRaw.trim(),
+    kcalPerServing: numField(formData, "kcalPerServing"),
+    carbsGPerServing: numField(formData, "carbsGPerServing"),
+    fatGPerServing: numField(formData, "fatGPerServing"),
+    proteinGPerServing: numField(formData, "proteinGPerServing"),
   };
   const parsed = CreateRecipeSchema.safeParse(raw);
   if (!parsed.success) {
@@ -97,6 +125,10 @@ export async function createRecipe(formData: FormData): Promise<RecipeActionResu
       default_servings: parsed.data.defaultServings ?? 4,
       notes: parsed.data.notes ?? null,
       youtube_url: parsed.data.youtubeUrl ?? null,
+      kcal_per_serving: parsed.data.kcalPerServing ?? null,
+      carbs_g_per_serving: parsed.data.carbsGPerServing ?? null,
+      fat_g_per_serving: parsed.data.fatGPerServing ?? null,
+      protein_g_per_serving: parsed.data.proteinGPerServing ?? null,
       created_by_profile_id: ctx.profile.id,
     })
     .select("id")
@@ -153,6 +185,10 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
     ingredients: formData.get("ingredients") ? JSON.parse(formData.get("ingredients") as string) : undefined,
     steps: formData.get("steps") ? JSON.parse(formData.get("steps") as string) : undefined,
     youtubeUrl,
+    kcalPerServing: numFieldOptional(formData, "kcalPerServing"),
+    carbsGPerServing: numFieldOptional(formData, "carbsGPerServing"),
+    fatGPerServing: numFieldOptional(formData, "fatGPerServing"),
+    proteinGPerServing: numFieldOptional(formData, "proteinGPerServing"),
   };
   const parsed = UpdateRecipeSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: { code: "RECIPE_INVALID", message: "Invalid input", fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string> } };
@@ -206,6 +242,10 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
   if (parsed.data.defaultServings !== undefined) patch.default_servings = parsed.data.defaultServings;
   if (parsed.data.notes !== undefined) patch.notes = parsed.data.notes;
   if (parsed.data.youtubeUrl !== undefined) patch.youtube_url = parsed.data.youtubeUrl;
+  if (parsed.data.kcalPerServing !== undefined) patch.kcal_per_serving = parsed.data.kcalPerServing;
+  if (parsed.data.carbsGPerServing !== undefined) patch.carbs_g_per_serving = parsed.data.carbsGPerServing;
+  if (parsed.data.fatGPerServing !== undefined) patch.fat_g_per_serving = parsed.data.fatGPerServing;
+  if (parsed.data.proteinGPerServing !== undefined) patch.protein_g_per_serving = parsed.data.proteinGPerServing;
   if (Object.keys(patch).length > 0) {
     const { error } = await supabase.from("recipes").update(patch).eq("id", effectiveRecipeId);
     if (error) return { ok: false, error: { code: "RECIPE_FORBIDDEN", message: error.message } };

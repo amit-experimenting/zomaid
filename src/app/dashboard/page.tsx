@@ -165,7 +165,7 @@ export default async function DashboardPage({
       .order("due_at", { ascending: true }),
     supabase
       .from("meal_plans")
-      .select("slot, recipe_id, recipes(name)")
+      .select("slot, recipe_id, recipes(name, kcal_per_serving)")
       .eq("household_id", ctx.household.id)
       .eq("plan_date", selectedYmd),
     supabase
@@ -236,12 +236,20 @@ export default async function DashboardPage({
     if (!r.recipe_id) continue;
     const t = timeBySlot[r.slot];
     if (!t) continue;
-    const recipeRaw = r.recipes as unknown as { name: string } | { name: string }[] | null;
+    const recipeRaw = r.recipes as unknown as
+      | { name: string; kcal_per_serving: number | string | null }
+      | { name: string; kcal_per_serving: number | string | null }[]
+      | null;
     const recipe = Array.isArray(recipeRaw) ? recipeRaw[0] ?? null : recipeRaw;
     if (!recipe?.name) continue;
     const [hh, mm] = (t as string).split(":").map(Number);
     const iso = `${selectedYmd}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:00+08:00`;
-    meals.push({ slot: r.slot as Slot, recipeName: recipe.name, slotTimeIso: iso });
+    meals.push({
+      slot: r.slot as Slot,
+      recipeName: recipe.name,
+      slotTimeIso: iso,
+      kcalPerServing: recipe.kcal_per_serving == null ? null : Number(recipe.kcal_per_serving),
+    });
   }
 
   return (

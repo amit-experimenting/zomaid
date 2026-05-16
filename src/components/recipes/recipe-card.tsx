@@ -11,6 +11,8 @@ export type RecipeCardProps = {
   photoUrl: string | null;
   isFork: boolean;
   youtubeUrl: string | null;
+  /** Per-serving calories. null hides the pill. */
+  kcalPerServing: number | null;
   canAddToPlan: boolean;
 };
 
@@ -19,7 +21,7 @@ const SLOT: Record<RecipeCardProps["slot"], string> = {
 };
 
 export function RecipeCard({
-  id, name, slot, prepTimeMinutes, photoUrl, isFork, youtubeUrl, canAddToPlan,
+  id, name, slot, prepTimeMinutes, photoUrl, isFork, youtubeUrl, kcalPerServing, canAddToPlan,
 }: RecipeCardProps) {
   return (
     <Card className="hover:bg-muted/50">
@@ -30,8 +32,15 @@ export function RecipeCard({
         <div className="min-w-0 flex-1">
           <Link href={`/recipes/${id}`} className="block">
             <div className="truncate font-medium">{name}</div>
-            <div className="text-xs text-muted-foreground">
-              {SLOT[slot]}{prepTimeMinutes ? ` · ${prepTimeMinutes}m` : ""}
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+              <span>
+                {SLOT[slot]}{prepTimeMinutes ? ` · ${prepTimeMinutes}m` : ""}
+              </span>
+              {kcalPerServing != null && (
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] tabular-nums">
+                  {Math.round(kcalPerServing)} kcal
+                </span>
+              )}
             </div>
             {isFork && (
               <div className="mt-1 inline-block rounded-sm bg-secondary px-1.5 py-0.5 text-[10px] uppercase">Customized</div>

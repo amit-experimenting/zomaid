@@ -93,7 +93,7 @@ async function PlannedView({ ctxDate }: { ctxDate: string | undefined }) {
     supabase
       .from("meal_plans")
       .select(
-        "slot, recipe_id, set_by_profile_id, people_eating, deduction_warnings, recipes(name, photo_path, household_id)",
+        "slot, recipe_id, set_by_profile_id, people_eating, deduction_warnings, recipes(name, photo_path, household_id, kcal_per_serving)",
       )
       .eq("household_id", ctx.household.id)
       .eq("plan_date", selectedYmd),
@@ -130,6 +130,7 @@ async function PlannedView({ ctxDate }: { ctxDate: string | undefined }) {
     slot: Slot;
     recipeId: string | null;
     recipeName: string | null;
+    kcalPerServing: number | null;
     photoUrl: string | null;
     setBySystem: boolean;
     rowExists: boolean;
@@ -142,8 +143,8 @@ async function PlannedView({ ctxDate }: { ctxDate: string | undefined }) {
   for (const s of ALL_SLOTS) {
     const r = rawMealRows?.find((x) => x.slot === s);
     const recipeRaw = r?.recipes as unknown as
-      | { name: string; photo_path: string | null; household_id: string | null }
-      | { name: string; photo_path: string | null; household_id: string | null }[]
+      | { name: string; photo_path: string | null; household_id: string | null; kcal_per_serving: number | string | null }
+      | { name: string; photo_path: string | null; household_id: string | null; kcal_per_serving: number | string | null }[]
       | null;
     const recipe = Array.isArray(recipeRaw) ? recipeRaw[0] ?? null : recipeRaw;
     let photoUrl: string | null = null;
@@ -163,6 +164,7 @@ async function PlannedView({ ctxDate }: { ctxDate: string | undefined }) {
       slot: s,
       recipeId: r?.recipe_id ?? null,
       recipeName: recipe?.name ?? null,
+      kcalPerServing: recipe?.kcal_per_serving == null ? null : Number(recipe.kcal_per_serving),
       photoUrl,
       setBySystem: r != null && r.set_by_profile_id === null,
       rowExists: r != null,
@@ -220,6 +222,7 @@ async function PlannedView({ ctxDate }: { ctxDate: string | undefined }) {
                   slot={row.slot}
                   recipeId={row.recipeId}
                   recipeName={row.recipeName}
+                  kcalPerServing={row.kcalPerServing}
                   photoUrl={row.photoUrl}
                   setBySystem={row.setBySystem}
                   rowExists={row.rowExists}
@@ -294,6 +297,8 @@ async function LibraryView({
       id: r.id, name: r.name, slot: r.slot, prepTimeMinutes: r.prep_time_minutes,
       photoUrl, isFork: !!r.parent_recipe_id,
       youtubeUrl: r.youtube_url ?? null,
+      // numeric columns come back as strings from PostgREST.
+      kcalPerServing: r.kcal_per_serving == null ? null : Number(r.kcal_per_serving),
       canAddToPlan,
     };
   }));
