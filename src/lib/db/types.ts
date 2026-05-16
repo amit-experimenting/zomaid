@@ -16,8 +16,6 @@ export type Database = {
           clerk_user_id: string;
           email: string;
           display_name: string;
-          locale: string;
-          timezone: string;
           is_admin: boolean;
           created_at: string;
           updated_at: string;
@@ -662,10 +660,6 @@ export type Database = {
       shopping_sweep_checked: {
         Args: Record<string, never>;
         Returns: number;
-      };
-      ingest_bill_ocr: {
-        Args: { p_bill_id: string; p_payload: Record<string, unknown> };
-        Returns: Database["public"]["Tables"]["bills"]["Row"];
       };
       tasks_generate_occurrences: {
         Args: { p_horizon_date: string };

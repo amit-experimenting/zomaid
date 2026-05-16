@@ -82,8 +82,6 @@ export async function createProfile(
     clerk_user_id: overrides.clerk_user_id ?? `user_${randomUUID()}`,
     email: overrides.email ?? `${randomUUID()}@example.com`,
     display_name: overrides.display_name ?? "Test User",
-    locale: overrides.locale ?? "en-SG",
-    timezone: overrides.timezone ?? "Asia/Singapore",
     is_admin: overrides.is_admin ?? false,
   };
   // Insert type omits id, but the DB column accepts an explicit value; cast
