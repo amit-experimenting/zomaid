@@ -16,7 +16,7 @@ import {
   type ScanUnit,
 } from "@/app/api/inventory/scan/_parse";
 
-export type ParsedBillLine = {
+type ParsedBillLine = {
   item_name: string;
   quantity: number | null;
   unit: ScanUnit | null;
@@ -33,7 +33,7 @@ export type ParsedBill = {
 
 // Permissive at the schema level — we coerce/null fields in
 // parseBillScanResponse so a single bad field doesn't drop the row.
-export const ModelBillResponseSchema = z
+const ModelBillResponseSchema = z
   .object({
     store_name: z.unknown().optional(),
     bill_date: z.unknown().optional(),

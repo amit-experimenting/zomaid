@@ -24,8 +24,8 @@ Filtering notes:
 - _(none found)_
 
 ## Unused exports
-- [ ] `src/app/api/bills/scan/_parse.ts` — exports `ModelBillResponseSchema` — zero importers per knip
-- [ ] `src/app/api/bills/scan/_parse.ts` — exports type `ParsedBillLine` — zero importers per knip (type-only; verify before removal)
+- [x] `src/app/api/bills/scan/_parse.ts` — exports `ModelBillResponseSchema` — removed `export` keyword; used internally only
+- [x] `src/app/api/bills/scan/_parse.ts` — exports type `ParsedBillLine` — removed `export` keyword; used internally only
 - [ ] `src/app/api/inventory/scan/_parse.ts` — exports `SCAN_UNITS`, `ModelResponseSchema` — zero importers per knip
 - [ ] `src/app/bills/_dedupe.ts` — exports type `DedupeLine` — zero importers per knip (type-only; verify before removal)
 - [ ] `src/lib/db/types.ts` — exports types `MembershipStatus`, `IntendedRole`, `MaidMode` — zero importers per knip (type-only; verify before removal)
