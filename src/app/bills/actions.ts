@@ -255,6 +255,43 @@ export async function uploadBillFromScan(
     }
   }
 
+  // ── 1.5. If finalizing a queued retry, copy the image from the
+  // bill-scan-pending bucket into bill-images so /bills/[id] can render
+  // it via the bill-images signed-URL path. The pending-bucket original
+  // stays put (user explicitly opted to retain images on success).
+  let finalImagePath = parsed.data.imageStoragePath ?? SENTINEL_IMAGE_PATH;
+  if (parsed.data.attemptId && !parsed.data.imageStoragePath) {
+    const { createServiceClient } = await import("@/lib/supabase/service");
+    const svc = createServiceClient();
+    const attempt = await svc
+      .from("bill_scan_attempts")
+      .select("storage_path, mime_type, household_id")
+      .eq("id", parsed.data.attemptId)
+      .single();
+    if (attempt.data) {
+      const dl = await svc.storage
+        .from("bill-scan-pending")
+        .download(attempt.data.storage_path);
+      if (dl.data) {
+        const mime = attempt.data.mime_type;
+        const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
+        const newPath = `${attempt.data.household_id}/${crypto.randomUUID()}.${ext}`;
+        const ul = await svc.storage
+          .from("bill-images")
+          .upload(newPath, dl.data, { contentType: mime, upsert: false });
+        if (!ul.error) {
+          finalImagePath = newPath;
+        } else {
+          console.error("[uploadBillFromScan] copy to bill-images failed", ul.error);
+        }
+      } else {
+        console.error("[uploadBillFromScan] download from bill-scan-pending failed", dl.error);
+      }
+    } else {
+      console.error("[uploadBillFromScan] attempt row lookup failed", attempt.error);
+    }
+  }
+
   // ── 2. Insert the bills row ──────────────────────────────────────
   const { data: billRow, error: billInsertErr } = await supabase
     .from("bills")
@@ -267,7 +304,7 @@ export async function uploadBillFromScan(
       bill_date: parsed.data.bill_date,
       currency: parsed.data.currency,
       total_amount: parsed.data.total_amount ?? null,
-      image_storage_path: parsed.data.imageStoragePath ?? SENTINEL_IMAGE_PATH,
+      image_storage_path: finalImagePath,
     })
     .select("id")
     .single();
