@@ -110,4 +110,24 @@ Cross-feature components scans is consumed by:
 - **`max_attempts` is per-row but defaults to 3 for every insert.** No UI or admin tool can bump a specific row's cap (a stubbornly broken bill that the admin wants to give one more shot still has to be reset, which moves it back to attempt 0 — fine in practice, but worth calling out).
 
 ## Test coverage
-_To be filled in Phase 2._
+
+| Code unit | File | Unit | Integration | E2E | Priority gap | Recommended test type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `GET /api/cron/retry-bill-scans` | `src/app/api/cron/retry-bill-scans/route.ts` | — | — | — | high | `tests/actions/` (or dedicated route test) |
+| `POST /api/bills/scan` | `src/app/api/bills/scan/route.ts` | — | — | — | high | `tests/actions/` (or dedicated route test) |
+| `resetBillScan` (admin) | `src/app/admin/bill-scans/actions.ts:19` | — | — | — | high | `tests/actions/` |
+| `runSonnetBillScan` (Sonnet client) | `src/app/api/bills/scan/_sonnet.ts` | — | — | — | high | `tests/unit/` |
+| `AdminBillScansClient` | `src/app/admin/bill-scans/_client.tsx` | — | — | — | medium | `tests/e2e/` |
+| `AdminBillScansPage` | `src/app/admin/bill-scans/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `bill_scan_attempts` RLS (read policies) | `supabase/migrations/20260629_001_bill_scan_retries.sql` | — | — | — | medium | `tests/db/` |
+| `cancelFailedScan` | `src/app/scans/actions.ts:45` | — | — | — | medium | `tests/actions/` |
+| `discardPendingScan` | `src/app/scans/actions.ts:18` | — | — | — | medium | `tests/actions/` |
+| `FailedAttemptCard` | `src/app/scans/pending/_failed-card.tsx` | — | — | — | medium | `tests/e2e/` |
+| `PendingScansBanner` | `src/components/site/pending-scans-banner.tsx` | — | — | — | medium | `tests/e2e/` |
+| `PendingScansPage` | `src/app/scans/pending/page.tsx` | — | — | — | medium | `tests/e2e/` |
+| `resolveBillScan` (admin) | `src/app/admin/bill-scans/actions.ts:48` | — | — | — | medium | `tests/actions/` |
+| `SucceededAttemptCard` | `src/app/scans/pending/_review-card.tsx` | — | — | — | medium | `tests/e2e/` |
+| `bill-scan-pending` storage bucket (no-RLS asymmetry) | `supabase/migrations/20260629_001_bill_scan_retries.sql` | — | — | — | low | `tests/db/` |
+| `parseBillScanResponse` + header normalisers (`normalizeBillDate` / `normalizeCurrency` / `normalizePrice` / `normalizeStoreName`) | `src/app/api/bills/scan/_parse.ts` | `tests/unit/bill-scan-parse.test.ts` | — | — | none | `tests/unit/` |
+| `buildBillScanStoragePath` / `extForMime` / `shouldRetryAttempt` | `src/app/api/bills/scan/_storage.ts` | `tests/unit/bill-scan-retry.test.ts` | — | — | none | `tests/unit/` |
+| `coerceUnit` / `normalizeName` / `normalizeQuantity` / `parseScanResponse` | `src/app/api/inventory/scan/_parse.ts` | `tests/unit/inventory-scan-parse.test.ts` | — | — | none | `tests/unit/` |
