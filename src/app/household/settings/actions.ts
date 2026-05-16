@@ -44,6 +44,15 @@ export async function createInvite(input: unknown) {
       .limit(1);
     if (has.error) throw new Error(has.error.message);
     if (has.data?.length) throw new Error("household already has an active maid");
+
+    // Generating a maid invite commits the household to the "have a maid" path.
+    if (household.maid_mode !== "invited") {
+      const flip = await svc
+        .from("households")
+        .update({ maid_mode: "invited" })
+        .eq("id", household.id);
+      if (flip.error) throw new Error(flip.error.message);
+    }
   }
   if (data.role === "owner") {
     const has = await svc
