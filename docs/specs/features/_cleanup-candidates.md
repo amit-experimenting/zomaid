@@ -40,4 +40,4 @@ Filtering notes:
 - [x] `src/components/ui/dialog.tsx` — exports `DialogClose`, `DialogDescription`, `DialogFooter`, `DialogOverlay`, `DialogPortal` — deleted DialogClose, DialogDescription, DialogFooter components; kept DialogPortal and DialogOverlay (used internally by DialogContent) but removed their exports
 
 ## Unused lib helpers
-- [ ] `src/lib/auth/require.ts` — exports `requireRole`, `requirePrivilege` — zero callers per `rg` (file itself is the only match)
+- [x] `src/lib/auth/require.ts` — exports `requireRole`, `requirePrivilege` — deleted both functions; also dropped unused Privilege/Role imports. requireHousehold and requireAdmin retained.
