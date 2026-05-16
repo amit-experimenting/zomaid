@@ -11,9 +11,19 @@ export async function inviteMaidFromHome() {
   if (!ctx) throw new Error("no active household");
   if (ctx.membership.role !== "owner") throw new Error("only the owner can invite a maid");
 
+  const svc = createServiceClient();
+
+  // Flip household into 'invited' mode if it isn't already. Idempotent.
+  if (ctx.household.maid_mode !== "invited") {
+    const upd = await svc
+      .from("households")
+      .update({ maid_mode: "invited" })
+      .eq("id", ctx.household.id);
+    if (upd.error) throw new Error(upd.error.message);
+  }
+
   // Idempotency: if a pending maid invite already exists for this household,
   // reuse it instead of creating a second one (defends against double-tap).
-  const svc = createServiceClient();
   const existing = await svc
     .from("invites")
     .select("id, code, token")
