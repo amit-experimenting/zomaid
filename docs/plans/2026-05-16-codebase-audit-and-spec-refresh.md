@@ -147,8 +147,10 @@ This procedure applies to every Phase 1 task (Tasks 1–11). Each task substitut
   For each related dated spec listed in the task, insert this banner as the second line (right after the `# Title`):
 
   ```markdown
-  > **Superseded as living documentation by [`features/<feature>.md`](features/<feature>.md).** This dated spec is retained for historical context.
+  > **Superseded as the living architecture doc for the <feature> area by [`features/<feature>.md`](features/<feature>.md).** This dated spec is retained for historical context.
   ```
+
+  The scoped phrasing ("for the `<feature>` area") works for both single-target and multi-target dated specs. A multi-target dated spec receives multiple banners (one per target feature, added by each feature's task), each scoped to its own feature.
 
   Use Edit, not Write — preserve the rest of the file unchanged.
 
