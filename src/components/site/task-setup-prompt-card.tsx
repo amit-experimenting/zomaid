@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
+import { Banner } from "@/components/ui/banner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { resetTaskSetupForEmptyState } from "@/app/onboarding/tasks/actions";
@@ -22,29 +22,27 @@ const COPY: Record<Variant, { title: string; body: string; cta: string }> = {
 export function TaskSetupPromptCard({ variant = "initial" }: { variant?: Variant }) {
   const copy = COPY[variant];
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-3 p-4">
-        <div>
-          <div className="text-sm font-semibold">{copy.title}</div>
-          <div className="mt-1 text-xs text-muted-foreground">{copy.body}</div>
-        </div>
-        <div>
-          {variant === "initial" ? (
-            <Link
-              href="/onboarding/tasks"
-              className={cn(buttonVariants({ size: "sm" }))}
-            >
+    <Banner
+      tone="info"
+      title={copy.title}
+      action={
+        variant === "initial" ? (
+          <Link
+            href="/onboarding/tasks"
+            className={cn(buttonVariants({ size: "sm" }))}
+          >
+            {copy.cta}
+          </Link>
+        ) : (
+          <form action={resetTaskSetupForEmptyState}>
+            <Button type="submit" size="sm">
               {copy.cta}
-            </Link>
-          ) : (
-            <form action={resetTaskSetupForEmptyState}>
-              <Button type="submit" size="sm">
-                {copy.cta}
-              </Button>
-            </form>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            </Button>
+          </form>
+        )
+      }
+    >
+      {copy.body}
+    </Banner>
   );
 }

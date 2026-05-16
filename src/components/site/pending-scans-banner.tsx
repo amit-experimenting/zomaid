@@ -2,6 +2,7 @@ import "server-only";
 
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
+import { Banner } from "@/components/ui/banner";
 import { createServiceClient } from "@/lib/supabase/service";
 
 /**
@@ -36,13 +37,14 @@ export async function PendingScansBanner() {
   }
   if (count === 0) return null;
   return (
-    <Link
-      href="/scans/pending"
-      className="mx-4 my-2 block rounded border border-amber-500/40 bg-amber-100/40 px-3 py-2 text-sm hover:bg-amber-100/60"
-    >
-      <span className="font-medium">{count}</span> bill scan
-      {count === 1 ? "" : "s"} ready to review.{" "}
-      <span className="underline underline-offset-2">Open the queue →</span>
+    <Link href="/scans/pending" className="mx-4 my-2 block">
+      <Banner
+        tone="warning"
+        action={<span className="font-semibold text-primary">Open the queue →</span>}
+      >
+        <span className="font-medium">{count}</span> bill scan
+        {count === 1 ? "" : "s"} ready to review.
+      </Banner>
     </Link>
   );
 }

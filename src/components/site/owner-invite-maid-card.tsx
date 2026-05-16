@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
+import { Banner } from "@/components/ui/banner";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { inviteMaidFromHome, revokeMaidInviteFromHome } from "@/app/dashboard/actions";
 
@@ -21,21 +21,23 @@ export function OwnerInviteMaidCard(props: Props) {
 function EmptyCard() {
   const [pending, start] = useTransition();
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle>Invite your maid</CardTitle>
-        <CardDescription>Send a code or a link your maid can tap to join the household.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button
-          type="button"
-          disabled={pending}
-          onClick={() => start(async () => { await inviteMaidFromHome(); })}
-        >
-          {pending ? "Generating…" : "Generate invite"}
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="mt-6">
+      <Banner
+        tone="neutral"
+        title="Invite your maid"
+        action={
+          <Button
+            type="button"
+            disabled={pending}
+            onClick={() => start(async () => { await inviteMaidFromHome(); })}
+          >
+            {pending ? "Generating…" : "Generate invite"}
+          </Button>
+        }
+      >
+        Send a code or a link your maid can tap to join the household.
+      </Banner>
+    </div>
   );
 }
 
@@ -76,63 +78,70 @@ function PendingCard({ origin, code, token, inviteId }: Extract<Props, { state: 
   }
 
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle>Share this with your maid</CardTitle>
-        <CardDescription>One-time link, expires in 7 days.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
+    <div className="mt-6">
+      <Banner
+        tone="neutral"
+        title="Share this with your maid"
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" size="sm" onClick={copy}>
+              {copied ? "Copied!" : "Copy link"}
+            </Button>
+            {canShare ? (
+              <Button type="button" size="sm" variant="secondary" onClick={share}>
+                Share
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={revoking}
+              onClick={() => startRevoke(async () => { await revokeMaidInviteFromHome({ inviteId }); })}
+            >
+              {revoking ? "Revoking…" : "Revoke"}
+            </Button>
+          </div>
+        }
+      >
+        <p>One-time link, expires in 7 days.</p>
+        <div className="mt-3">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Code</p>
-          <p className="mt-1 font-mono text-3xl font-semibold tracking-widest">{code}</p>
+          <p className="mt-1 font-mono text-3xl font-semibold tracking-widest text-text-primary">{code}</p>
         </div>
-        <div>
+        <div className="mt-3">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Link</p>
           <code className="mt-1 block break-all rounded-md bg-muted p-3 text-xs">{url}</code>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" size="sm" onClick={copy}>
-            {copied ? "Copied!" : "Copy link"}
-          </Button>
-          {canShare ? (
-            <Button type="button" size="sm" variant="secondary" onClick={share}>
-              Share
-            </Button>
-          ) : null}
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            disabled={revoking}
-            onClick={() => startRevoke(async () => { await revokeMaidInviteFromHome({ inviteId }); })}
-          >
-            {revoking ? "Revoking…" : "Revoke"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      </Banner>
+    </div>
   );
 }
 
 function JoinedCard({ maidName }: { maidName: string }) {
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <div className="flex items-center justify-between gap-3">
-          <CardTitle>Maid: {maidName}</CardTitle>
-          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
-            Joined
-          </span>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Link
-          href="/household/settings"
-          className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
-        >
-          Manage
-        </Link>
-      </CardContent>
-    </Card>
+    <div className="mt-6">
+      <Banner
+        tone="neutral"
+        title={
+          <div className="flex items-center justify-between gap-3">
+            <span>Maid: {maidName}</span>
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
+              Joined
+            </span>
+          </div>
+        }
+        action={
+          <Link
+            href="/household/settings"
+            className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
+          >
+            Manage
+          </Link>
+        }
+      >
+        {null}
+      </Banner>
+    </div>
   );
 }
