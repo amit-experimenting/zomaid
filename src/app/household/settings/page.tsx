@@ -113,7 +113,7 @@ export default async function HouseholdSettingsPage() {
         </Card>
       )}
 
-      <Card>
+      <Card id="diet">
         <CardHeader><CardTitle>Meal preference</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
