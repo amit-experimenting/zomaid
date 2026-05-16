@@ -115,3 +115,17 @@ No app strings are RTL today, but Urdu (and Arabic-script Urdu) could be a futur
 ### Avatar image uploads
 
 `Avatar` ships with initials-only in slice A. The image variant exists in the API but no upload flow. Likely picked up alongside profile editing.
+
+### Lint rule gap — raw Tailwind palette names
+
+The `no-arbitrary-design-values` ESLint rule from slice A bans `bg-[#hex]` and similar arbitrary-syntax violations, but does NOT catch raw Tailwind palette names like `bg-yellow-100`, `text-red-600`, etc. There are ~188 such occurrences across `src/` today (mostly in pre-design-system code), and the rule will quietly allow new ones.
+
+To close this gap: extend the rule with an allow-list of permitted Tailwind palette classes (e.g. only those mapped to a design token via shadcn-compat aliases), or convert the rule to enforce a "design-token-or-fail" model.
+
+Until then: treat the rule as "no inline hex / arbitrary px sizes" rather than "complete token discipline".
+
+### Typography utilities not implemented as Tailwind classes
+
+The spec's typography section names tokens `display` / `h1` / `h2` / `h3` / `body-lg` / `body` / `body-sm` / `label` / `numeric` (sizes 32 / 24 / 20 / 17 / 16 / 15 / 13 / 11 / 15 px). Slice A wired only the font family through `@theme inline`; the size tokens are NOT available as `text-display` / `text-h1` / etc. Slice A primitives that need 17px or 15px use bracket-syntax (`text-[17px]` in TopAppBar, `text-[15px]` in ListRow) inside the allowlisted `src/components/ui/` folder.
+
+To close: add the size tokens to `@theme inline` in `globals.css` (e.g. `--text-h1: 24px; --text-h1-line-height: 30px;`), then use `text-h1` etc. in primitives. Probably worth doing alongside slice B (persona UX) so the redesigned pages use them directly.

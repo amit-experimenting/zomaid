@@ -16,3 +16,5 @@ function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
 }
 
 export { Textarea }
+
+export const textareaSizes = { default: { height: 88 } } as const;

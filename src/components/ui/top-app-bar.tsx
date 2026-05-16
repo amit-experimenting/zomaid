@@ -14,7 +14,7 @@ export function TopAppBar({ leading, title, subtitle, trailing, className }: Pro
     <header
       className={cn(
         "sticky top-0 z-30 flex items-center gap-1 border-b border-border bg-surface-1",
-        "h-[52px] px-1 pt-[env(safe-area-inset-top)]",
+        "min-h-[52px] px-1 pt-[env(safe-area-inset-top)]",
         className,
       )}
     >

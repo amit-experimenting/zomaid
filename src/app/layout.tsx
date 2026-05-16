@@ -50,7 +50,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className={cn("font-sans", plex.variable)}>
-        <body className="min-h-dvh antialiased pb-14">
+        <body className="min-h-dvh antialiased pb-[calc(56px+env(safe-area-inset-bottom))]">
           {process.env.NODE_ENV === "development" && (
             // TEMP DIAGNOSTIC: react-server-dom-turbopack's flushComponentPerformance
             // can call performance.measure(name, { start: 0, end: -Infinity }) when an

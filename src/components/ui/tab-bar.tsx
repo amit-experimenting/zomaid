@@ -21,7 +21,7 @@ export function TabBar({ tabs, className }: Props) {
       aria-label="Main"
       className={cn(
         "sticky bottom-0 z-30 flex border-t border-border bg-surface-1",
-        "h-14 pb-[env(safe-area-inset-bottom)]",
+        "min-h-14 pb-[env(safe-area-inset-bottom)]",
         className,
       )}
     >

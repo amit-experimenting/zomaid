@@ -106,12 +106,12 @@ function PendingCard({ origin, code, token, inviteId }: Extract<Props, { state: 
       >
         <p>One-time link, expires in 7 days.</p>
         <div className="mt-3">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Code</p>
+          <p className="text-xs uppercase tracking-wide text-text-muted">Code</p>
           <p className="mt-1 font-mono text-3xl font-semibold tracking-widest text-text-primary">{code}</p>
         </div>
         <div className="mt-3">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Link</p>
-          <code className="mt-1 block break-all rounded-md bg-muted p-3 text-xs">{url}</code>
+          <p className="text-xs uppercase tracking-wide text-text-muted">Link</p>
+          <code className="mt-1 block break-all rounded-md bg-secondary p-3 text-xs">{url}</code>
         </div>
       </Banner>
     </div>
@@ -126,7 +126,7 @@ function JoinedCard({ maidName }: { maidName: string }) {
         title={
           <div className="flex items-center justify-between gap-3">
             <span>Maid: {maidName}</span>
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
+            <span className="rounded-full bg-success-subtle px-2 py-0.5 text-xs font-medium text-success">
               Joined
             </span>
           </div>
