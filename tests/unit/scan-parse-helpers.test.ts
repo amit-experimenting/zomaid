@@ -4,7 +4,7 @@ import {
   normalizeName,
   normalizeQuantity,
   parseScanResponse,
-} from "@/app/api/inventory/scan/_parse";
+} from "@/lib/scan/parse-helpers";
 
 describe("coerceUnit", () => {
   it("passes known units through", () => {

@@ -14,7 +14,7 @@ import {
   normalizeName,
   normalizeQuantity,
   type ScanUnit,
-} from "@/app/api/inventory/scan/_parse";
+} from "@/lib/scan/parse-helpers";
 
 type ParsedBillLine = {
   item_name: string;
