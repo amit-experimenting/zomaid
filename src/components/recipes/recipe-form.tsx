@@ -113,7 +113,17 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
         <Label htmlFor="youtubeUrl">Video URL</Label>
         <Input id="youtubeUrl" type="url" value={youtubeUrl}
           onChange={(e) => setYoutubeUrl(e.target.value)}
-          placeholder="https://www.youtube.com/watch?v=..." />
+          placeholder="Paste a YouTube link" />
+        {youtubeUrl.trim() && (
+          <a
+            href={youtubeUrl.trim()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 inline-block break-all text-xs text-primary underline"
+          >
+            Watch video ↗
+          </a>
+        )}
       </div>
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Ingredients</legend>

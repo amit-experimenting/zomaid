@@ -20,6 +20,11 @@ export default async function RecipesIndex({ searchParams }: { searchParams: Pro
     .filter((r: any) => !sp.q || r.name.toLowerCase().includes(sp.q.toLowerCase()))
     .filter((r: any) => r.archived_at === null);
 
+  const role = ctx.membership.role;
+  const priv = ctx.membership.privilege;
+  const canAddToPlan =
+    role === "owner" || role === "maid" || (role === "family_member" && priv === "meal_modify");
+
   // Compute photo URL per row (public bucket for starter, signed URL for household).
   const cards = await Promise.all(filtered.map(async (r: any) => {
     let photoUrl: string | null = null;
@@ -34,6 +39,8 @@ export default async function RecipesIndex({ searchParams }: { searchParams: Pro
     return {
       id: r.id, name: r.name, slot: r.slot, prepTimeMinutes: r.prep_time_minutes,
       photoUrl, isFork: !!r.parent_recipe_id,
+      youtubeUrl: r.youtube_url ?? null,
+      canAddToPlan,
     };
   }));
 

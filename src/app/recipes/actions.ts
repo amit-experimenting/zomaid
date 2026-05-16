@@ -241,6 +241,51 @@ export async function updateRecipe(formData: FormData): Promise<RecipeActionResu
   return { ok: true, data: { recipeId: effectiveRecipeId } };
 }
 
+export async function addRecipeToTodayPlan(input: { recipeId: string }): Promise<RecipeActionResult<{ planDate: string }>> {
+  const ctx = await requireHousehold();
+  const supabase = await createClient();
+
+  // Permission: owner, maid, or family_member with meal_modify privilege.
+  const role = ctx.membership.role;
+  const priv = ctx.membership.privilege;
+  const canModify =
+    role === "owner" || role === "maid" || (role === "family_member" && priv === "meal_modify");
+  if (!canModify) {
+    return { ok: false, error: { code: "RECIPE_FORBIDDEN", message: "You don't have permission to modify the meal plan." } };
+  }
+
+  // Pull slot from the recipe so we know which today-slot to set.
+  const { data: recipe, error: rErr } = await supabase
+    .from("recipes")
+    .select("id, slot")
+    .eq("id", input.recipeId)
+    .maybeSingle();
+  if (rErr || !recipe) {
+    return { ok: false, error: { code: "RECIPE_NOT_FOUND", message: "Recipe not found." } };
+  }
+
+  // Today in SG (en-CA gives ISO YYYY-MM-DD). Matches the rest of the app.
+  const planDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Singapore",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const { error: setErr } = await supabase.rpc("mealplan_set_slot", {
+    p_date: planDate,
+    p_slot: recipe.slot,
+    p_recipe_id: recipe.id,
+  });
+  if (setErr) {
+    return { ok: false, error: { code: "RECIPE_FORBIDDEN", message: setErr.message } };
+  }
+
+  revalidatePath("/plan");
+  revalidatePath(`/plan/${planDate}`);
+  return { ok: true, data: { planDate } };
+}
+
 export async function archiveRecipe(input: { recipeId: string }): Promise<RecipeActionResult<{ recipeId: string }>> {
   await requireHousehold();
   const supabase = await createClient();
