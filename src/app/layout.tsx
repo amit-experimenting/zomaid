@@ -1,10 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Geist } from "next/font/google";
+import { IBM_Plex_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const plex = IBM_Plex_Sans({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+});
 
 const APP_NAME = "Zomaid";
 const APP_DESCRIPTION = "Zomaid PWA";
@@ -36,7 +40,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={cn("font-sans", geist.variable)}>
+      <html lang="en" className={cn("font-sans", plex.variable)}>
         <body className="min-h-dvh antialiased">
           {process.env.NODE_ENV === "development" && (
             // TEMP DIAGNOSTIC: react-server-dom-turbopack's flushComponentPerformance
