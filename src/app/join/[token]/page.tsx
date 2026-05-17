@@ -29,5 +29,8 @@ export default async function JoinTokenPage({ params }: Params) {
       </main>
     );
   }
-  redirect("/dashboard");
+  // After redeem, route everyone (including owners who joined via link, in
+  // theory) through the personal profile page. It self-skips if
+  // onboarding_completed_at is already set, so this is safe for re-joiners.
+  redirect("/onboarding/personal");
 }
