@@ -197,35 +197,40 @@ describe("saveTaskSetupPicks (action)", () => {
     expect(drafts![0].picked_task_ids).toEqual([id1, id2]);
   });
 
-  it("family_member cannot run task setup (owner-only)", async () => {
+  it("maid can save picks", async () => {
     const { household } = await seedOwnerHouseholdReadyForWizard(ids);
-    const [id1] = await pickTwoStandardTaskIds();
+    const [id1, id2] = await pickTwoStandardTaskIds();
 
-    const fam = await createProfile();
-    ids.profiles.push(fam.id);
-    const mFam = await createMembership({
+    const maid = await createProfile();
+    ids.profiles.push(maid.id);
+    const mMaid = await createMembership({
       household_id: household.id,
-      profile_id: fam.id,
-      role: "family_member",
+      profile_id: maid.id,
+      role: "maid",
     });
-    ids.memberships.push(mFam.id);
+    ids.memberships.push(mMaid.id);
 
-    mockClerk({ clerkUserId: fam.clerk_user_id });
+    mockClerk({ clerkUserId: maid.clerk_user_id });
     mockNextStubs();
     const { saveTaskSetupPicks } = await import(
       "@/app/onboarding/tasks/actions"
     );
 
-    await expect(
-      saveTaskSetupPicks({ standardTaskIds: [id1] }),
-    ).rejects.toThrow(/only the owner/);
+    await expectRedirect(
+      saveTaskSetupPicks({ standardTaskIds: [id1, id2] }),
+      "/onboarding/tasks/tune",
+    );
 
-    // No draft was written.
-    const { data: drafts } = await serviceClient()
+    // Draft was written with maid's picks.
+    const { data: draft, error } = await serviceClient()
       .from("task_setup_drafts")
-      .select("household_id")
-      .eq("household_id", household.id);
-    expect(drafts ?? []).toHaveLength(0);
+      .select("household_id, picked_task_ids, tuned_json")
+      .eq("household_id", household.id)
+      .single();
+    expect(error).toBeNull();
+    expect(draft?.household_id).toBe(household.id);
+    expect(draft?.picked_task_ids).toEqual([id1, id2]);
+    expect(draft?.tuned_json).toBeNull();
   });
 
   it("empty picks array is rejected by the zod schema (min(1))", async () => {
@@ -469,51 +474,62 @@ describe("submitTaskSetup (action)", () => {
     expect(tasksAfterSecond).toHaveLength(1);
   });
 
-  it("family_member cannot submit (owner-only)", async () => {
+  it("maid can submit task setup", async () => {
     const { household } = await seedOwnerHouseholdReadyForWizard(ids);
-    const [stdId] = await pickTwoStandardTaskIds();
+    const [stdId1, stdId2] = await pickTwoStandardTaskIds();
 
-    const fam = await createProfile();
-    ids.profiles.push(fam.id);
-    const mFam = await createMembership({
+    const maid = await createProfile();
+    ids.profiles.push(maid.id);
+    const mMaid = await createMembership({
       household_id: household.id,
-      profile_id: fam.id,
-      role: "family_member",
+      profile_id: maid.id,
+      role: "maid",
     });
-    ids.memberships.push(mFam.id);
+    ids.memberships.push(mMaid.id);
 
-    mockClerk({ clerkUserId: fam.clerk_user_id });
+    mockClerk({ clerkUserId: maid.clerk_user_id });
     mockNextStubs();
     const { submitTaskSetup } = await import(
       "@/app/onboarding/tasks/actions"
     );
 
-    await expect(
+    await expectRedirect(
       submitTaskSetup({
         entries: [
           {
-            standardTaskId: stdId,
+            standardTaskId: stdId1,
             frequency: "daily",
             interval: 1,
             dueTime: "09:00",
             assigneeProfileId: "anyone",
           },
+          {
+            standardTaskId: stdId2,
+            frequency: "weekly",
+            interval: 1,
+            byweekday: [1, 4],
+            dueTime: "10:30",
+            assigneeProfileId: maid.id,
+          },
         ],
       }),
-    ).rejects.toThrow(/only the owner/);
+      "/dashboard",
+    );
 
-    // No tasks materialised, gate still null.
+    // Tasks materialised, gate latched.
     const { data: tasks } = await serviceClient()
       .from("tasks")
       .select("id")
       .eq("household_id", household.id);
-    expect(tasks ?? []).toHaveLength(0);
+    expect(tasks).toHaveLength(2);
+    for (const t of tasks!) ids.tasks.push(t.id);
+
     const { data: h } = await serviceClient()
       .from("households")
       .select("task_setup_completed_at")
       .eq("id", household.id)
       .single();
-    expect(h?.task_setup_completed_at).toBeNull();
+    expect(h?.task_setup_completed_at).not.toBeNull();
   });
 
   it("rejects an unknown standard_task_id in entries", async () => {
@@ -696,39 +712,42 @@ describe("resetTaskSetupForEmptyState (action)", () => {
     );
   });
 
-  it("family_member cannot reset (owner-only)", async () => {
+  it("maid can reset task setup for empty state", async () => {
     const { household } = await seedOwnerHouseholdReadyForWizard(ids);
 
+    // Latch the gate (simulating a previously-completed wizard whose tasks
+    // were then wiped).
     await serviceClient()
       .from("households")
       .update({ task_setup_completed_at: new Date().toISOString() })
       .eq("id", household.id);
 
-    const fam = await createProfile();
-    ids.profiles.push(fam.id);
-    const mFam = await createMembership({
+    const maid = await createProfile();
+    ids.profiles.push(maid.id);
+    const mMaid = await createMembership({
       household_id: household.id,
-      profile_id: fam.id,
-      role: "family_member",
+      profile_id: maid.id,
+      role: "maid",
     });
-    ids.memberships.push(mFam.id);
+    ids.memberships.push(mMaid.id);
 
-    mockClerk({ clerkUserId: fam.clerk_user_id });
+    mockClerk({ clerkUserId: maid.clerk_user_id });
     mockNextStubs();
     const { resetTaskSetupForEmptyState } = await import(
       "@/app/onboarding/tasks/actions"
     );
 
-    await expect(resetTaskSetupForEmptyState()).rejects.toThrow(
-      /only the owner/,
+    await expectRedirect(
+      resetTaskSetupForEmptyState(),
+      "/onboarding/tasks",
     );
 
-    // Gate still latched.
+    // Gate reset to null.
     const { data: h } = await serviceClient()
       .from("households")
       .select("task_setup_completed_at")
       .eq("id", household.id)
       .single();
-    expect(h?.task_setup_completed_at).not.toBeNull();
+    expect(h?.task_setup_completed_at).toBeNull();
   });
 });
