@@ -28,11 +28,17 @@ type IconButtonProps = ButtonPrimitive.Props &
     "aria-label": string;
   };
 
-export function IconButton({ className, variant, ...props }: IconButtonProps) {
+export function IconButton({ className, variant, render, nativeButton, ...props }: IconButtonProps) {
+  // When `render` swaps in a non-<button> (commonly <Link> for back-nav),
+  // Base UI warns unless `nativeButton` is false. Default it here so callers
+  // don't have to thread the prop through every back-button on the app.
+  const resolvedNativeButton = nativeButton ?? render === undefined;
   return (
     <ButtonPrimitive
       data-slot="icon-button"
       className={cn(iconButtonVariants({ variant, className }))}
+      render={render}
+      nativeButton={resolvedNativeButton}
       {...props}
     />
   );
