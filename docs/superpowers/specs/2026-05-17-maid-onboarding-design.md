@@ -27,7 +27,7 @@ Out of scope:
 Maid clicks /join/{token}
   → (existing) Clerk login if needed
   → (existing) redeemInvite() adds her to the household
-  → NEW: /onboarding/profile (only if profiles.onboarding_completed_at IS NULL)
+  → NEW: /onboarding/personal (only if profiles.onboarding_completed_at IS NULL)
        Fields:
          - Display name [pre-filled from Clerk, editable, required]
          - Passport number [optional]
@@ -37,7 +37,7 @@ Maid clicks /join/{token}
   → /dashboard
 ```
 
-If `onboarding_completed_at` is already set, the onboarding page redirects to `/dashboard`. The dashboard, in turn, redirects **maids only** with `onboarding_completed_at IS NULL` to `/onboarding/profile`. This gate covers maids who land on `/dashboard` directly (bookmark, post-login fallback) without going through `/join/{token}`, and ensures existing maids (who predate this feature) also pass through the form on next visit. Owners are never redirected.
+If `onboarding_completed_at` is already set, the onboarding page redirects to `/dashboard`. The dashboard, in turn, redirects **maids only** with `onboarding_completed_at IS NULL` to `/onboarding/personal`. This gate covers maids who land on `/dashboard` directly (bookmark, post-login fallback) without going through `/join/{token}`, and ensures existing maids (who predate this feature) also pass through the form on next visit. Owners are never redirected.
 
 ## Schema
 
@@ -65,18 +65,20 @@ Stored as a stable short code (`en`, `hi`, `ta`, `te`, `kn`, `mr`, `bn`, `ml`, `
 
 ## Component breakdown
 
-- `src/app/onboarding/profile/page.tsx` — server component. Loads the caller's profile, pre-fills name from Clerk when display name is empty, redirects to `/dashboard` if onboarding already done.
-- `src/app/onboarding/profile/actions.ts` — `saveProfile()` server action. Validates with Zod, updates `profiles`, sets `onboarding_completed_at = now()` **only if currently NULL** (so the first save through any surface stamps it; later edits leave it alone), then redirects. The redirect target comes from a form field — `/dashboard` from onboarding, back to settings from the settings page.
-- `src/components/profile/profile-form.tsx` — shared form (name + 3 optional fields + submit button + hidden `redirect_to`). Same component used in the settings page.
-- `src/app/household/settings/profile/page.tsx` — settings sub-route reusing `ProfileForm` with `redirect_to=/household/settings`.
-- `src/lib/profile/languages.ts` — language list, code↔label helpers.
-- Edit `src/app/join/[token]/page.tsx:32` — change final redirect from `/dashboard` to `/onboarding/profile`. The onboarding page handles the "already done" case, so this is safe for re-joiners.
-- Edit `src/app/dashboard/page.tsx` — add early check: `if (ctx.membership.role === "maid" && profile.onboarding_completed_at == null) redirect("/onboarding/profile")`. **Maid-only gate** — owners and family members are never redirected, even if their `onboarding_completed_at` is NULL. They can still optionally fill in the form via Settings → Profile.
-- Edit `src/app/household/settings/page.tsx` — add a "My Profile" card linking to `/household/settings/profile` (mirrors the Household profile section pattern from commit 7bb3f5c). Available to all roles.
+**Naming note:** `/onboarding/profile` and `src/app/onboarding/profile/profile-form.tsx` are already taken by the **household questionnaire** (different feature, different table: `household_profiles`). To avoid collision, the new personal-profile feature uses `personal` / `personal-profile-form` / `me`.
+
+- `src/app/onboarding/personal/page.tsx` — server component. Loads the caller's profile, pre-fills name from Clerk when display name is empty, redirects to `/dashboard` if onboarding already done.
+- `src/app/onboarding/personal/actions.ts` — `savePersonalProfile()` server action. Validates with Zod, updates `profiles`, sets `onboarding_completed_at = now()` **only if currently NULL** (so the first save through any surface stamps it; later edits leave it alone), then redirects. The redirect target comes from a form field — `/dashboard` from onboarding, `/household/settings` from the settings page.
+- `src/components/profile/personal-profile-form.tsx` — shared client form `PersonalProfileForm` (name + 3 optional fields + submit button + hidden `redirect_to`). Same component used in the settings page.
+- `src/app/household/settings/me/page.tsx` — settings sub-route reusing `PersonalProfileForm` with `redirect_to=/household/settings`.
+- `src/lib/profile/languages.ts` — language list, code↔label helpers. Lives alongside the existing `src/lib/profile/types.ts` (which is for household questionnaire); no collision.
+- Edit `src/app/join/[token]/page.tsx:32` — change final redirect from `/dashboard` to `/onboarding/personal`. The onboarding page handles the "already done" case, so this is safe for re-joiners.
+- Edit `src/app/dashboard/page.tsx` — add early check: `if (ctx.membership.role === "maid" && profile.onboarding_completed_at == null) redirect("/onboarding/personal")`. **Maid-only gate** — owners and family members are never redirected, even if their `onboarding_completed_at` is NULL. They can still optionally fill in the form via Settings → My Profile.
+- Edit `src/app/household/settings/page.tsx` — add a "My Profile" card linking to `/household/settings/me` (mirrors the Household profile section pattern from commit 7bb3f5c). Available to all roles.
 
 ## Data validation
 
-Zod schema (`saveProfile` input):
+Zod schema (`savePersonalProfile` input):
 
 ```ts
 const profileSchema = z.object({
@@ -95,14 +97,14 @@ Empty optional fields are normalized to `null` before write.
 - **Owner with `onboarding_completed_at IS NULL`:** never redirected — the dashboard gate is maid-only. Owners may optionally fill in their own passport/language details via Settings → Profile; otherwise their `onboarding_completed_at` stays NULL forever, which is harmless.
 - **Clerk has no name on the Google account:** the field shows empty and the maid must type one. Submit is disabled until non-empty.
 - **Mid-form navigation away:** no draft persistence. She'll see the form again next time. Acceptable for beta.
-- **`saveProfile` fails (DB error):** form re-renders with error banner; `onboarding_completed_at` is not stamped, so she's still gated.
+- **`savePersonalProfile` fails (DB error):** form re-renders with error banner; `onboarding_completed_at` is not stamped, so she's still gated.
 
 ## Testing
 
 - Unit: Zod schema accepts/rejects the documented cases.
-- Integration: `saveProfile()` writes the row, stamps `onboarding_completed_at`, redirects.
-- E2E (Playwright): redeem invite → expect `/onboarding/profile` → submit minimal form → expect `/dashboard`; re-visit `/onboarding/profile` → expect redirect to `/dashboard`.
-- Manual: edit at `/household/settings/profile` does not re-set `onboarding_completed_at`, but does persist new values.
+- Integration: `savePersonalProfile()` writes the row, stamps `onboarding_completed_at`, redirects.
+- E2E (Playwright): redeem invite → expect `/onboarding/personal` → submit minimal form → expect `/dashboard`; re-visit `/onboarding/personal` → expect redirect to `/dashboard`.
+- Manual: edit at `/household/settings/me` does not re-set `onboarding_completed_at`, but does persist new values.
 
 ## Open questions
 
