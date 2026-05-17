@@ -1,0 +1,114 @@
+# Maid onboarding flow — design
+
+**Date:** 2026-05-17
+**Status:** Proposed
+**Owner:** dharni
+
+## Problem
+
+When a maid clicks her invite link (`/join/{token}`), the current flow redeems the invite and drops her on `/dashboard`. There is no step to collect her details, and she lands on a screen built around the owner's tasks ("Set up your household", "Set up your kitchen inventory"). Maids should pass through a short onboarding step that captures their name and a few optional personal fields before reaching the dashboard.
+
+## Scope
+
+In scope (beta):
+- A new maid onboarding page shown once, after invite redemption, before dashboard.
+- Capture: display name (required, pre-filled from Clerk/Google), passport number, passport expiry, preferred language. Passport/expiry/language are optional.
+- A "My Profile" section under household settings so the maid (or anyone) can edit these fields later.
+- Persistence on the existing `public.profiles` table.
+
+Out of scope:
+- Changes to owner flow. Owners continue to land on `/dashboard` as today.
+- Changes to dashboard card gating. Owner + maid both continue to see "Set up your household" / "Set up your kitchen inventory" cards (per explicit decision; this is not the bug we're fixing).
+- Profile photo upload, role-specific dashboards, multi-household profiles.
+
+## User flow
+
+```
+Maid clicks /join/{token}
+  → (existing) Clerk login if needed
+  → (existing) redeemInvite() adds her to the household
+  → NEW: /onboarding/profile (only if profiles.onboarding_completed_at IS NULL)
+       Fields:
+         - Display name [pre-filled from Clerk, editable, required]
+         - Passport number [optional]
+         - Passport expiry [optional, date]
+         - Preferred language [optional, dropdown]
+       [Save & continue]
+  → /dashboard
+```
+
+If `onboarding_completed_at` is already set, the onboarding page redirects to `/dashboard`. The dashboard, in turn, redirects any signed-in member with `onboarding_completed_at IS NULL` to `/onboarding/profile`. This gate covers users who land on `/dashboard` directly (bookmark, post-login fallback) without going through `/join/{token}`.
+
+## Schema
+
+New migration (filename assigned at implementation time, following the existing `YYYYMMDD_NNN_*.sql` convention) extending `public.profiles`:
+
+```sql
+alter table public.profiles
+  add column passport_number       text,
+  add column passport_expiry       date,
+  add column preferred_language    text,
+  add column onboarding_completed_at timestamptz;
+
+-- Backfill: existing users predate this feature and should not be forced through
+-- the form on next visit. Stamp them as already onboarded.
+update public.profiles
+  set onboarding_completed_at = coalesce(onboarding_completed_at, created_at);
+```
+
+Notes:
+- All four new columns are nullable. `onboarding_completed_at = NULL` means "show onboarding"; setting it (even with all optional fields empty) means "user has been through the flow and continued."
+- The backfill is one-shot and only applies to rows that exist at migration time. Anyone who signs up after the migration starts with `onboarding_completed_at = NULL` and goes through the form.
+- `preferred_language` is free text in the database, but the UI dropdown constrains values to the supported list (see below). Free text keeps the door open for future additions without another migration.
+- No new RLS policies needed: `profiles_self_read` and `profiles_self_update` already cover these columns. The `profiles_block_protected_columns` trigger does not need to guard the new fields — users may freely change them.
+
+## Language options
+
+The dropdown shows: English, Hindi, Tamil, Telugu, Kannada, Marathi, Bengali, Malayalam, Manipuri, Mizo, Punjabi.
+
+Stored as a stable short code (`en`, `hi`, `ta`, `te`, `kn`, `mr`, `bn`, `ml`, `mni`, `lus`, `pa`) so labels can be localized later without a data migration. The mapping lives in `src/lib/profile/languages.ts`.
+
+## Component breakdown
+
+- `src/app/onboarding/profile/page.tsx` — server component. Loads the caller's profile, pre-fills name from Clerk when display name is empty, redirects to `/dashboard` if onboarding already done.
+- `src/app/onboarding/profile/actions.ts` — `saveProfile()` server action. Validates with Zod, updates `profiles`, sets `onboarding_completed_at = now()` **only if currently NULL** (so the first save through any surface stamps it; later edits leave it alone), then redirects. The redirect target comes from a form field — `/dashboard` from onboarding, back to settings from the settings page.
+- `src/components/profile/profile-form.tsx` — shared form (name + 3 optional fields + submit button + hidden `redirect_to`). Same component used in the settings page.
+- `src/app/household/settings/profile/page.tsx` — settings sub-route reusing `ProfileForm` with `redirect_to=/household/settings`.
+- `src/lib/profile/languages.ts` — language list, code↔label helpers.
+- Edit `src/app/join/[token]/page.tsx:32` — change final redirect from `/dashboard` to `/onboarding/profile`. The onboarding page handles the "already done" case, so this is safe for re-joiners.
+- Edit `src/app/dashboard/page.tsx` — add early check: `if (profile.onboarding_completed_at == null) redirect("/onboarding/profile")`. Applies to all roles. (Existing maids/owners who were created before this change will need to pass through the form once; since name is pre-filled and other fields are optional, this is one click.)
+- Edit `src/app/household/settings/page.tsx` — add a "My Profile" card linking to `/household/settings/profile` (mirrors the Household profile section pattern from commit 7bb3f5c).
+
+## Data validation
+
+Zod schema (`saveProfile` input):
+
+```ts
+const profileSchema = z.object({
+  display_name:        z.string().trim().min(1, "Name is required").max(120),
+  passport_number:     z.string().trim().max(64).optional().nullable(),
+  passport_expiry:     z.iso.date().optional().nullable(),  // YYYY-MM-DD
+  preferred_language:  z.enum(LANGUAGE_CODES).optional().nullable(),
+});
+```
+
+Empty optional fields are normalized to `null` before write.
+
+## Edge cases
+
+- **Maid already onboarded re-clicks a new invite (multi-household, future):** out of scope. The current redeem flow already short-circuits if she's in a household (`actions.ts:148`); v1 doesn't support multi-household.
+- **Owner with `onboarding_completed_at IS NULL`:** the dashboard gate sends owners through the same form. Pre-existing owners are pre-stamped by the migration backfill and skip it. New owners (post-change) see the form once — name is the only required field and is pre-filled from Clerk, so it's effectively a one-click pass.
+- **Clerk has no name on the Google account:** the field shows empty and the maid must type one. Submit is disabled until non-empty.
+- **Mid-form navigation away:** no draft persistence. She'll see the form again next time. Acceptable for beta.
+- **`saveProfile` fails (DB error):** form re-renders with error banner; `onboarding_completed_at` is not stamped, so she's still gated.
+
+## Testing
+
+- Unit: Zod schema accepts/rejects the documented cases.
+- Integration: `saveProfile()` writes the row, stamps `onboarding_completed_at`, redirects.
+- E2E (Playwright): redeem invite → expect `/onboarding/profile` → submit minimal form → expect `/dashboard`; re-visit `/onboarding/profile` → expect redirect to `/dashboard`.
+- Manual: edit at `/household/settings/profile` does not re-set `onboarding_completed_at`, but does persist new values.
+
+## Open questions
+
+None at design time. The two outstanding decisions (cards stay for both roles; settings page in scope now) are confirmed.
