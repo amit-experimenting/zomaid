@@ -19,6 +19,10 @@ export type Database = {
           is_admin: boolean;
           created_at: string;
           updated_at: string;
+          passport_number: string | null;
+          passport_expiry: string | null;        // ISO date "YYYY-MM-DD"
+          preferred_language: string | null;
+          onboarding_completed_at: string | null; // ISO timestamp
         };
         Insert: Partial<Database["public"]["Tables"]["profiles"]["Row"]> & {
           clerk_user_id: string;
