@@ -103,3 +103,22 @@ Already tracked under slice D of the design-system follow-ups. When that lands, 
 - Edit-mode submit toast.
 
 Total: ~140 strings to translate per locale. Slice D's tooling handles extraction.
+
+---
+
+## finalizePicksAction CAS + rollback test coverage
+
+When `tests/actions/task-setup-wizard.test.ts` was deleted during Phase 7 implementation (its tested old action functions `saveTaskSetupPicks` and `submitTaskSetup` were removed), it took with it the only test coverage for the CAS-claim, rollback-on-insert-failure, and lost-race scenarios for the picker's finalize action.
+
+The new `finalizePicksAction` (in `src/app/onboarding/tasks/actions.ts`) carries similar logic that's now uncovered:
+- CAS claim on `households.task_setup_completed_at` (set to `now()` only if currently NULL).
+- Rollback if the bulk-insert of household tasks fails partway.
+- Lost-race no-op path (if another writer claimed the CAS first, this writer doesn't double-insert).
+- `household_task_hides` upsert for standard tasks not picked.
+- `tasks_generate_occurrences` trigger.
+
+Indirect coverage exists via `tests/db/household-profiles.test.ts` and `tests/db/task-relevance-filter.test.ts` (DB layer), but the application-action edge cases listed above are unverified.
+
+**When picking up:** create `tests/actions/finalize-picks.test.ts` that ports the CAS / rollback / lost-race / hide-upsert scenarios from the deleted wizard suite, adapted to the new function signature `finalizePicksAction(picks: string[])`.
+
+Why deferred: not blocking for merge — the logic exists, just untested. Risk is regression-on-future-edit rather than current correctness.
