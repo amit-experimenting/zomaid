@@ -16,6 +16,9 @@ export async function saveTaskSetupPicks(input: unknown) {
   const data = savePicksSchema.parse(input);
   const ctx = await getCurrentHousehold();
   if (!ctx) throw new Error("no active household");
+  if (ctx.membership.role !== "owner" && ctx.membership.role !== "maid") {
+    throw new Error("only owner or maid can run task setup");
+  }
   if (ctx.household.maid_mode === "unset") throw new Error("set household mode first");
   if (ctx.household.task_setup_completed_at !== null) throw new Error("task setup already completed");
 
@@ -59,6 +62,9 @@ export async function saveDraftAction(pickedTaskIds: string[]): Promise<void> {
   if (!parsed.success) return;
   const ctx = await getCurrentHousehold();
   if (!ctx) return;
+  if (ctx.membership.role !== "owner" && ctx.membership.role !== "maid") {
+    return;
+  }
   if (ctx.household.maid_mode === "unset") return;
   if (ctx.household.task_setup_completed_at !== null) return;
 
@@ -104,6 +110,9 @@ export async function submitTaskSetup(input: unknown) {
   const data = submitSchema.parse(input);
   const ctx = await getCurrentHousehold();
   if (!ctx) throw new Error("no active household");
+  if (ctx.membership.role !== "owner" && ctx.membership.role !== "maid") {
+    throw new Error("only owner or maid can run task setup");
+  }
   if (ctx.household.maid_mode === "unset") throw new Error("set household mode first");
   if (ctx.household.task_setup_completed_at !== null) {
     // Already done in another tab; treat as no-op + redirect.
@@ -240,6 +249,9 @@ export async function finalizePicksAction(
 
   const ctx = await getCurrentHousehold();
   if (!ctx) return { error: "no active household" };
+  if (ctx.membership.role !== "owner" && ctx.membership.role !== "maid") {
+    return { error: "only owner or maid can run task setup" };
+  }
   if (ctx.household.maid_mode === "unset") return { error: "set household mode first" };
   if (ctx.household.task_setup_completed_at !== null) {
     // Already done in another tab — treat as success; caller will navigate.
@@ -346,6 +358,9 @@ export async function finalizePicksAction(
 export async function resetTaskSetupForEmptyState() {
   const ctx = await getCurrentHousehold();
   if (!ctx) throw new Error("no active household");
+  if (ctx.membership.role !== "owner" && ctx.membership.role !== "maid") {
+    throw new Error("only owner or maid can run task setup");
+  }
   if (ctx.household.task_setup_completed_at === null) {
     redirect("/onboarding/tasks");
   }

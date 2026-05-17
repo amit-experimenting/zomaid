@@ -323,6 +323,37 @@ describe("saveTaskSetupPicks (action)", () => {
       saveTaskSetupPicks({ standardTaskIds: [id1] }),
     ).rejects.toThrow(/task setup already completed/);
   });
+
+  it("family_member cannot save picks (blocked at app layer)", async () => {
+    const { household } = await seedOwnerHouseholdReadyForWizard(ids);
+    const [id1, id2] = await pickTwoStandardTaskIds();
+
+    const familyMember = await createProfile();
+    ids.profiles.push(familyMember.id);
+    const mFamily = await createMembership({
+      household_id: household.id,
+      profile_id: familyMember.id,
+      role: "family_member",
+    });
+    ids.memberships.push(mFamily.id);
+
+    mockClerk({ clerkUserId: familyMember.clerk_user_id });
+    mockNextStubs();
+    const { saveTaskSetupPicks } = await import(
+      "@/app/onboarding/tasks/actions"
+    );
+
+    await expect(
+      saveTaskSetupPicks({ standardTaskIds: [id1, id2] }),
+    ).rejects.toThrow(/only owner or maid can run task setup/);
+
+    // Draft was not written.
+    const { data: draft } = await serviceClient()
+      .from("task_setup_drafts")
+      .select("household_id")
+      .eq("household_id", household.id);
+    expect(draft ?? []).toHaveLength(0);
+  });
 });
 
 describe("submitTaskSetup (action)", () => {
@@ -606,6 +637,61 @@ describe("submitTaskSetup (action)", () => {
       .single();
     expect(h?.task_setup_completed_at).toBeNull();
   });
+
+  it("family_member cannot submit task setup (blocked at app layer)", async () => {
+    const { household } = await seedOwnerHouseholdReadyForWizard(ids);
+    const [stdId1, stdId2] = await pickTwoStandardTaskIds();
+
+    const familyMember = await createProfile();
+    ids.profiles.push(familyMember.id);
+    const mFamily = await createMembership({
+      household_id: household.id,
+      profile_id: familyMember.id,
+      role: "family_member",
+    });
+    ids.memberships.push(mFamily.id);
+
+    mockClerk({ clerkUserId: familyMember.clerk_user_id });
+    mockNextStubs();
+    const { submitTaskSetup } = await import(
+      "@/app/onboarding/tasks/actions"
+    );
+
+    await expect(
+      submitTaskSetup({
+        entries: [
+          {
+            standardTaskId: stdId1,
+            frequency: "daily",
+            interval: 1,
+            dueTime: "09:00",
+            assigneeProfileId: "anyone",
+          },
+          {
+            standardTaskId: stdId2,
+            frequency: "weekly",
+            interval: 1,
+            byweekday: [1, 4],
+            dueTime: "10:30",
+            assigneeProfileId: familyMember.id,
+          },
+        ],
+      }),
+    ).rejects.toThrow(/only owner or maid can run task setup/);
+
+    // No tasks materialised, gate untouched.
+    const { data: tasks } = await serviceClient()
+      .from("tasks")
+      .select("id")
+      .eq("household_id", household.id);
+    expect(tasks ?? []).toHaveLength(0);
+    const { data: h } = await serviceClient()
+      .from("households")
+      .select("task_setup_completed_at")
+      .eq("id", household.id)
+      .single();
+    expect(h?.task_setup_completed_at).toBeNull();
+  });
 });
 
 describe("resetTaskSetupForEmptyState (action)", () => {
@@ -749,5 +835,43 @@ describe("resetTaskSetupForEmptyState (action)", () => {
       .eq("id", household.id)
       .single();
     expect(h?.task_setup_completed_at).toBeNull();
+  });
+
+  it("family_member cannot reset task setup (blocked at app layer)", async () => {
+    const { household } = await seedOwnerHouseholdReadyForWizard(ids);
+
+    // Latch the gate (simulating a previously-completed wizard whose tasks
+    // were then wiped).
+    await serviceClient()
+      .from("households")
+      .update({ task_setup_completed_at: new Date().toISOString() })
+      .eq("id", household.id);
+
+    const familyMember = await createProfile();
+    ids.profiles.push(familyMember.id);
+    const mFamily = await createMembership({
+      household_id: household.id,
+      profile_id: familyMember.id,
+      role: "family_member",
+    });
+    ids.memberships.push(mFamily.id);
+
+    mockClerk({ clerkUserId: familyMember.clerk_user_id });
+    mockNextStubs();
+    const { resetTaskSetupForEmptyState } = await import(
+      "@/app/onboarding/tasks/actions"
+    );
+
+    await expect(
+      resetTaskSetupForEmptyState(),
+    ).rejects.toThrow(/only owner or maid can run task setup/);
+
+    // Gate still latched.
+    const { data: h } = await serviceClient()
+      .from("households")
+      .select("task_setup_completed_at")
+      .eq("id", household.id)
+      .single();
+    expect(h?.task_setup_completed_at).not.toBeNull();
   });
 });
