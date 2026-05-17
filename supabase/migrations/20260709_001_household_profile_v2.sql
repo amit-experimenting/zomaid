@@ -208,4 +208,12 @@ values
   (null, 'Check and replace air fresheners',             'monthly', 1, null, 25, '09:00', '{}');
 
 -- 5. Sanity check -----------------------------------------------------------
--- Inserted in Task 1.3 below.
+
+do $$
+declare v_count int;
+begin
+  select count(*) into v_count from public.tasks where household_id is null;
+  if v_count < 95 or v_count > 110 then
+    raise exception 'Seed row count out of expected range: % (expected 95-110)', v_count;
+  end if;
+end$$;
