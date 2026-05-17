@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth/current-profile";
 import { createServiceClient } from "@/lib/supabase/server";
 import { personalProfileSchema } from "@/lib/profile/personal";
+import type { Database } from "@/lib/db/types";
+
+type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 const ALLOWED_REDIRECTS = new Set(["/dashboard", "/household/settings"]);
 
@@ -24,7 +27,7 @@ export async function savePersonalProfile(formData: FormData): Promise<void> {
 
   // Stamp onboarding_completed_at only if currently NULL: first save through
   // any surface marks the user as onboarded; later edits leave it alone.
-  const update: Record<string, unknown> = {
+  const update: ProfileUpdate = {
     display_name:       parsed.display_name,
     passport_number:    parsed.passport_number,
     passport_expiry:    parsed.passport_expiry,
