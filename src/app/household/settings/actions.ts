@@ -253,6 +253,8 @@ export async function updateMembershipDiet(input: unknown) {
     .eq("id", data.membershipId);
   if (error) throw new Error(error.message);
 
+  await refreshMealPlansAfterDietChange(svc, ctx.household.id);
+
   revalidatePath("/household/settings");
   revalidatePath("/dashboard");
   revalidatePath("/recipes");
@@ -313,7 +315,41 @@ export async function updateHouseholdDiet(input: unknown) {
     .eq("id", ctx.household.id);
   if (error) throw new Error(error.message);
 
+  await refreshMealPlansAfterDietChange(svc, ctx.household.id);
+
   revalidatePath("/household/settings");
   revalidatePath("/dashboard");
   revalidatePath("/recipes");
+}
+
+// Clears recipe_id on today-or-future, non-locked, non-cooked meal_plans rows
+// whose recipe violates the new effective diet, then re-runs autofill for today
+// + tomorrow so the user sees a fresh, valid plan immediately. Failures here
+// are logged but do not roll back the diet change itself — the next 22:00 cron
+// run will eventually reconcile.
+async function refreshMealPlansAfterDietChange(
+  svc: ReturnType<typeof createServiceClient>,
+  householdId: string,
+) {
+  const clearRes = await svc.rpc("mealplan_clear_diet_violations", {
+    p_household: householdId,
+  });
+  if (clearRes.error) {
+    console.error("mealplan_clear_diet_violations failed", clearRes.error);
+    return;
+  }
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const toYmd = (d: Date) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Singapore" }).format(d);
+  for (const d of [today, tomorrow]) {
+    const res = await svc.rpc("mealplan_autofill_date_for_household", {
+      p_household: householdId,
+      p_date: toYmd(d),
+    });
+    if (res.error) {
+      console.error("mealplan_autofill_date_for_household failed", res.error);
+    }
+  }
 }

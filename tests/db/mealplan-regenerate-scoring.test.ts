@@ -24,6 +24,9 @@ describe("mealplan_regenerate_slot — scoring upgrade", () => {
       await insertMembership(c, { household_id: h.id, profile_id: me.id, role: "owner", status: "active" });
       // Push meal times far into the future so the lock check doesn't reject regenerate.
       await c.query(`update household_meal_times set meal_time = '23:00'::time where household_id = $1`, [h.id]);
+      // Regenerate now refuses to run when the household has no diet preference
+      // (gate added 20260712_002). Set the most permissive value.
+      await c.query(`update households set diet_preference = 'non_vegetarian' where id = $1`, [h.id]);
       await setJwtClaims(c, { sub: me.clerk_user_id });
       await hideAllStarters(c, h.id, me.id);
 

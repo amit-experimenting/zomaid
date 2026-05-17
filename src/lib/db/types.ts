@@ -723,6 +723,10 @@ export type Database = {
         Args: { p_household: string; p_date: string };
         Returns: number;
       };
+      mealplan_clear_diet_violations: {
+        Args: { p_household: string };
+        Returns: number;
+      };
       inventory_bill_ingest: {
         Args: { p_line_item_id: string; p_inventory_id: string | null; p_quantity: number; p_unit: string; p_new_item_name: string | null };
         Returns: Database["public"]["Tables"]["inventory_items"]["Row"];
@@ -738,6 +742,10 @@ export type Database = {
       household_effective_diet: {
         Args: { p_household: string };
         Returns: Diet;
+      };
+      household_has_diet_preference: {
+        Args: { p_household: string };
+        Returns: boolean;
       };
     };
   };

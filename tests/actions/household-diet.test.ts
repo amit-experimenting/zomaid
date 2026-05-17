@@ -29,7 +29,13 @@ function makeCtx(role: "owner" | "maid" | "family_member") {
 }
 
 function makeSvc(updateImpl: (table: string) => unknown) {
-  return { from: (table: string) => updateImpl(table) };
+  // updateHouseholdDiet additionally calls svc.rpc("mealplan_clear_diet_violations")
+  // and svc.rpc("mealplan_autofill_date_for_household") after the diet update.
+  // Stub both so the action doesn't crash; tests that care assert on the calls.
+  return {
+    from: (table: string) => updateImpl(table),
+    rpc: vi.fn().mockResolvedValue({ data: 0, error: null }),
+  };
 }
 
 beforeEach(() => {
@@ -110,5 +116,20 @@ describe("updateHouseholdDiet", () => {
     getCurrentHouseholdMock.mockResolvedValue(makeCtx("owner"));
     await expect(updateHouseholdDiet({ diet: "carnivore" }))
       .rejects.toThrow(/invalid|enum/i); // zod parse error
+  });
+
+  it("clears stale meal plans + refills after a diet change", async () => {
+    // Regression for bug where flipping the household to vegetarian left
+    // existing non-veg meal_plans rows on the dashboard until the 22:00 cron.
+    getCurrentHouseholdMock.mockResolvedValue(makeCtx("owner"));
+    const svc = makeSvc(() => ({
+      update: () => ({ eq: () => Promise.resolve({ error: null }) }),
+    }));
+    createServiceClientMock.mockReturnValue(svc);
+    await updateHouseholdDiet({ diet: "vegetarian" });
+
+    const calls = svc.rpc.mock.calls.map((args: unknown[]) => String(args[0]));
+    expect(calls).toContain("mealplan_clear_diet_violations");
+    expect(calls.filter((n) => n === "mealplan_autofill_date_for_household")).toHaveLength(2);
   });
 });

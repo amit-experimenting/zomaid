@@ -46,6 +46,13 @@ async function bootstrap(c: Client) {
     `update household_meal_times set meal_time = '23:00'::time where household_id = $1`,
     [h.id],
   );
+  // Autofill now refuses to run when the household has no diet preference set
+  // (gate added 20260712_002). Set the most permissive value so the existing
+  // scoring tests stay focused on stock-fit, not on the diet gate.
+  await c.query(
+    `update households set diet_preference = 'non_vegetarian' where id = $1`,
+    [h.id],
+  );
   await setJwtClaims(c, { sub: me.clerk_user_id });
   await hideAllStarters(c, h.id, me.id);
   return { householdId: h.id, profileId: me.id };
