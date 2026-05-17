@@ -12,6 +12,7 @@ import {
 import { HouseholdDietForm } from "@/components/household/household-diet-form";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { NotificationToggle } from "@/components/tasks/notification-toggle";
+import { Banner } from "@/components/ui/banner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,6 +113,21 @@ export default async function HouseholdSettingsPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{ctx.household.name}</h1>
       </header>
+
+      <section>
+        <h2 className="text-sm font-semibold text-text-primary mb-2">Household profile</h2>
+        <Banner
+          tone="neutral"
+          title="About your home"
+          action={
+            <Link href="/onboarding/profile?edit=1" className="text-primary font-semibold text-sm">
+              Update →
+            </Link>
+          }
+        >
+          Who lives here, pets, work hours, and home features — used to filter task suggestions.
+        </Banner>
+      </section>
 
       {(isOwner || isMaid) && (
         <Card>
