@@ -129,3 +129,7 @@ Until then: treat the rule as "no inline hex / arbitrary px sizes" rather than "
 The spec's typography section names tokens `display` / `h1` / `h2` / `h3` / `body-lg` / `body` / `body-sm` / `label` / `numeric` (sizes 32 / 24 / 20 / 17 / 16 / 15 / 13 / 11 / 15 px). Slice A wired only the font family through `@theme inline`; the size tokens are NOT available as `text-display` / `text-h1` / etc. Slice A primitives that need 17px or 15px use bracket-syntax (`text-[17px]` in TopAppBar, `text-[15px]` in ListRow) inside the allowlisted `src/components/ui/` folder.
 
 To close: add the size tokens to `@theme inline` in `globals.css` (e.g. `--text-h1: 24px; --text-h1-line-height: 30px;`), then use `text-h1` etc. in primitives. Probably worth doing alongside slice B (persona UX) so the redesigned pages use them directly.
+
+### E2E coverage for maid onboarding flow
+
+- E2E coverage for maid onboarding flow (`/onboarding/personal` redirect from `/dashboard` and `/join/{token}`) — deferred until Playwright auth fixture exists.
