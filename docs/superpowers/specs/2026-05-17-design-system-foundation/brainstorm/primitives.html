@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — primitives</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#111;max-width:1100px;margin:0 auto;}
+h2{font-size:24px;margin:0 0 8px;}.subtitle{color:#666;font-size:14px;margin:0 0 24px;}
+.option,.vibe,.pal,.font,.tier,.slice{position:relative;}
+.option:after,.vibe:after,.pal:after,.font:after,.tier:after{content:"";display:block;}
+code{font-family:ui-monospace,monospace;font-size:0.92em;background:#f3f3f3;padding:1px 5px;border-radius:3px;}
+</style></head><body>
+<p style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 16px;">Brainstorm artifact · primitives.html · 2026-05-17</p>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+  .p-wrap { font-family: 'IBM Plex Sans', sans-serif; color: #111; }
+  .p-wrap h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin: 18px 0 6px 0; }
+  .p-wrap .meta { font-size: 12px; color: #666; margin: 0 0 10px 0; }
+  .cell { background: #fff; border: 1px solid #EFE9E1; border-radius: 8px; padding: 16px; margin-bottom: 14px; }
+
+  /* TabBar */
+  .tabbar { display: flex; height: 56px; border-top: 1px solid #EFE9E1; background: #fff; border-radius: 6px; overflow: hidden; }
+  .tabbar .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #767676; gap: 3px; }
+  .tabbar .tab.active { color: #3949AB; }
+  .tabbar .tab .ico { font-size: 18px; }
+
+  /* TopAppBar */
+  .topbar { display: flex; height: 52px; align-items: center; padding: 0 8px 0 4px; gap: 6px; }
+  .topbar .back { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; color: #3949AB; font-size: 20px; }
+  .topbar .title { font-size: 17px; font-weight: 600; flex: 1; }
+  .topbar .action { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; color: #3949AB; font-size: 18px; }
+
+  /* ListRow */
+  .listrow { display: flex; align-items: center; padding: 10px 14px; min-height: 56px; gap: 12px; border-bottom: 1px solid #EFE9E1; }
+  .listrow:last-child { border: none; }
+  .listrow .lead { width: 32px; height: 32px; background: #E8EAF6; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: #3949AB; font-weight: 600; font-size: 13px; flex-shrink: 0; }
+  .listrow .body { flex: 1; min-width: 0; }
+  .listrow .t { font-size: 15px; font-weight: 500; color: #111; }
+  .listrow .s { font-size: 13px; color: #555; margin-top: 1px; }
+  .listrow .trail { font-size: 15px; font-weight: 600; color: #111; font-variant-numeric: tabular-nums; }
+  .listrow .chev { color: #B0AFAA; font-size: 18px; }
+
+  /* IconButton variants */
+  .iconbtn-row { display: flex; gap: 12px; align-items: center; }
+  .iconbtn { width: 44px; height: 44px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; cursor: pointer; }
+  .iconbtn.filled { background: #3949AB; color: #fff; }
+  .iconbtn.tonal { background: #E8EAF6; color: #3949AB; }
+  .iconbtn.ghost { background: transparent; color: #3949AB; }
+  .iconbtn-label { font-size: 11px; color: #888; margin-left: 4px; }
+
+  /* Banner variants */
+  .banner { display: flex; gap: 12px; padding: 12px 14px; border-radius: 8px; align-items: flex-start; margin-bottom: 8px; border: 1px solid; }
+  .banner.info { background: #E8F3FF; border-color: #C7DDF5; }
+  .banner.success { background: #E9F8EE; border-color: #BFE3CB; }
+  .banner.warning { background: #FFF1E0; border-color: #F2D7AA; }
+  .banner.danger { background: #FEEAEA; border-color: #F0BFBF; }
+  .banner.neutral { background: #FAF7F2; border-color: #EFE9E1; }
+  .banner .ico { width: 24px; height: 24px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; font-size: 12px; }
+  .banner.info .ico { background: #1859D1; color: #fff; }
+  .banner.success .ico { background: #1F7A3B; color: #fff; }
+  .banner.warning .ico { background: #B26100; color: #fff; }
+  .banner.danger .ico { background: #C62828; color: #fff; }
+  .banner.neutral .ico { background: #767676; color: #fff; }
+  .banner .body { flex: 1; font-size: 13.5px; line-height: 1.45; color: #333; }
+  .banner .body strong { color: #111; font-weight: 600; display: block; margin-bottom: 2px; }
+  .banner .body a { color: #3949AB; font-weight: 600; text-decoration: none; font-size: 13px; }
+
+  /* Avatar */
+  .avatar { display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; border-radius: 9999px; }
+  .av-sm { width: 24px; height: 24px; font-size: 10px; }
+  .av-md { width: 32px; height: 32px; font-size: 12px; }
+  .av-lg { width: 48px; height: 48px; font-size: 16px; }
+  .av-row { display: flex; gap: 10px; align-items: center; }
+</style>
+
+<div class="p-wrap">
+
+<h2 style="font-size:20px;font-weight:600;margin:8px 0 4px 0;">Six new primitives</h2>
+<p class="meta">Default state shown for each. The full spec will list every variant + state (hover / focus / pressed / disabled / loading).</p>
+
+<h3>1 · TabBar (bottom navigation)</h3>
+<p class="meta">Replaces the current top main-nav. 56px + safe-area inset. Icon above label, primary color for active tab, 11px label.</p>
+<div class="cell">
+  <div class="tabbar">
+    <div class="tab active"><span class="ico">⌂</span>Home</div>
+    <div class="tab"><span class="ico">🍲</span>Meals</div>
+    <div class="tab"><span class="ico">₹</span>Bills</div>
+    <div class="tab"><span class="ico">🛒</span>Shop</div>
+  </div>
+</div>
+
+<h3>2 · TopAppBar</h3>
+<p class="meta">52px + safe-area inset. Optional leading (back), title, optional trailing actions. Each action is a 44×44 tap target.</p>
+<div class="cell" style="padding:0 4px;">
+  <div class="topbar">
+    <div class="back">‹</div>
+    <div class="title">Electricity bill</div>
+    <div class="action">⌕</div>
+    <div class="action">⋯</div>
+  </div>
+</div>
+
+<h3>3 · ListRow</h3>
+<p class="meta">56px min height. Optional leading (icon or avatar), title + optional subtitle, trailing (value, chevron, or icon button). Three modes: navigational (chevron), static, actionable.</p>
+<div class="cell" style="padding:0;">
+  <div class="listrow"><div class="lead">E</div><div class="body"><div class="t">Electricity bill</div><div class="s">Due in 3 days</div></div><div class="trail">₹2,840</div><div class="chev">›</div></div>
+  <div class="listrow"><div class="lead">G</div><div class="body"><div class="t">Gas refill</div><div class="s">Paid · 12 May</div></div><div class="trail">₹1,150</div><div class="chev">›</div></div>
+  <div class="listrow"><div class="lead">I</div><div class="body"><div class="t">Internet bill</div><div class="s">Asha to log</div></div><div class="trail">₹999</div><div class="chev">›</div></div>
+</div>
+
+<h3>4 · IconButton</h3>
+<p class="meta">44×44. Three visual variants. <code>aria-label</code> required by lint.</p>
+<div class="cell">
+  <div class="iconbtn-row">
+    <div><span class="iconbtn filled">+</span><span class="iconbtn-label">filled (primary CTA)</span></div>
+    <div><span class="iconbtn tonal">⌕</span><span class="iconbtn-label">tonal (secondary)</span></div>
+    <div><span class="iconbtn ghost">⋯</span><span class="iconbtn-label">ghost (inline action)</span></div>
+  </div>
+</div>
+
+<h3>5 · Banner</h3>
+<p class="meta">Replaces the five bespoke prompt cards in <code>components/site/</code>. Five tones: info / success / warning / danger / neutral. Each: leading icon, optional title, body, optional action.</p>
+<div class="cell">
+  <div class="banner info">
+    <div class="ico">i</div>
+    <div class="body"><strong>Set up household</strong>Add who lives here so meals and bills know who they're for. &nbsp; <a href="#">Set up →</a></div>
+  </div>
+  <div class="banner warning">
+    <div class="ico">!</div>
+    <div class="body"><strong>Electricity bill due in 3 days</strong>₹2,840 — Asha to log when paid.</div>
+  </div>
+  <div class="banner danger">
+    <div class="ico">×</div>
+    <div class="body"><strong>Internet bill overdue</strong>Was due 14 May. Pay now to avoid disconnection.</div>
+  </div>
+  <div class="banner success">
+    <div class="ico">✓</div>
+    <div class="body">Gas refill marked paid.</div>
+  </div>
+  <div class="banner neutral">
+    <div class="ico">⊕</div>
+    <div class="body"><strong>Invite your maid</strong>She can log bills, update inventory, and follow the meal plan. &nbsp; <a href="#">Send invite →</a></div>
+  </div>
+</div>
+
+<h3>6 · Avatar</h3>
+<p class="meta">Three sizes (24 / 32 / 48). Initials fallback (background derived deterministically from name hash). Image variant for when uploaded later.</p>
+<div class="cell">
+  <div class="av-row">
+    <span class="avatar av-sm" style="background:#3949AB;">A</span>
+    <span class="avatar av-md" style="background:#5C6BC0;">DH</span>
+    <span class="avatar av-lg" style="background:#7986CB;">DM</span>
+    <span style="margin-left:14px;font-size:12px;color:#888;">sm 24 · md 32 · lg 48</span>
+  </div>
+</div>
+
+</div>
+</body></html>

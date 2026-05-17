@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — library-gap</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#FAF7F2;color:#111;}.archive-note{background:#fff;border-bottom:1px solid #EFE9E1;padding:10px 16px;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;}</style>
+</head><body>
+<div class="archive-note">Brainstorm artifact · library-gap.html · 2026-05-17</div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+  body { font-family: 'IBM Plex Sans', sans-serif; }
+  h2 { font-size: 22px; font-weight: 600; margin: 8px 0 6px; }
+  .sub { color: #555; font-size: 13px; margin: 0 0 18px; }
+  h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin: 16px 0 8px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .col { background: #fff; border: 1px solid #EFE9E1; border-radius: 8px; padding: 14px 16px; }
+  .col h4 { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+  .task { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px dashed #EFE9E1; font-size: 13px; }
+  .task:last-child { border: none; }
+  .task .dot { width: 8px; height: 8px; border-radius: 9999px; background: #1F7A3B; }
+  .task.muted .dot { background: #B0AFAA; }
+  .task.danger .dot { background: #C62828; }
+  .task .t { color: #111; }
+  .task.muted .t { color: #888; }
+  .task.danger .t { color: #C62828; }
+
+  .map { background: #fff; border: 1px solid #EFE9E1; border-radius: 8px; padding: 14px 16px; margin: 18px 0; }
+  .map h4 { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+  .map table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .map td, .map th { text-align: left; padding: 8px 6px; border-bottom: 1px solid #EFE9E1; vertical-align: top; }
+  .map th { font-size: 10.5px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .map .filt { color: #555; font-style: italic; }
+  .map .none { color: #C62828; font-weight: 600; }
+  .map .yes { color: #1F7A3B; font-weight: 600; }
+  .map .partial { color: #B26100; font-weight: 600; }
+
+  .callout { background: #FFF1E0; border: 1px solid #F2D7AA; color: #5C4400; padding: 14px 16px; border-radius: 8px; margin: 18px 0 8px; font-size: 13.5px; line-height: 1.55; }
+  .callout strong { color: #5C4400; }
+</style>
+
+<h2>The questionnaire is plumbing without payload</h2>
+<p class="sub">Soft-filter with 8 questions only makes sense if the task library has tasks worth filtering. Today it doesn't.</p>
+
+<h3>Current standard task library — all 13 are universal</h3>
+<div class="col">
+  <h4 style="margin-bottom: 8px;">Standard tasks today (filterable by household structure?)</h4>
+  <div class="task"><span class="dot"></span><span class="t">Sweep and mop main living area</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Take out kitchen trash</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Wash dishes after dinner</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Wipe kitchen counters and stove</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Water indoor plants</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Iron clothes</span></div>
+  <div class="task muted"><span class="dot"></span><span class="t">"Whatever" — looks like a test row, ignore</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Clean bathrooms</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Vacuum carpet and rugs</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Wash bedsheets</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Wipe windows and glass doors</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Buy groceries from wet market or NTUC</span></div>
+  <div class="task"><span class="dot"></span><span class="t">Defrost and clean fridge</span></div>
+</div>
+
+<h3>Mapping your 8 questions → what they'd actually filter</h3>
+<div class="map">
+  <table>
+    <thead>
+      <tr><th>Question</th><th>What it filters today</th><th>What it COULD filter if library expanded</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1. Household type</td><td class="none">Nothing</td><td>Joint-family: shared bathroom rotations, multi-cooking. Single: minimal tasks.</td></tr>
+      <tr><td>2. # family members</td><td class="none">Nothing — quantity hint, not a filter</td><td>Same — not a filter, just a sizing multiplier (more bedsheets per wash)</td></tr>
+      <tr><td>3. Age groups (multi)</td><td class="none">Nothing</td><td class="yes">Strong: infant tasks (sterilize bottles), school-age (homework area), senior care</td></tr>
+      <tr><td>4. # bedrooms</td><td class="none">Nothing</td><td>Spare bedroom maintenance, guest bedding</td></tr>
+      <tr><td>5. # bathrooms</td><td class="none">Nothing — multiplier only</td><td>Same — multiplier, not filter</td></tr>
+      <tr><td>6. Pets</td><td class="none">Nothing</td><td class="yes">Strong: feed, walk, litter, grooming, vet</td></tr>
+      <tr><td>7. Work hours</td><td class="none">Nothing</td><td class="partial">Mild: meal-prep timing hints, package-collection</td></tr>
+      <tr><td>8. Children attend school</td><td class="none">Nothing</td><td class="yes">Strong: school lunch prep, pick-up/drop-off, uniform laundry</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="callout">
+  <strong>The realization:</strong> with the library as-is, 8/8 questions have nothing to filter. Even after answering, the picker shows all 12 universal tasks. The user notices the questionnaire was pointless. Three honest paths forward — choose one before we proceed.
+</div>
+</body></html>

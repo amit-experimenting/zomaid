@@ -16,7 +16,7 @@ import {
   uploadBillFromScan,
   type UploadBillFromScanInput,
 } from "@/app/bills/actions";
-import { PendingButton } from "@/components/ui/pending-button";
+import { Button } from "@/components/ui/button";
 
 const UNIT_OPTIONS = ["kg", "g", "l", "ml", "piece"] as const;
 type Unit = (typeof UNIT_OPTIONS)[number];
@@ -316,15 +316,14 @@ export function BillConfirmForm({
         >
           Discard
         </button>
-        <PendingButton
+        <Button
           type="button"
-          pending={saving}
-          pendingLabel="Saving…"
+          loading={saving}
           onClick={onSave}
           disabled={saving || rows.length === 0}
         >
-          Save bill
-        </PendingButton>
+          {saving ? "Saving…" : "Save bill"}
+        </Button>
       </div>
     </div>
   );

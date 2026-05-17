@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — a11y</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#111;max-width:1100px;margin:0 auto;}
+h2{font-size:24px;margin:0 0 8px;}.subtitle{color:#666;font-size:14px;margin:0 0 24px;}
+.option,.vibe,.pal,.font,.tier,.slice{position:relative;}
+.option:after,.vibe:after,.pal:after,.font:after,.tier:after{content:"";display:block;}
+code{font-family:ui-monospace,monospace;font-size:0.92em;background:#f3f3f3;padding:1px 5px;border-radius:3px;}
+</style></head><body>
+<p style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 16px;">Brainstorm artifact · a11y.html · 2026-05-17</p>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+  .a11y-wrap { font-family: 'IBM Plex Sans', sans-serif; }
+  .a11y-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 22px 0; }
+  .tier { border-radius: 12px; overflow: hidden; cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; border: 2px solid transparent; background: #fff; display: flex; flex-direction: column; }
+  .tier:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+  .tier.selected { border-color: #3949AB; box-shadow: 0 0 0 4px rgba(57, 73, 171, 0.15); }
+
+  .tier-head { padding: 14px 16px; background: #FAF7F2; border-bottom: 1px solid #EFE9E1; }
+  .tier-head h3 { margin: 0 0 2px 0; font-size: 15px; font-weight: 600; color: #111; }
+  .tier-head p { margin: 0; font-size: 11.5px; color: #666; }
+
+  .tier-demo { padding: 22px 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; background: #FAF7F2; border-bottom: 1px solid #EFE9E1; }
+  .tier-demo .demo-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+
+  .btn { background: #3949AB; color: #fff; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+
+  .tier-rules { padding: 14px 16px; flex: 1; }
+  .tier-rules h4 { margin: 0 0 8px 0; font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; }
+  .tier-rules .row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12px; border-bottom: 1px dashed #EFE9E1; }
+  .tier-rules .row:last-child { border: none; }
+  .tier-rules .row .k { color: #666; }
+  .tier-rules .row .v { color: #111; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  .cost { padding: 10px 16px; font-size: 11px; color: #666; background: #FFFBF0; border-top: 1px solid #F5E6A3; line-height: 1.55; }
+</style>
+
+<div class="a11y-wrap">
+
+<h2>Pick an accessibility tier</h2>
+<p class="subtitle">Each tier is a hard commitment, not a wish. Whatever we pick becomes a CI gate — components that violate it don't ship. The button to the right of each label is shown at the actual minimum touch-target size for that tier, so you can feel the difference with your thumb on a phone if you open this URL on mobile.</p>
+
+<div class="a11y-grid">
+
+  <div class="tier" data-choice="standard" onclick="toggleSelect(this)">
+    <div class="tier-head">
+      <h3>1 · Standard</h3>
+      <p>WCAG AA, 44px targets — Apple HIG baseline</p>
+    </div>
+    <div class="tier-demo">
+      <div class="demo-label">Min tap target</div>
+      <button class="btn" style="height:44px;min-width:44px;padding:0 18px;font-size:14px;">Mark paid</button>
+      <div class="demo-label" style="margin-top:6px;">Min body text</div>
+      <div style="font-size:14px;color:#111;">Electricity bill · ₹2,840</div>
+    </div>
+    <div class="tier-rules">
+      <h4>Rules</h4>
+      <div class="row"><span class="k">Touch target min</span><span class="v">44 × 44 px</span></div>
+      <div class="row"><span class="k">Body text min</span><span class="v">14 px</span></div>
+      <div class="row"><span class="k">Contrast (body)</span><span class="v">4.5 : 1 (AA)</span></div>
+      <div class="row"><span class="k">Contrast (large)</span><span class="v">3 : 1 (AA)</span></div>
+      <div class="row"><span class="k">OS text scaling</span><span class="v">Honored to 130%</span></div>
+      <div class="row"><span class="k">Reduce motion</span><span class="v">Respected</span></div>
+      <div class="row"><span class="k">Focus indicators</span><span class="v">Visible</span></div>
+    </div>
+    <div class="cost">Cheapest to enforce. Genuinely accessible to most users. Risky for our maid persona on a cracked screen with reading glasses.</div>
+  </div>
+
+  <div class="tier selected" data-choice="inclusive" onclick="toggleSelect(this)">
+    <div class="tier-head">
+      <h3>2 · Inclusive &nbsp;<span style="color:#0E6E6E;font-weight:500;font-size:11px;">recommended</span></h3>
+      <p>WCAG AA, 48px targets, scales to 150%</p>
+    </div>
+    <div class="tier-demo">
+      <div class="demo-label">Min tap target</div>
+      <button class="btn" style="height:48px;min-width:48px;padding:0 22px;font-size:15px;">Mark paid</button>
+      <div class="demo-label" style="margin-top:6px;">Min body text</div>
+      <div style="font-size:15px;color:#111;">Electricity bill · ₹2,840</div>
+    </div>
+    <div class="tier-rules">
+      <h4>Rules</h4>
+      <div class="row"><span class="k">Touch target min</span><span class="v">48 × 48 px</span></div>
+      <div class="row"><span class="k">Body text min</span><span class="v">15 px</span></div>
+      <div class="row"><span class="k">Contrast (body)</span><span class="v">4.5 : 1 (AA)</span></div>
+      <div class="row"><span class="k">Contrast (large)</span><span class="v">3 : 1 (AA)</span></div>
+      <div class="row"><span class="k">OS text scaling</span><span class="v">Honored to 150%</span></div>
+      <div class="row"><span class="k">Reduce motion</span><span class="v">Respected</span></div>
+      <div class="row"><span class="k">Focus indicators</span><span class="v">Visible + 2px ring</span></div>
+      <div class="row"><span class="k">Icon-only buttons</span><span class="v">Require aria-label</span></div>
+      <div class="row"><span class="k">Form errors</span><span class="v">Text + color (not color alone)</span></div>
+    </div>
+    <div class="cost">Material Design baseline. Modest extra effort. Covers older users, dim screens, gloves, and 90%+ of accessibility needs.</div>
+  </div>
+
+  <div class="tier" data-choice="maximum" onclick="toggleSelect(this)">
+    <div class="tier-head">
+      <h3>3 · Maximum</h3>
+      <p>WCAG AAA where feasible, 56px targets</p>
+    </div>
+    <div class="tier-demo">
+      <div class="demo-label">Min tap target</div>
+      <button class="btn" style="height:56px;min-width:56px;padding:0 26px;font-size:16px;">Mark paid</button>
+      <div class="demo-label" style="margin-top:6px;">Min body text</div>
+      <div style="font-size:16px;color:#111;">Electricity bill · ₹2,840</div>
+    </div>
+    <div class="tier-rules">
+      <h4>Rules</h4>
+      <div class="row"><span class="k">Touch target min</span><span class="v">56 × 56 px</span></div>
+      <div class="row"><span class="k">Body text min</span><span class="v">16 px</span></div>
+      <div class="row"><span class="k">Contrast (body)</span><span class="v">7 : 1 (AAA)</span></div>
+      <div class="row"><span class="k">Contrast (large)</span><span class="v">4.5 : 1 (AAA)</span></div>
+      <div class="row"><span class="k">OS text scaling</span><span class="v">Honored to 200%</span></div>
+      <div class="row"><span class="k">Reduce motion</span><span class="v">Respected + default tame</span></div>
+      <div class="row"><span class="k">Focus indicators</span><span class="v">Always-on, 3px</span></div>
+      <div class="row"><span class="k">Screen reader</span><span class="v">Full traversal tested</span></div>
+      <div class="row"><span class="k">Color palette</span><span class="v">Constrained by AAA contrast</span></div>
+    </div>
+    <div class="cost">Sacrifices visual density. AAA contrast restricts the palette — indigo on cream may need darkening, accents may need pruning. Best for elderly/low-vision-first products.</div>
+  </div>
+
+</div>
+
+<div style="background: #FFFBE6; border: 1px solid #F5E6A3; border-radius: 10px; padding: 14px; font-size: 13px; color: #5C4400; margin-top: 4px;">
+  <strong>My recommendation: 2 (Inclusive).</strong> Tier 1 is too thin for the maid persona — 44px is the minimum a young, dexterous, sighted thumb can hit reliably; the gap to real-world conditions is large. Tier 3 is excellent but the AAA contrast requirement will fight our chosen palette (indigo on cream is ~5.8:1, which is AA but not AAA — we'd have to darken the indigo and lose some of the palette personality). Tier 2 keeps the palette intact, doubles real-world usability, and adds the rules that prevent the most common accessibility regressions (icon-only buttons without labels, color-only error states).
+</div>
+</div>
+</body></html>

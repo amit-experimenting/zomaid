@@ -1,4 +1,4 @@
-import { MainNav } from "@/components/site/main-nav";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 
 function MemberRow() {
   return (
@@ -18,7 +18,7 @@ function MemberRow() {
 export default function HouseholdSettingsLoading() {
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="home" />
+      <TopAppBar title="Household settings" />
       <div className="space-y-8 px-4 py-6">
         <header className="flex flex-col gap-2">
           <div className="h-7 w-44 animate-pulse rounded bg-muted" />

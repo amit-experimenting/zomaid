@@ -13,7 +13,7 @@ import {
   BillConfirmForm,
   type ConfirmFormInitial,
 } from "@/components/bills/bill-confirm-form";
-import { PendingButton } from "@/components/ui/pending-button";
+import { Button } from "@/components/ui/button";
 import { discardPendingScan } from "../actions";
 
 export type SucceededAttemptCardProps = {
@@ -78,23 +78,22 @@ export function SucceededAttemptCard({
 
       {!open ? (
         <div className="mt-2 flex justify-end gap-2">
-          <PendingButton
+          <Button
             type="button"
-            pending={discarding}
-            pendingLabel="Discarding…"
+            loading={discarding}
             onClick={onDiscard}
             variant="ghost"
             size="sm"
           >
-            Discard
-          </PendingButton>
-          <PendingButton
+            {discarding ? "Discarding…" : "Discard"}
+          </Button>
+          <Button
             type="button"
             onClick={() => setOpen(true)}
             size="sm"
           >
             Review &amp; save
-          </PendingButton>
+          </Button>
         </div>
       ) : (
         <div className="mt-3 border-t pt-3">

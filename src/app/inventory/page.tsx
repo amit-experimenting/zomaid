@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { PendingScansBanner } from "@/components/site/pending-scans-banner";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,22 +22,28 @@ export default async function InventoryListPage() {
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="inventory" />
+      <TopAppBar
+        title="Inventory"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/dashboard" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+        trailing={
+          <Link
+            href="/inventory/conversions"
+            className={cn(buttonVariants({ size: "sm", variant: "secondary" }))}
+          >
+            Conversions
+          </Link>
+        }
+      />
       <PendingScansBanner />
-      <header className="flex items-center justify-between px-4 py-3">
-        <h1 className="text-lg font-semibold">Inventory</h1>
-        <Link
-          href="/inventory/conversions"
-          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-        >
-          Unit conversions
-        </Link>
-      </header>
       {items?.length === 0 ? (
         <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
           <p className="text-sm text-muted-foreground">Your inventory is empty.</p>
           {canWrite && (
-            <Link href="/inventory/new" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+            <Link href="/inventory/new" className={cn(buttonVariants({ size: "sm", variant: "secondary" }))}>
               Add your first item →
             </Link>
           )}
@@ -59,7 +67,10 @@ export default async function InventoryListPage() {
                     <Link href={`/inventory/${i.id}`} className="block">
                       <span className="font-medium">{i.item_name}</span>
                       {isLow && (
-                        <span className="ml-2 rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] uppercase text-yellow-800">
+                        <span
+                          className="ml-2 rounded bg-yellow-100 px-1.5 py-0.5 uppercase text-yellow-800"
+                          style={{ fontSize: 10 }}
+                        >
                           Low
                         </span>
                       )}

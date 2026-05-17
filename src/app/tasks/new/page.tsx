@@ -1,6 +1,9 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { TaskForm } from "@/components/tasks/task-form";
 
 export default async function NewTaskPage() {
@@ -18,10 +21,14 @@ export default async function NewTaskPage() {
   }));
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="home" />
-      <header className="border-b border-border px-4 py-3">
-        <h1 className="text-lg font-semibold">New task</h1>
-      </header>
+      <TopAppBar
+        title="New task"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/dashboard" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+      />
       <TaskForm mode="create" members={memberList} />
     </main>
   );

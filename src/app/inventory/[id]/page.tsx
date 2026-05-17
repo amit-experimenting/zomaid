@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { InventoryAdjustForm } from "@/components/inventory/adjust-form";
 import { InventoryTransactionLog } from "@/components/inventory/transaction-log";
 
@@ -28,18 +30,24 @@ export default async function InventoryItemDetail({ params }: { params: Promise<
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="inventory" />
-      <div className="px-4 pt-3">
-        <Link href="/inventory" className="text-xs text-muted-foreground hover:text-foreground">
-          ← Inventory
-        </Link>
-      </div>
+      <TopAppBar
+        title={item.item_name}
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/inventory" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+      />
       <header className="px-4 py-3">
-        <h1 className="text-lg font-semibold">{item.item_name}</h1>
         <div className="text-sm text-muted-foreground">
           {item.quantity} {item.unit}
           {item.low_stock_threshold !== null && Number(item.quantity) <= Number(item.low_stock_threshold) && (
-            <span className="ml-2 rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] uppercase text-yellow-800">Low</span>
+            <span
+              className="ml-2 rounded bg-yellow-100 px-1.5 py-0.5 uppercase text-yellow-800"
+              style={{ fontSize: 10 }}
+            >
+              Low
+            </span>
           )}
         </div>
       </header>

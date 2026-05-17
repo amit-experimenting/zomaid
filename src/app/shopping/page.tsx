@@ -2,7 +2,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSupabaseClient } from "@/lib/supabase/client";
-import { MainNav } from "@/components/site/main-nav";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { QuickAdd } from "@/components/shopping/quick-add";
 import { AutoAddButton } from "@/components/shopping/auto-add-button";
 import { ItemRow } from "@/components/shopping/item-row";
@@ -108,11 +108,10 @@ export default function ShoppingPage() {
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="shopping" />
-      <header className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <h1 className="text-lg font-semibold">Shopping</h1>
-        {view === "list" && !readOnly && <AutoAddButton />}
-      </header>
+      <TopAppBar
+        title="Shopping"
+        trailing={view === "list" && !readOnly ? <AutoAddButton /> : undefined}
+      />
       <nav className="flex gap-1 border-b border-border px-4" aria-label="Shopping view">
         <TabButton active={view === "list"} onClick={() => setView("list")}>
           List
@@ -186,6 +185,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       aria-current={active ? "page" : undefined}
+      aria-label={typeof children === "string" ? children : undefined}
       className={cn(
         "border-b-2 px-3 py-2 text-sm",
         active

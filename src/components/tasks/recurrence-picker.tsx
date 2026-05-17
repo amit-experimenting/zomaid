@@ -21,6 +21,7 @@ export type RecurrenceValue = {
 };
 
 const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
+const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export function RecurrencePicker({
   value, onChange,
@@ -52,7 +53,7 @@ export function RecurrencePicker({
           <Button
             key={m.id}
             type="button"
-            variant={value.mode === m.id ? "default" : "outline"}
+            variant={value.mode === m.id ? "primary" : "secondary"}
             size="sm"
             onClick={() => setMode(m.id)}
           >
@@ -97,6 +98,8 @@ export function RecurrencePicker({
                     key={i}
                     type="button"
                     onClick={() => toggleDay(i)}
+                    aria-label={DAY_LABELS[i]}
+                    aria-pressed={value.byweekday.includes(i)}
                     className={cn(
                       "h-8 w-8 rounded-full text-xs font-medium",
                       value.byweekday.includes(i) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70",

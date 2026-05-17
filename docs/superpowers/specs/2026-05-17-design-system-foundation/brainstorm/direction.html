@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — direction</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#111;max-width:1100px;margin:0 auto;}
+h2{font-size:24px;margin:0 0 8px;}.subtitle{color:#666;font-size:14px;margin:0 0 24px;}
+.option,.vibe,.pal,.font,.tier,.slice{position:relative;}
+.option:after,.vibe:after,.pal:after,.font:after,.tier:after{content:"";display:block;}
+code{font-family:ui-monospace,monospace;font-size:0.92em;background:#f3f3f3;padding:1px 5px;border-radius:3px;}
+</style></head><body>
+<p style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 16px;">Brainstorm artifact · direction.html · 2026-05-17</p>
+<h2>Pick a design direction</h2>
+<p class="subtitle">Same household app, four personalities. This decision drives color, typography, illustration, density, everything downstream. Click the one that feels right — or tell me what's off.</p>
+
+<style>
+  .vibes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin: 24px 0; }
+
+  .vibe { border-radius: 16px; overflow: hidden; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; border: 2px solid transparent; }
+  .vibe:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+  .vibe.selected { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); }
+
+  .vibe-preview { padding: 22px 18px; min-height: 200px; display: flex; flex-direction: column; justify-content: space-between; }
+  .vibe-meta { padding: 14px 18px; background: #fff; border-top: 1px solid #eee; }
+  .vibe-meta h3 { margin: 0 0 4px 0; font-size: 16px; }
+  .vibe-meta p { margin: 0; font-size: 12.5px; color: #666; line-height: 1.5; }
+  .swatches { display: flex; gap: 6px; margin-top: 10px; }
+  .sw { width: 22px; height: 22px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.06); }
+
+  /* A — Warm Home */
+  .vibe-a .vibe-preview { background: #FFF8F0; font-family: 'Georgia', serif; color: #3D2817; }
+  .vibe-a .card { background: #fff; border-radius: 14px; padding: 12px 14px; box-shadow: 0 1px 0 rgba(0,0,0,0.04); border: 1px solid #F3E4CE; }
+  .vibe-a .card .title { font-size: 14px; font-weight: 600; color: #3D2817; }
+  .vibe-a .card .sub { font-size: 11px; color: #8B6B4A; margin-top: 2px; }
+  .vibe-a .pill { display: inline-block; padding: 6px 12px; background: #E89B47; color: #fff; border-radius: 999px; font-size: 12px; font-weight: 600; font-family: sans-serif; }
+
+  /* B — Calm Modern */
+  .vibe-b .vibe-preview { background: #F7F8FA; font-family: -apple-system, 'Inter', sans-serif; color: #0F172A; }
+  .vibe-b .card { background: #fff; border-radius: 10px; padding: 12px 14px; border: 1px solid #E5E7EB; }
+  .vibe-b .card .title { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; color: #0F172A; }
+  .vibe-b .card .sub { font-size: 11px; color: #64748B; margin-top: 2px; }
+  .vibe-b .pill { display: inline-block; padding: 6px 12px; background: #0F172A; color: #fff; border-radius: 8px; font-size: 12px; font-weight: 500; }
+
+  /* C — Vibrant India */
+  .vibe-c .vibe-preview { background: linear-gradient(135deg, #FFF0E6 0%, #FCE4EC 100%); font-family: 'Poppins', sans-serif; color: #4A148C; }
+  .vibe-c .card { background: #fff; border-radius: 16px; padding: 12px 14px; border: 1px solid #FBC9D9; box-shadow: 0 4px 14px rgba(220, 70, 130, 0.08); }
+  .vibe-c .card .title { font-size: 14px; font-weight: 700; color: #6A1B9A; }
+  .vibe-c .card .sub { font-size: 11px; color: #C2185B; margin-top: 2px; }
+  .vibe-c .pill { display: inline-block; padding: 6px 14px; background: linear-gradient(135deg, #FF6B35 0%, #E91E63 100%); color: #fff; border-radius: 999px; font-size: 12px; font-weight: 700; }
+
+  /* D — Trust Utility */
+  .vibe-d .vibe-preview { background: #FAFAFA; font-family: 'IBM Plex Sans', sans-serif; color: #111; }
+  .vibe-d .card { background: #fff; border-radius: 4px; padding: 12px 14px; border: 1px solid #D4D4D4; border-left: 3px solid #0B5394; }
+  .vibe-d .card .title { font-size: 13.5px; font-weight: 600; color: #111; }
+  .vibe-d .card .sub { font-size: 11px; color: #555; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .vibe-d .pill { display: inline-block; padding: 6px 12px; background: #0B5394; color: #fff; border-radius: 4px; font-size: 12px; font-weight: 600; }
+</style>
+
+<div class="vibes">
+
+  <div class="vibe vibe-a" data-choice="a" onclick="toggleSelect(this)">
+    <div class="vibe-preview">
+      <div class="card">
+        <div class="title">Today's meal · Dal Tadka</div>
+        <div class="sub">Lunch · for 4 people</div>
+      </div>
+      <div>
+        <span class="pill">Mark cooked</span>
+      </div>
+    </div>
+    <div class="vibe-meta">
+      <h3>A · Warm Home</h3>
+      <p>Earthy, hospitable, slightly traditional. Feels like a well-kept Indian home. Cream backgrounds, terracotta/saffron accents, generous rounding, serif headings.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#FFF8F0"></div>
+        <div class="sw" style="background:#E89B47"></div>
+        <div class="sw" style="background:#7A9B5E"></div>
+        <div class="sw" style="background:#3D2817"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="vibe vibe-b" data-choice="b" onclick="toggleSelect(this)">
+    <div class="vibe-preview">
+      <div class="card">
+        <div class="title">Today's meal — Dal Tadka</div>
+        <div class="sub">Lunch · for 4</div>
+      </div>
+      <div>
+        <span class="pill">Mark cooked</span>
+      </div>
+    </div>
+    <div class="vibe-meta">
+      <h3>B · Calm Modern</h3>
+      <p>Linear/Notion-grade restraint. Tight type, ample whitespace, near-monochrome with a single accent. Feels premium and competent; risks feeling cold for the maid persona.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#F7F8FA"></div>
+        <div class="sw" style="background:#0F172A"></div>
+        <div class="sw" style="background:#3B82F6"></div>
+        <div class="sw" style="background:#64748B"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="vibe vibe-c" data-choice="c" onclick="toggleSelect(this)">
+    <div class="vibe-preview">
+      <div class="card">
+        <div class="title">Today's meal · Dal Tadka 🍲</div>
+        <div class="sub">Lunch · 4 people</div>
+      </div>
+      <div>
+        <span class="pill">Mark cooked</span>
+      </div>
+    </div>
+    <div class="vibe-meta">
+      <h3>C · Vibrant India</h3>
+      <p>Energetic, joyful, gradients and saturated color. Reads as a friendly consumer app (Swiggy/Zomato territory). Strong personality; can feel busy at high density.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#FF6B35"></div>
+        <div class="sw" style="background:#E91E63"></div>
+        <div class="sw" style="background:#6A1B9A"></div>
+        <div class="sw" style="background:#FFF0E6"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="vibe vibe-d" data-choice="d" onclick="toggleSelect(this)">
+    <div class="vibe-preview">
+      <div class="card">
+        <div class="title">Today's meal: Dal Tadka</div>
+        <div class="sub">Lunch · serves 4</div>
+      </div>
+      <div>
+        <span class="pill">Mark cooked</span>
+      </div>
+    </div>
+    <div class="vibe-meta">
+      <h3>D · Trust Utility</h3>
+      <p>Bank/utility-app reliability. Square corners, civic blue, tabular numerals, plain sans. Reads as dependable and serious — great for bills/money flows, dry for cooking.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#0B5394"></div>
+        <div class="sw" style="background:#FAFAFA"></div>
+        <div class="sw" style="background:#D4D4D4"></div>
+        <div class="sw" style="background:#111"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="background: #FFFBE6; border: 1px solid #F5E6A3; border-radius: 10px; padding: 14px; font-size: 13px; color: #5C4400; margin-top: 18px;">
+  <strong>My recommendation: A (Warm Home).</strong> Two reasons. First, the maid persona — warm/earthy reads as welcoming and approachable, which matters for users with lower app-fluency far more than it does for tech-savvy owners. Second, the domain — this app is about food, family, daily rituals. A "calm modern" or "trust utility" treatment of "Dal Tadka" feels emotionally off. Optionally borrow one trait from D (tabular numerals) for the bills section.
+</div>
+</body></html>

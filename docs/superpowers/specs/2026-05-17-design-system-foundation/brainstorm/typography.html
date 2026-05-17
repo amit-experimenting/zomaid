@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — typography</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#111;max-width:1100px;margin:0 auto;}
+h2{font-size:24px;margin:0 0 8px;}.subtitle{color:#666;font-size:14px;margin:0 0 24px;}
+.option,.vibe,.pal,.font,.tier,.slice{position:relative;}
+.option:after,.vibe:after,.pal:after,.font:after,.tier:after{content:"";display:block;}
+code{font-family:ui-monospace,monospace;font-size:0.92em;background:#f3f3f3;padding:1px 5px;border-radius:3px;}
+</style></head><body>
+<p style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 16px;">Brainstorm artifact · typography.html · 2026-05-17</p>
+<div style="background:#FEEAEA;border:1px solid #F0BFBF;border-radius:8px;padding:14px;margin:0 0 20px;font-family:-apple-system,sans-serif;font-size:13px;color:#7A1F1F;">
+  <strong>Correction (post-brainstorm):</strong> the page below claims IBM Plex Sans covers Bengali script. That's wrong — IBM Plex covers Latin, Devanagari, Arabic, Cyrillic, Greek, Hebrew, Thai, CJK, but <strong>not Bengali</strong>. The Bengali sample below rendered via browser system fallback, not Plex. The typography decision (option 1, IBM Plex Sans) still stands — see the parent spec D4 and follow-ups for the corrected reasoning. Bengali fallback is deferred to slice D.
+</div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
+
+  .fonts { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 22px 0; }
+  .font { border-radius: 12px; overflow: hidden; cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; border: 2px solid transparent; background: #fff; }
+  .font:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+  .font.selected { border-color: #3949AB; box-shadow: 0 0 0 4px rgba(57, 73, 171, 0.15); }
+
+  .font-head { padding: 14px 18px; background: #FAF7F2; border-bottom: 1px solid #EFE9E1; display: flex; justify-content: space-between; align-items: baseline; }
+  .font-head h3 { margin: 0; font-size: 16px; font-family: 'IBM Plex Sans', sans-serif; }
+  .font-head .tag { font-size: 11px; color: #666; font-family: 'IBM Plex Sans', sans-serif; }
+
+  .font-body { padding: 18px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; }
+
+  .col h4 { margin: 0 0 10px 0; font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; }
+
+  .scale-line { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .scale-line .sz { color: #999; font-size: 10px; font-family: 'IBM Plex Sans', sans-serif; min-width: 40px; }
+  .scale-line .txt { color: #111; }
+
+  .sample { padding: 12px 14px; background: #FAF7F2; border-radius: 6px; border-left: 3px solid #3949AB; margin-bottom: 8px; }
+  .sample .lang { font-size: 9.5px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; font-family: 'IBM Plex Sans', sans-serif; margin-bottom: 4px; font-weight: 600; }
+  .sample .line-1 { font-size: 14px; font-weight: 600; color: #111; }
+  .sample .line-2 { font-size: 12.5px; color: #555; margin-top: 2px; }
+
+  /* Font 1 — IBM Plex Sans */
+  .font-1 .ibm { font-family: 'IBM Plex Sans', sans-serif; }
+  .font-1 .ben { font-family: 'IBM Plex Sans', sans-serif; }
+
+  /* Font 2 — Geist + Noto Bengali */
+  .font-2 .latin { font-family: 'Geist', sans-serif; }
+  .font-2 .ben { font-family: 'Noto Sans Bengali', sans-serif; }
+
+  /* Font 3 — Inter + Noto Bengali */
+  .font-3 .latin { font-family: 'Inter', sans-serif; }
+  .font-3 .ben { font-family: 'Noto Sans Bengali', sans-serif; }
+
+  .note { font-size: 11.5px; color: #666; line-height: 1.55; margin-top: 6px; }
+</style>
+
+<h2>Pick a typography system</h2>
+<p class="subtitle">Each option shows the same type scale and the same three sample strings — English bill row, Mizo greeting, Manipuri (Bengali script) greeting. Look for: do English and Bengali feel like the same family, or like roommates?</p>
+
+<div class="fonts">
+
+  <div class="font font-1" data-choice="ibm-plex" onclick="toggleSelect(this)">
+    <div class="font-head">
+      <h3>1 · IBM Plex Sans (single family, all scripts) &nbsp;<span style="color:#0E6E6E">— recommended</span></h3>
+      <span class="tag">Latin + Bengali + Devanagari, one designer</span>
+    </div>
+    <div class="font-body">
+      <div class="col ibm">
+        <h4>Type scale</h4>
+        <div class="scale-line"><span class="sz">28 / 700</span><span class="txt" style="font-size:28px;font-weight:700;">Bills this month</span></div>
+        <div class="scale-line"><span class="sz">20 / 600</span><span class="txt" style="font-size:20px;font-weight:600;">Today's meal</span></div>
+        <div class="scale-line"><span class="sz">15 / 500</span><span class="txt" style="font-size:15px;font-weight:500;">Electricity bill</span></div>
+        <div class="scale-line"><span class="sz">13 / 400</span><span class="txt" style="font-size:13px;">Due in 3 days · for Asha to log</span></div>
+        <div class="scale-line"><span class="sz">11 / 500</span><span class="txt" style="font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Upcoming</span></div>
+        <div class="note">Designed by IBM for trust-context products. Single source, single rhythm across English / Mizo / Bengali. Strongest "one app" feel.</div>
+      </div>
+      <div class="col">
+        <h4>Three-script sample</h4>
+        <div class="sample">
+          <div class="lang">English</div>
+          <div class="line-1 ibm">Today's meal: Dal Tadka</div>
+          <div class="line-2 ibm">Lunch · serves 4 · 30 min</div>
+        </div>
+        <div class="sample">
+          <div class="lang">Mizo (Latin)</div>
+          <div class="line-1 ibm">Ni hnuhnung ei tur: Dal Tadka</div>
+          <div class="line-2 ibm">Chawhnu chaw · mi 4 atan</div>
+        </div>
+        <div class="sample">
+          <div class="lang">Manipuri (Bengali script)</div>
+          <div class="line-1 ben">আজির চাকখুম: ডাল তাড়কা</div>
+          <div class="line-2 ben">নুংথিল চাক · ৪ অমসুং · ৩০ মিনিট</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="font font-2" data-choice="geist-noto" onclick="toggleSelect(this)">
+    <div class="font-head">
+      <h3>2 · Geist + Noto Sans Bengali (paired)</h3>
+      <span class="tag">Already in project for Latin · Noto for Bengali</span>
+    </div>
+    <div class="font-body">
+      <div class="col latin">
+        <h4>Type scale</h4>
+        <div class="scale-line"><span class="sz">28 / 700</span><span class="txt" style="font-size:28px;font-weight:700;">Bills this month</span></div>
+        <div class="scale-line"><span class="sz">20 / 600</span><span class="txt" style="font-size:20px;font-weight:600;">Today's meal</span></div>
+        <div class="scale-line"><span class="sz">15 / 500</span><span class="txt" style="font-size:15px;font-weight:500;">Electricity bill</span></div>
+        <div class="scale-line"><span class="sz">13 / 400</span><span class="txt" style="font-size:13px;">Due in 3 days · for Asha to log</span></div>
+        <div class="scale-line"><span class="sz">11 / 500</span><span class="txt" style="font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Upcoming</span></div>
+        <div class="note">Zero install cost — Geist already loaded. But Bengali falls back to Noto Sans Bengali, which has a different rhythm and weight color. English vs Manipuri start to feel like two design systems.</div>
+      </div>
+      <div class="col">
+        <h4>Three-script sample</h4>
+        <div class="sample">
+          <div class="lang">English</div>
+          <div class="line-1 latin">Today's meal: Dal Tadka</div>
+          <div class="line-2 latin">Lunch · serves 4 · 30 min</div>
+        </div>
+        <div class="sample">
+          <div class="lang">Mizo (Latin)</div>
+          <div class="line-1 latin">Ni hnuhnung ei tur: Dal Tadka</div>
+          <div class="line-2 latin">Chawhnu chaw · mi 4 atan</div>
+        </div>
+        <div class="sample">
+          <div class="lang">Manipuri (Bengali script)</div>
+          <div class="line-1 ben">আজির চাকখুম: ডাল তাড়কা</div>
+          <div class="line-2 ben">নুংথিল চাক · ৪ অমসুং · ৩০ মিনিট</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="font font-3" data-choice="inter-noto" onclick="toggleSelect(this)">
+    <div class="font-head">
+      <h3>3 · Inter + Noto Sans Bengali (paired, conventional)</h3>
+      <span class="tag">Industry-default Latin · Noto for Bengali</span>
+    </div>
+    <div class="font-body">
+      <div class="col latin">
+        <h4>Type scale</h4>
+        <div class="scale-line"><span class="sz">28 / 700</span><span class="txt" style="font-size:28px;font-weight:700;">Bills this month</span></div>
+        <div class="scale-line"><span class="sz">20 / 600</span><span class="txt" style="font-size:20px;font-weight:600;">Today's meal</span></div>
+        <div class="scale-line"><span class="sz">15 / 500</span><span class="txt" style="font-size:15px;font-weight:500;">Electricity bill</span></div>
+        <div class="scale-line"><span class="sz">13 / 400</span><span class="txt" style="font-size:13px;">Due in 3 days · for Asha to log</span></div>
+        <div class="scale-line"><span class="sz">11 / 500</span><span class="txt" style="font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Upcoming</span></div>
+        <div class="note">Safest, blandest. Inter is the React/Tailwind default and reads "I am a SaaS". Same Latin-vs-Bengali rhythm mismatch as option 2.</div>
+      </div>
+      <div class="col">
+        <h4>Three-script sample</h4>
+        <div class="sample">
+          <div class="lang">English</div>
+          <div class="line-1 latin">Today's meal: Dal Tadka</div>
+          <div class="line-2 latin">Lunch · serves 4 · 30 min</div>
+        </div>
+        <div class="sample">
+          <div class="lang">Mizo (Latin)</div>
+          <div class="line-1 latin">Ni hnuhnung ei tur: Dal Tadka</div>
+          <div class="line-2 latin">Chawhnu chaw · mi 4 atan</div>
+        </div>
+        <div class="sample">
+          <div class="lang">Manipuri (Bengali script)</div>
+          <div class="line-1 ben">আজির চাকখুম: ডাল তাড়কা</div>
+          <div class="line-2 ben">নুংথিল চাক · ৪ অমসুং · ৩০ মিনিট</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="background: #FFFBE6; border: 1px solid #F5E6A3; border-radius: 10px; padding: 14px; font-size: 13px; color: #5C4400; margin-top: 4px;">
+  <strong>My recommendation: 1 (IBM Plex Sans).</strong> Two reasons. <strong>(1) Multilingual coherence:</strong> IBM Plex is one of the few open-source families designed by a single team across Latin, Bengali, Devanagari, etc. — they all share rhythm, weight, and proportions, so a maid switching to Manipuri sees the *same app*, not a fallback. <strong>(2) Trust-context fit:</strong> IBM Plex was literally designed to carry a trust/utility brand. Geist is gorgeous for Latin but the moment Bengali appears the system looks inconsistent. We'd replace Geist (currently `--font-sans`) with IBM Plex Sans. Mizo uses regular Latin with a few diacritics so any of the three handles it fine.
+</div>
+
+<p style="font-size:11.5px;color:#888;margin-top:14px;font-family:'IBM Plex Sans',sans-serif;">
+  Note: Manipuri samples shown in Bengali script for browser-font availability. Meitei Mayek (the traditional script) can be added later as an in-locale toggle once we have Noto Sans Meetei Mayek bundled — captured as a future decision in the i18n spec (slice D).
+</p>
+</body></html>

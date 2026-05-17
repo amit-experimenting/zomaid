@@ -2,7 +2,6 @@
 import React, { useState, useTransition } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { PendingButton } from "@/components/ui/pending-button";
 import { RecipePicker, type Recipe } from "./recipe-picker";
 import { setMealPlanSlot, regenerateMealPlanSlot } from "@/app/plan/actions";
 
@@ -50,7 +49,7 @@ export function SlotActionSheet(props: SlotActionSheetProps) {
         </SheetHeader>
         <div className="flex flex-col gap-2 py-4">
           {props.currentRecipeId && (
-            <Button variant="outline" nativeButton={false} render={<a href={`/recipes/${props.currentRecipeId}`} />}>
+            <Button variant="secondary" nativeButton={false} render={<a href={`/recipes/${props.currentRecipeId}`} />}>
               View recipe
             </Button>
           )}
@@ -63,10 +62,10 @@ export function SlotActionSheet(props: SlotActionSheetProps) {
                 open={pickerOpen}
                 onOpenChange={setPickerOpen}
                 pending={pending}
-                trigger={<Button variant="outline" disabled={pending}>Pick different</Button>}
+                trigger={<Button variant="secondary" disabled={pending}>Pick different</Button>}
               />
-              <PendingButton variant="outline" pending={pending} onClick={onRegenerate}>Regenerate</PendingButton>
-              <PendingButton variant="ghost" pending={pending} onClick={onClear}>Clear</PendingButton>
+              <Button variant="secondary" loading={pending} onClick={onRegenerate}>Regenerate</Button>
+              <Button variant="ghost" loading={pending} onClick={onClear}>Clear</Button>
             </>
           )}
         </div>

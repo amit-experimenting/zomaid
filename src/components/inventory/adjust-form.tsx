@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { PendingButton } from "@/components/ui/pending-button";
+import { Button } from "@/components/ui/button";
 import { adjustInventoryItem } from "@/app/inventory/actions";
 
 export function InventoryAdjustForm({ itemId }: { itemId: string }) {
@@ -40,8 +40,8 @@ export function InventoryAdjustForm({ itemId }: { itemId: string }) {
         className="rounded border px-2 py-1 text-sm"
       />
       <div className="flex gap-2">
-        <PendingButton onClick={submit(1)} pending={pending} variant="outline">Add</PendingButton>
-        <PendingButton onClick={submit(-1)} pending={pending} variant="outline">Subtract</PendingButton>
+        <Button onClick={submit(1)} loading={pending} variant="secondary">Add</Button>
+        <Button onClick={submit(-1)} loading={pending} variant="secondary">Subtract</Button>
       </div>
       {err && <div className="text-xs text-red-600">{err}</div>}
     </div>

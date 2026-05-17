@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { RecipeForm } from "@/components/recipes/recipe-form";
 
 export default async function EditRecipePage({ params }: { params: Promise<{ id: string }> }) {
@@ -19,15 +21,14 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="recipes" />
-      <div className="px-4 pt-3">
-        <Link href={`/recipes/${id}`} className="text-xs text-muted-foreground hover:text-foreground">
-          ← Recipe
-        </Link>
-      </div>
-      <header className="border-b border-border px-4 py-3">
-        <h1 className="text-lg font-semibold">Edit recipe</h1>
-      </header>
+      <TopAppBar
+        title="Edit recipe"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href={`/recipes/${id}`} />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+      />
       <RecipeForm
         mode="edit"
         recipeId={id}

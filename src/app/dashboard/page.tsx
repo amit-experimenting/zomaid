@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
-import { MainNav } from "@/components/site/main-nav";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { OwnerInviteMaidCard } from "@/components/site/owner-invite-maid-card";
 import { HouseholdModeCard } from "@/components/site/household-mode-card";
 import { TaskSetupPromptCard } from "@/components/site/task-setup-prompt-card";
@@ -61,21 +61,39 @@ export default async function DashboardPage({
   const origin = await siteUrl();
   const sp = await searchParams;
 
-  // Gates introduced by 2026-05-16 task-setup design.
+  // Gates introduced by 2026-05-16 task-setup design (Phase 6 split:
+  // profile-pending vs picker-pending, both visible to either role).
   const setupCompleted = ctx.household.task_setup_completed_at !== null;
   const showHouseholdModeCard =
     ctx.membership.role === "owner" && ctx.household.maid_mode === "unset";
+
+  const isOwnerOrMaid =
+    ctx.membership.role === "owner" || ctx.membership.role === "maid";
+
+  const supabase = await createClient();
+
+  const profileRes = await supabase
+    .from("household_profiles")
+    .select("household_id", { count: "exact", head: true })
+    .eq("household_id", ctx.household.id);
+  if (profileRes.error) throw new Error(profileRes.error.message);
+  const profileExists = (profileRes.count ?? 0) > 0;
+
+  const showProfilePromptCard =
+    ctx.household.maid_mode !== "unset" && !profileExists && isOwnerOrMaid;
+
   const showTaskSetupPromptCard =
-    ctx.membership.role === "owner" &&
     ctx.household.maid_mode !== "unset" &&
-    !setupCompleted;
+    profileExists &&
+    !setupCompleted &&
+    isOwnerOrMaid;
 
   // Recovery path: setup latched as complete but household has zero tasks
-  // (e.g. wiped by a migration). Offered to owners only; the action is
-  // re-guarded server-side against the same zero-tasks condition.
+  // (e.g. wiped by a migration). The action is re-guarded server-side
+  // against the same zero-tasks condition. Role gate: owner or maid can
+  // recover, but family_member cannot.
   let showTaskSetupRerunCard = false;
-  if (setupCompleted && ctx.membership.role === "owner") {
-    const supabase = await createClient();
+  if (setupCompleted && isOwnerOrMaid) {
     const { count, error } = await supabase
       .from("tasks")
       .select("id", { count: "exact", head: true })
@@ -88,7 +106,6 @@ export default async function DashboardPage({
 
   let pendingOwnerInviteToken: string | null = null;
   if (ctx.membership.role === "maid") {
-    const supabase = await createClient();
     const r = await supabase
       .from("invites")
       .select("token")
@@ -105,7 +122,6 @@ export default async function DashboardPage({
   let ownerCard: OwnerCardProps | null = null;
   if (ctx.membership.role === "owner" && ctx.household.maid_mode !== "unset") {
     const svc = createServiceClient();
-    const supabase = await createClient();
     const [maidRes, inviteRes] = await Promise.all([
       svc
         .from("household_memberships")
@@ -143,7 +159,6 @@ export default async function DashboardPage({
 
   let showInventoryCard = false;
   if (ctx.membership.role === "owner" || ctx.membership.role === "maid") {
-    const supabase = await createClient();
     const { count } = await supabase
       .from("inventory_items")
       .select("id", { count: "exact", head: true })
@@ -154,7 +169,6 @@ export default async function DashboardPage({
 
   // --- Day view fetch (gated on task_setup_completed_at) -----------------
 
-  const supabase = await createClient();
   const [effectiveDietRes, memberPrefCountRes] = await Promise.all([
     supabase.rpc("household_effective_diet", { p_household: ctx.household.id }),
     supabase
@@ -185,8 +199,6 @@ export default async function DashboardPage({
   const selectedYmd = resolveSelectedYmd(sp?.date, todayYmd);
   const isToday = selectedYmd === todayYmd;
 
-  const isOwnerOrMaid =
-    ctx.membership.role === "owner" || ctx.membership.role === "maid";
   const canAddTasks = isOwnerOrMaid || ctx.membership.role === "family_member";
   const taskActionsEnabled = isOwnerOrMaid;
 
@@ -322,7 +334,7 @@ export default async function DashboardPage({
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="home" />
+      <TopAppBar title="Home" />
       <div className="px-4 py-6">
         {dietChip ? (
           <Link
@@ -349,7 +361,8 @@ export default async function DashboardPage({
 
         {showHouseholdModeCard ? <HouseholdModeCard /> : null}
         {ownerCard ? <OwnerInviteMaidCard {...ownerCard} /> : null}
-        {showTaskSetupPromptCard ? <TaskSetupPromptCard /> : null}
+        {showProfilePromptCard ? <TaskSetupPromptCard variant="profile" /> : null}
+        {showTaskSetupPromptCard ? <TaskSetupPromptCard variant="picker" /> : null}
         {showTaskSetupRerunCard ? <TaskSetupPromptCard variant="rerun" /> : null}
 
         {showInventoryCard && <InventoryPromptCard />}

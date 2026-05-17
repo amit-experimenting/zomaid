@@ -30,7 +30,7 @@ export default async function Home() {
               there. After auth, Clerk redirects to /dashboard per the
               CLERK_SIGN_IN_FALLBACK_REDIRECT_URL env var. */}
           <SignInButton><Button>Sign in</Button></SignInButton>
-          <SignUpButton><Button variant="outline">Sign up</Button></SignUpButton>
+          <SignUpButton><Button variant="secondary">Sign up</Button></SignUpButton>
         </Show>
         <Show when="signed-in">
           <p className="text-xs text-muted-foreground">Redirecting…</p>

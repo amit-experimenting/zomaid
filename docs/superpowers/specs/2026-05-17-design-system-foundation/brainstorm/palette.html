@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — palette</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#111;max-width:1100px;margin:0 auto;}
+h2{font-size:24px;margin:0 0 8px;}.subtitle{color:#666;font-size:14px;margin:0 0 24px;}
+.option,.vibe,.pal,.font,.tier,.slice{position:relative;}
+.option:after,.vibe:after,.pal:after,.font:after,.tier:after{content:"";display:block;}
+code{font-family:ui-monospace,monospace;font-size:0.92em;background:#f3f3f3;padding:1px 5px;border-radius:3px;}
+</style></head><body>
+<p style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 16px;">Brainstorm artifact · palette.html · 2026-05-17</p>
+<h2>Pick the primary color + neutral temperature</h2>
+<p class="subtitle">All four below are within the "trust utility" direction (D). They differ in primary hue and how warm or cool the background neutrals feel. The same card and bill row shown in each, so you can compare at equal density.</p>
+
+<style>
+  .palettes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin: 22px 0; }
+  .pal { border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; border: 2px solid transparent; font-family: 'IBM Plex Sans', -apple-system, sans-serif; }
+  .pal:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+  .pal.selected { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); }
+
+  .pal-preview { padding: 18px 16px 22px; min-height: 240px; }
+  .pal-card { background: #fff; border-radius: 4px; padding: 12px 14px; margin-bottom: 10px; border: 1px solid var(--c-border); border-left: 3px solid var(--c-primary); }
+  .pal-card .t { font-size: 13.5px; font-weight: 600; color: #111; }
+  .pal-card .s { font-size: 11px; color: #555; margin-top: 2px; }
+  .pal-row { background: #fff; border-radius: 4px; padding: 10px 14px; margin-bottom: 8px; border: 1px solid var(--c-border); display: flex; justify-content: space-between; align-items: center; }
+  .pal-row .l { font-size: 13px; color: #111; font-weight: 500; }
+  .pal-row .r { font-size: 13px; color: #111; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .pal-button { display: inline-block; padding: 8px 14px; background: var(--c-primary); color: #fff; border-radius: 4px; font-size: 12.5px; font-weight: 600; margin-top: 4px; }
+
+  .pal-meta { padding: 14px 16px; background: #fff; border-top: 1px solid #eee; }
+  .pal-meta h3 { margin: 0 0 4px 0; font-size: 15.5px; }
+  .pal-meta p { margin: 0 0 8px 0; font-size: 12px; color: #666; line-height: 1.5; }
+  .pal-swatches { display: flex; gap: 6px; }
+  .sw { width: 22px; height: 22px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.06); }
+  .sw-label { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 9px; color: #888; }
+
+  /* 1 — Civic Blue (cool) */
+  .pal-1 { --c-primary: #0B5394; --c-border: #E2E8F0; }
+  .pal-1 .pal-preview { background: #F4F6F9; }
+
+  /* 2 — Deep Teal (balanced) */
+  .pal-2 { --c-primary: #0E6E6E; --c-border: #E2E8F0; }
+  .pal-2 .pal-preview { background: #F2F6F6; }
+
+  /* 3 — Indigo + warm neutrals */
+  .pal-3 { --c-primary: #3949AB; --c-border: #EFE9E1; }
+  .pal-3 .pal-preview { background: #FAF7F2; }
+
+  /* 4 — Forest + warm neutrals */
+  .pal-4 { --c-primary: #1F5132; --c-border: #EFE9E1; }
+  .pal-4 .pal-preview { background: #FAF7F2; }
+</style>
+
+<div class="palettes">
+
+  <div class="pal pal-1" data-choice="civic-blue" onclick="toggleSelect(this)">
+    <div class="pal-preview">
+      <div class="pal-card">
+        <div class="t">Today's meal: Dal Tadka</div>
+        <div class="s">Lunch · serves 4 · 30 min</div>
+      </div>
+      <div class="pal-row"><span class="l">Electricity bill</span><span class="r">₹2,840.00</span></div>
+      <div class="pal-row"><span class="l">Gas refill</span><span class="r">₹1,150.00</span></div>
+      <div class="pal-button">Mark paid</div>
+    </div>
+    <div class="pal-meta">
+      <h3>1 · Civic Blue (cool)</h3>
+      <p>Banking-app classic. Cool, professional, slightly institutional. Strongest "this is serious" signal.</p>
+      <div class="pal-swatches">
+        <div class="sw" style="background:#0B5394"></div>
+        <div class="sw" style="background:#F4F6F9"></div>
+        <div class="sw" style="background:#E2E8F0"></div>
+        <div class="sw" style="background:#111"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pal pal-2" data-choice="deep-teal" onclick="toggleSelect(this)">
+    <div class="pal-preview">
+      <div class="pal-card">
+        <div class="t">Today's meal: Dal Tadka</div>
+        <div class="s">Lunch · serves 4 · 30 min</div>
+      </div>
+      <div class="pal-row"><span class="l">Electricity bill</span><span class="r">₹2,840.00</span></div>
+      <div class="pal-row"><span class="l">Gas refill</span><span class="r">₹1,150.00</span></div>
+      <div class="pal-button">Mark paid</div>
+    </div>
+    <div class="pal-meta">
+      <h3>2 · Deep Teal (balanced)</h3>
+      <p>Trustworthy but slightly warmer than blue. Less "bank", more "thoughtful product". Distinctive without being loud.</p>
+      <div class="pal-swatches">
+        <div class="sw" style="background:#0E6E6E"></div>
+        <div class="sw" style="background:#F2F6F6"></div>
+        <div class="sw" style="background:#E2E8F0"></div>
+        <div class="sw" style="background:#111"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pal pal-3" data-choice="indigo-warm" onclick="toggleSelect(this)">
+    <div class="pal-preview">
+      <div class="pal-card">
+        <div class="t">Today's meal: Dal Tadka</div>
+        <div class="s">Lunch · serves 4 · 30 min</div>
+      </div>
+      <div class="pal-row"><span class="l">Electricity bill</span><span class="r">₹2,840.00</span></div>
+      <div class="pal-row"><span class="l">Gas refill</span><span class="r">₹1,150.00</span></div>
+      <div class="pal-button">Mark paid</div>
+    </div>
+    <div class="pal-meta">
+      <h3>3 · Indigo + warm neutrals (recommended)</h3>
+      <p>Indigo keeps the trust signal of blue, but cream/sand surfaces add warmth so food and bills can coexist without one feeling wrong. Most flexible across feature domains.</p>
+      <div class="pal-swatches">
+        <div class="sw" style="background:#3949AB"></div>
+        <div class="sw" style="background:#FAF7F2"></div>
+        <div class="sw" style="background:#EFE9E1"></div>
+        <div class="sw" style="background:#111"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pal pal-4" data-choice="forest-warm" onclick="toggleSelect(this)">
+    <div class="pal-preview">
+      <div class="pal-card">
+        <div class="t">Today's meal: Dal Tadka</div>
+        <div class="s">Lunch · serves 4 · 30 min</div>
+      </div>
+      <div class="pal-row"><span class="l">Electricity bill</span><span class="r">₹2,840.00</span></div>
+      <div class="pal-row"><span class="l">Gas refill</span><span class="r">₹1,150.00</span></div>
+      <div class="pal-button">Mark paid</div>
+    </div>
+    <div class="pal-meta">
+      <h3>4 · Forest + warm neutrals</h3>
+      <p>Naturalistic, food-friendly, "growing things" connotation. Less conventionally "trust", but pairs nicely with a household + cooking domain.</p>
+      <div class="pal-swatches">
+        <div class="sw" style="background:#1F5132"></div>
+        <div class="sw" style="background:#FAF7F2"></div>
+        <div class="sw" style="background:#EFE9E1"></div>
+        <div class="sw" style="background:#111"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="background: #FFFBE6; border: 1px solid #F5E6A3; border-radius: 10px; padding: 14px; font-size: 13px; color: #5C4400;">
+  <strong>My recommendation: 3 (Indigo + warm neutrals).</strong> Indigo is close enough to civic blue to carry the trust signal, and warm cream surfaces soften the chassis just enough that recipes and meal plans don't feel out of place. If you want the strictest "bank-grade" read, pick 1. If you want maximum food/household personality at the cost of slight trust signal, pick 4.
+</div>
+</body></html>

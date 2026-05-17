@@ -1,15 +1,22 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { RecipeForm } from "@/components/recipes/recipe-form";
 
 export default async function NewRecipePage() {
   await requireHousehold();
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="recipes" />
-      <header className="border-b border-border px-4 py-3">
-        <h1 className="text-lg font-semibold">New recipe</h1>
-      </header>
+      <TopAppBar
+        title="New recipe"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/recipes?view=library" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+      />
       <RecipeForm mode="create" />
     </main>
   );

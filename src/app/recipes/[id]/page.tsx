@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient } from "@/lib/supabase/server";
 import { buttonVariants } from "@/components/ui/button";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { RecipeDetail } from "@/components/recipes/recipe-detail";
 import { cn } from "@/lib/utils";
 
@@ -43,17 +45,19 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="recipes" />
-      <div className="px-4 pt-3">
-        <Link href="/recipes?view=library" className="text-xs text-muted-foreground hover:text-foreground">
-          ← Recipes
-        </Link>
-      </div>
-      <div className="flex items-center justify-end border-b border-border px-4 py-2">
-        {canEdit && (
-          <Link href={`/recipes/${id}/edit`} className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>Edit</Link>
-        )}
-      </div>
+      <TopAppBar
+        title="Recipe"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/recipes?view=library" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+        trailing={
+          canEdit ? (
+            <Link href={`/recipes/${id}/edit`} className={cn(buttonVariants({ size: "sm", variant: "secondary" }))}>Edit</Link>
+          ) : undefined
+        }
+      />
       <RecipeDetail
         name={recipe.name}
         slot={recipe.slot as "breakfast" | "lunch" | "snacks" | "dinner"}

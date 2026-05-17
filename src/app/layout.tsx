@@ -1,10 +1,23 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Geist } from "next/font/google";
+import { IBM_Plex_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Home, ShoppingCart, Utensils, Package } from "lucide-react";
+import { TabBar, type Tab } from "@/components/ui/tab-bar";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const TABS: Tab[] = [
+  { href: "/dashboard", label: "Home", icon: <Home /> },
+  { href: "/recipes", label: "Meals", icon: <Utensils /> },
+  { href: "/shopping", label: "Shop", icon: <ShoppingCart /> },
+  { href: "/inventory", label: "Inventory", icon: <Package /> },
+];
+
+const plex = IBM_Plex_Sans({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+});
 
 const APP_NAME = "Zomaid";
 const APP_DESCRIPTION = "Zomaid PWA";
@@ -36,8 +49,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={cn("font-sans", geist.variable)}>
-        <body className="min-h-dvh antialiased">
+      <html lang="en" className={cn("font-sans", plex.variable)}>
+        <body className="min-h-dvh antialiased pb-[calc(56px+env(safe-area-inset-bottom))]">
           {process.env.NODE_ENV === "development" && (
             // TEMP DIAGNOSTIC: react-server-dom-turbopack's flushComponentPerformance
             // can call performance.measure(name, { start: 0, end: -Infinity }) when an
@@ -51,6 +64,7 @@ export default function RootLayout({
             />
           )}
           {children}
+          <TabBar tabs={TABS} />
         </body>
       </html>
     </ClerkProvider>

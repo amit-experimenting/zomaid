@@ -1,14 +1,18 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
-import { MainNav } from "@/components/site/main-nav";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import {
   createInvite, removeMembership,
   updateHouseholdDiet, updateMembershipDiet, updateMembershipPrivilege,
 } from "@/app/household/settings/actions";
 import { HouseholdDietForm } from "@/components/household/household-diet-form";
-import { PendingButton } from "@/components/ui/pending-button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { NotificationToggle } from "@/components/tasks/notification-toggle";
+import { Banner } from "@/components/ui/banner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,12 +101,33 @@ export default async function HouseholdSettingsPage() {
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="home" />
+      <TopAppBar
+        title="Household settings"
+        leading={
+          <IconButton variant="ghost" aria-label="Back" render={<Link href="/dashboard" />}>
+            <ChevronLeft />
+          </IconButton>
+        }
+      />
       <div className="px-4 py-6 space-y-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{ctx.household.name}</h1>
-        <p className="text-sm text-muted-foreground">Household settings</p>
       </header>
+
+      <section>
+        <h2 className="text-sm font-semibold text-text-primary mb-2">Household profile</h2>
+        <Banner
+          tone="neutral"
+          title="About your home"
+          action={
+            <Link href="/onboarding/profile?edit=1" className="text-primary font-semibold text-sm">
+              Update →
+            </Link>
+          }
+        >
+          Who lives here, pets, work hours, and home features — used to filter task suggestions.
+        </Banner>
+      </section>
 
       {(isOwner || isMaid) && (
         <Card>
@@ -195,7 +220,7 @@ export default async function HouseholdSettingsPage() {
                           <option value="eggitarian">Eggitarian</option>
                           <option value="non_vegetarian">Non-veg</option>
                         </select>
-                        <PendingButton type="submit" size="sm" variant="outline">Save</PendingButton>
+                        <SubmitButton size="sm" variant="secondary">Save</SubmitButton>
                       </form>
                     ) : null}
                     {isOwner && m.role === "family_member" ? (
@@ -205,15 +230,15 @@ export default async function HouseholdSettingsPage() {
                           <option value="meal_modify">meal_modify</option>
                           <option value="view_only">view_only</option>
                         </select>
-                        <PendingButton type="submit" size="sm" variant="outline">Update</PendingButton>
+                        <SubmitButton size="sm" variant="secondary">Update</SubmitButton>
                       </form>
                     ) : null}
                     {canRemove ? (
                       <form action={remove}>
                         <input type="hidden" name="membershipId" value={m.id} />
-                        <PendingButton type="submit" size="sm" variant="destructive">
+                        <SubmitButton size="sm" variant="destructive">
                           {p.id === ctx.profile.id ? "Leave" : "Remove"}
-                        </PendingButton>
+                        </SubmitButton>
                       </form>
                     ) : null}
                   </div>
@@ -238,7 +263,7 @@ export default async function HouseholdSettingsPage() {
                     <option value="meal_modify">meal_modify ($9)</option>
                   </select>
                 </div>
-                <PendingButton type="submit">Invite family member</PendingButton>
+                <SubmitButton>Invite family member</SubmitButton>
               </div>
               <div className="space-y-1">
                 <Input name="email" type="email" placeholder="Email (optional)" />
@@ -248,7 +273,7 @@ export default async function HouseholdSettingsPage() {
           ) : null}
           {isOwner ? (
             <form action={inviteMaid} className="space-y-3">
-              <PendingButton type="submit" variant="outline">Invite maid</PendingButton>
+              <SubmitButton variant="secondary">Invite maid</SubmitButton>
               <div className="space-y-1">
                 <Input name="email" type="email" placeholder="Email (optional)" />
                 <p className="text-xs text-muted-foreground">Auto-join when this email signs in.</p>
@@ -257,7 +282,7 @@ export default async function HouseholdSettingsPage() {
           ) : null}
           {isMaid ? (
             <form action={inviteOwner} className="space-y-3">
-              <PendingButton type="submit" variant="outline">Invite owner</PendingButton>
+              <SubmitButton variant="secondary">Invite owner</SubmitButton>
               <div className="space-y-1">
                 <Input name="email" type="email" placeholder="Email (optional)" />
                 <p className="text-xs text-muted-foreground">Auto-join when this email signs in.</p>

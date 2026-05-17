@@ -43,7 +43,7 @@ export default async function OnboardingPage() {
             <CardDescription>Got a 6-digit code or a link.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/join/code" className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
+            <Link href="/join/code" className={cn(buttonVariants({ variant: "secondary" }), "w-full")}>
               Enter code
             </Link>
           </CardContent>

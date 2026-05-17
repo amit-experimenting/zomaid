@@ -3,7 +3,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import imageCompression from "browser-image-compression";
 import { Button } from "@/components/ui/button";
-import { PendingButton } from "@/components/ui/pending-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -178,7 +177,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
             <Button type="button" variant="ghost" onClick={() => setIngredients(ingredients.filter((_, idx) => idx !== i))}>×</Button>
           </div>
         ))}
-        <Button type="button" variant="outline" onClick={() => setIngredients([...ingredients, { item_name: "", quantity: null, unit: null }])}>+ Add ingredient</Button>
+        <Button type="button" variant="secondary" onClick={() => setIngredients([...ingredients, { item_name: "", quantity: null, unit: null }])}>+ Add ingredient</Button>
       </fieldset>
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Steps</legend>
@@ -189,14 +188,14 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
             <Button type="button" variant="ghost" onClick={() => setSteps(steps.filter((_, idx) => idx !== i))}>×</Button>
           </div>
         ))}
-        <Button type="button" variant="outline" onClick={() => setSteps([...steps, { instruction: "" }])}>+ Add step</Button>
+        <Button type="button" variant="secondary" onClick={() => setSteps([...steps, { instruction: "" }])}>+ Add step</Button>
       </fieldset>
       <div>
         <Label htmlFor="notes">Notes</Label>
         <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <PendingButton type="submit" pending={pending}>{mode === "create" ? "Create recipe" : "Save changes"}</PendingButton>
+      <Button type="submit" loading={pending}>{mode === "create" ? "Create recipe" : "Save changes"}</Button>
     </form>
   );
 }

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RecipeCard } from "@/components/recipes/recipe-card";
-import { MainNav } from "@/components/site/main-nav";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 import { DayStrip } from "@/components/site/day-strip";
 import { SlotRow } from "@/components/plan/slot-row";
 import { SlotActionSheet } from "@/components/plan/slot-action-sheet";
@@ -208,15 +208,14 @@ async function PlannedView({ ctxDate }: { ctxDate: string | undefined }) {
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="recipes" />
-      <div className="px-4 py-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Planned meals</h1>
+      <TopAppBar
+        title="Meal plan"
+        trailing={
           <Link href="/recipes?view=library">
-            <Button variant="outline">Recipes</Button>
+            <Button variant="secondary">Recipes</Button>
           </Link>
-        </div>
-      </div>
+        }
+      />
       <DayStrip activeYmd={selectedYmd} baseHref="/recipes" />
       {libraryEmpty ? (
         <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
@@ -329,25 +328,26 @@ async function LibraryView({
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="recipes" />
-      <div className="px-4 py-4">
-        <div className="flex items-center justify-between gap-2">
-          <h1 className="text-lg font-semibold">Recipes</h1>
+      <TopAppBar
+        title="Recipes"
+        trailing={
           <div className="flex items-center gap-2">
             <Link href="/recipes">
-              <Button variant="outline">Planned meals</Button>
+              <Button variant="secondary">Planned</Button>
             </Link>
             <Link href="/recipes/new"><Button>+ Add</Button></Link>
           </div>
-        </div>
-        <form className="mt-4 flex gap-2" action="/recipes" method="get">
+        }
+      />
+      <div className="px-4 py-4">
+        <form className="flex gap-2" action="/recipes" method="get">
           <input type="hidden" name="view" value="library" />
           <Input name="q" placeholder="Search" defaultValue={q ?? ""} />
           <select name="slot" defaultValue={slot ?? ""} className="rounded-md border bg-background px-3 text-sm">
             <option value="">All</option>
             {ALL_SLOTS.map((s) => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}
           </select>
-          <Button type="submit" variant="outline">Filter</Button>
+          <Button type="submit" variant="secondary">Filter</Button>
         </form>
         <div className="mt-4 grid gap-2">
           {cards.length === 0 && <p className="py-8 text-center text-muted-foreground">No recipes match.</p>}

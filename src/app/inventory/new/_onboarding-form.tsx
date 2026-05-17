@@ -3,7 +3,7 @@
 import { useId, useRef, useState } from "react";
 import { createInventoryItemsBulk } from "@/app/inventory/actions";
 import { STARTER_ITEMS } from "@/app/inventory/_starter-items";
-import { PendingButton } from "@/components/ui/pending-button";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 const UNIT_OPTIONS = ["kg", "g", "l", "ml", "piece"] as const;
 
@@ -63,9 +63,9 @@ export function OnboardingInventoryForm() {
         + Add another item
       </button>
 
-      <PendingButton type="submit" className="mt-3">
+      <SubmitButton className="mt-3">
         Save inventory
-      </PendingButton>
+      </SubmitButton>
     </form>
   );
 }

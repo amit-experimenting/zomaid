@@ -105,7 +105,7 @@ export function NotificationToggle() {
         Notifications: {state === "on" ? "On (this device)" : "Off"}
       </span>
       {state === "off" ? (
-        <Button type="button" size="sm" variant="outline" disabled={pending} onClick={enable}>Enable</Button>
+        <Button type="button" size="sm" variant="secondary" disabled={pending} onClick={enable}>Enable</Button>
       ) : (
         <Button type="button" size="sm" variant="ghost" disabled={pending} onClick={disable}>Disable</Button>
       )}

@@ -1,15 +1,11 @@
-import { MainNav } from "@/components/site/main-nav";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 
 export default function RecipesLoading() {
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="recipes" />
+      <TopAppBar title="Recipes" />
       <div className="px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="h-5 w-24 animate-pulse rounded bg-muted" />
-          <div className="h-8 w-16 animate-pulse rounded-lg bg-muted" />
-        </div>
-        <div className="mt-4 flex gap-2">
+        <div className="flex gap-2">
           <div className="h-8 flex-1 animate-pulse rounded-md bg-muted" />
           <div className="h-8 w-24 animate-pulse rounded-md bg-muted" />
           <div className="h-8 w-16 animate-pulse rounded-md bg-muted" />

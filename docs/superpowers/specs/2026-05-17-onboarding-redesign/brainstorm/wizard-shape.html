@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — wizard-shape</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#FAF7F2;color:#111;}.archive-note{background:#fff;border-bottom:1px solid #EFE9E1;padding:10px 16px;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;}</style>
+</head><body>
+<div class="archive-note">Brainstorm artifact · wizard-shape.html · 2026-05-17</div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+  body { font-family: 'IBM Plex Sans', sans-serif; background: #FAF7F2; }
+  h2 { font-size: 22px; font-weight: 600; margin: 8px 0 6px; }
+  .sub { color: #555; font-size: 13px; margin: 0 0 18px; }
+
+  .opts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .opt { background: #fff; border: 2px solid #EFE9E1; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+  .opt:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+  .opt.selected { border-color: #3949AB; box-shadow: 0 0 0 4px rgba(57,73,171,0.15); }
+
+  .opt-head { padding: 12px 14px; background: #FAF7F2; border-bottom: 1px solid #EFE9E1; }
+  .opt-head .lbl { font-size: 10.5px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .opt-head h3 { margin: 2px 0 0; font-size: 15px; font-weight: 600; color: #111; }
+
+  .opt-preview { padding: 14px; min-height: 360px; background: #FAF7F2; }
+  .opt-foot { padding: 12px 14px; font-size: 12px; color: #555; border-top: 1px solid #EFE9E1; background: #fff; }
+  .opt-foot strong { color: #111; }
+
+  /* Mini-mockup styling within an opt */
+  .mock-screen { background: #fff; border: 1px solid #EFE9E1; border-radius: 8px; padding: 14px; }
+  .mock-screen .topbar { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #555; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #EFE9E1; }
+  .mock-screen .topbar .step { font-weight: 600; color: #3949AB; }
+  .mock-screen .qtitle { font-size: 14px; font-weight: 600; color: #111; margin-bottom: 12px; }
+  .mock-screen .opt-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: #FAF7F2; border-radius: 6px; margin-bottom: 6px; font-size: 12px; }
+  .mock-screen .opt-row.active { background: #E8EAF6; border: 1px solid #3949AB; }
+  .mock-screen .opt-row .num { width: 20px; height: 20px; background: #EFE9E1; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 600; color: #777; }
+  .mock-screen .opt-row.active .num { background: #3949AB; color: #fff; }
+  .mock-screen .opt-row .lbl { flex: 1; color: #111; }
+  .mock-screen .opt-row.checkbox .check { width: 16px; height: 16px; border: 1.5px solid #B0AFAA; border-radius: 3px; }
+  .mock-screen .opt-row.checkbox.checked .check { background: #3949AB; border-color: #3949AB; }
+  .mock-screen .opt-row .arrow { color: #B0AFAA; }
+  .mock-screen .bottombar { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px solid #EFE9E1; }
+  .mock-screen .progress { font-size: 11px; color: #888; }
+  .mock-screen .nextbtn { background: #3949AB; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 11.5px; font-weight: 600; }
+  .mock-screen .skipbtn { background: transparent; color: #555; padding: 6px 12px; border-radius: 6px; font-size: 11.5px; border: 1px solid #EFE9E1; }
+
+  .scroll-mock { background: #fff; border: 1px solid #EFE9E1; border-radius: 8px; padding: 14px; }
+  .scroll-mock .qblock { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px dashed #EFE9E1; }
+  .scroll-mock .qblock:last-of-type { border: none; margin-bottom: 0; }
+  .scroll-mock .qblock .qtitle { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #111; }
+  .scroll-mock .chip { display: inline-block; padding: 4px 10px; background: #FAF7F2; border: 1px solid #EFE9E1; border-radius: 999px; font-size: 11px; margin-right: 4px; margin-bottom: 4px; }
+  .scroll-mock .chip.active { background: #E8EAF6; border-color: #3949AB; color: #3949AB; font-weight: 600; }
+
+  .inline-mock { background: #fff; border: 1px solid #EFE9E1; border-radius: 8px; padding: 14px; }
+  .inline-mock .summary { background: #FAF7F2; padding: 8px 10px; border-radius: 6px; font-size: 11px; color: #555; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+  .inline-mock .summary .edit { color: #3949AB; font-weight: 600; font-size: 11px; }
+  .inline-mock .task { padding: 8px 10px; border-bottom: 1px solid #EFE9E1; font-size: 12px; display: flex; gap: 8px; align-items: center; }
+  .inline-mock .task:last-child { border: none; }
+  .inline-mock .task .check { width: 14px; height: 14px; border: 1.5px solid #B0AFAA; border-radius: 3px; }
+  .inline-mock .task.checked .check { background: #3949AB; border-color: #3949AB; }
+</style>
+
+<h2>Question 6 — wizard layout</h2>
+<p class="sub">All three use the existing primitives (Card, Button, IconButton, ListRow-style rows). The difference is information density per screen and where the picker fits.</p>
+
+<div class="opts">
+
+  <div class="opt selected" data-choice="a" onclick="toggleSelect(this)">
+    <div class="opt-head">
+      <div class="lbl">Option a · recommended</div>
+      <h3>1 question per screen, wizard</h3>
+    </div>
+    <div class="opt-preview">
+      <div class="mock-screen">
+        <div class="topbar"><span>Household profile</span><span class="step">3 of 8</span></div>
+        <div class="qtitle">Do you have any pets?</div>
+        <div class="opt-row"><span class="num">1</span><span class="lbl">No pets</span></div>
+        <div class="opt-row active"><span class="num">2</span><span class="lbl">Dog(s)</span><span class="arrow">›</span></div>
+        <div class="opt-row"><span class="num">3</span><span class="lbl">Cat(s)</span></div>
+        <div class="opt-row"><span class="num">4</span><span class="lbl">Other pets</span></div>
+        <div class="opt-row"><span class="num">5</span><span class="lbl">Multiple types</span></div>
+        <div class="bottombar"><span class="progress">●●●○○○○○</span><span class="nextbtn">Next →</span></div>
+      </div>
+    </div>
+    <div class="opt-foot">
+      <strong>Matches your mockup.</strong> Linear, low-cognitive-load, clear progress. 8 separate route renders. Most code; nicest UX on mobile.
+    </div>
+  </div>
+
+  <div class="opt" data-choice="b" onclick="toggleSelect(this)">
+    <div class="opt-head">
+      <div class="lbl">Option b</div>
+      <h3>Single scrolling form</h3>
+    </div>
+    <div class="opt-preview">
+      <div class="scroll-mock" style="font-size:11px;">
+        <div style="font-weight:600;margin-bottom:10px;font-size:13px;">Household profile</div>
+        <div class="qblock">
+          <div class="qtitle">Age groups present</div>
+          <span class="chip">Infants</span><span class="chip active">School-age</span><span class="chip">Teens</span><span class="chip">Adults</span><span class="chip">Seniors</span>
+        </div>
+        <div class="qblock">
+          <div class="qtitle">Pets</div>
+          <span class="chip">None</span><span class="chip active">Dog(s)</span><span class="chip">Cat(s)</span><span class="chip">Other</span>
+        </div>
+        <div class="qblock">
+          <div class="qtitle">Work hours</div>
+          <span class="chip">WFH</span><span class="chip">Office</span><span class="chip active">Mixed</span><span class="chip">Retired</span>
+        </div>
+        <div class="qblock">
+          <div class="qtitle">School-age children</div>
+          <span class="chip active">Yes, all</span><span class="chip">Some</span><span class="chip">Homeschool</span><span class="chip">No</span>
+        </div>
+        <div style="text-align:center;color:#888;font-size:10px;margin:6px 0;">… 4 more questions ↓</div>
+        <div style="text-align:right;margin-top:8px;"><span style="background:#3949AB;color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;">Save profile</span></div>
+      </div>
+    </div>
+    <div class="opt-foot">
+      <strong>One screen, all 8.</strong> Fastest to fill if user is decisive. Less hand-holding. Single route. Cheapest to build. Feels heavier on small mobile screens.
+    </div>
+  </div>
+
+  <div class="opt" data-choice="c" onclick="toggleSelect(this)">
+    <div class="opt-head">
+      <div class="lbl">Option c</div>
+      <h3>Inline on the picker page</h3>
+    </div>
+    <div class="opt-preview">
+      <div class="inline-mock">
+        <div class="summary"><span>Filter: school-age, dog, balcony, plants…</span><span class="edit">Edit profile →</span></div>
+        <div style="font-size:11px;color:#888;margin-bottom:8px;">Showing 38 of 85 tasks for your home</div>
+        <div class="task checked"><span class="check"></span><span>Prepare breakfast · 07:00 daily</span></div>
+        <div class="task checked"><span class="check"></span><span>Pack school lunch boxes · 08:30 daily</span></div>
+        <div class="task checked"><span class="check"></span><span>Walk dog · 07:00 + 18:00 daily</span></div>
+        <div class="task"><span class="check"></span><span>Water indoor plants · every 2 days</span></div>
+        <div class="task"><span class="check"></span><span>Clean balcony · weekly Wed</span></div>
+        <div style="text-align:center;margin-top:8px;"><span style="font-size:11px;color:#3949AB;font-weight:600;">+ Show 47 more tasks</span></div>
+      </div>
+    </div>
+    <div class="opt-foot">
+      <strong>No separate questionnaire route.</strong> User answers via a modal/sheet from the picker. Tightest flow; minimal screen count. Question wording carries less emphasis (it's "filter UI" not "wizard"). May feel cramped for 8 questions.
+    </div>
+  </div>
+
+</div>
+
+<div style="background:#FFFBE6;border:1px solid #F5E6A3;border-radius:8px;padding:14px;margin-top:18px;font-size:13px;color:#5C4400;">
+  <strong>My recommendation: a (1-per-screen wizard).</strong> Matches the mockup you shared. The questions are short and the answers fit on one screen each — exactly the case where wizard pattern shines (low cognitive load, clear progress, easy to back out). (b) is faster but loses the "this is meaningful, please think" framing — and on a mobile keyboard, scrolling 8 questions feels long. (c) is technically tidiest but the questionnaire becomes invisible filter UI rather than a meaningful onboarding step. Since this is a first-time-only commitment, (a)'s extra screens are worth the polish.
+</div>
+</body></html>

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { requireHousehold } from "@/lib/auth/require";
 import { createInventoryItem } from "@/app/inventory/actions";
-import { MainNav } from "@/components/site/main-nav";
-import { PendingButton } from "@/components/ui/pending-button";
+import { IconButton } from "@/components/ui/icon-button";
+import { TopAppBar } from "@/components/ui/top-app-bar";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { cn } from "@/lib/utils";
 import { OnboardingInventoryForm } from "./_onboarding-form";
 import { UploadBillForm } from "./_bill-form";
@@ -36,24 +38,23 @@ export default async function NewInventoryItemPage({
 
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="inventory" />
-      {!isOnboarding && (
-        <div className="px-4 pt-3">
-          <Link href="/inventory" className="text-xs text-muted-foreground hover:text-foreground">
-            ← Inventory
-          </Link>
-        </div>
-      )}
-      <header className="px-4 py-3">
-        <h1 className="text-lg font-semibold">
-          {isOnboarding ? "Set up your inventory" : "Add an item"}
-        </h1>
-        {isOnboarding && (
-          <p className="mt-1 text-sm text-muted-foreground">
+      <TopAppBar
+        title={isOnboarding ? "Set up your inventory" : "Add to inventory"}
+        leading={
+          !isOnboarding ? (
+            <IconButton variant="ghost" aria-label="Back" render={<Link href="/inventory" />}>
+              <ChevronLeft />
+            </IconButton>
+          ) : undefined
+        }
+      />
+      {isOnboarding && (
+        <header className="px-4 py-3">
+          <p className="text-sm text-muted-foreground">
             Fill in any quantities you have on hand. Skip items you don&apos;t track.
           </p>
-        )}
-      </header>
+        </header>
+      )}
 
       {!isOnboarding && (
         <nav className="flex gap-1 border-b px-4" aria-label="Add inventory mode">
@@ -102,7 +103,7 @@ export default async function NewInventoryItemPage({
               placeholder="e.g. kg, g, l, ml, piece"
             />
           </label>
-          <PendingButton type="submit">Save</PendingButton>
+          <SubmitButton>Save</SubmitButton>
         </form>
       )}
     </main>

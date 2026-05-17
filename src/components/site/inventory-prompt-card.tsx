@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useTransition } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Banner } from "@/components/ui/banner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { dismissInventoryCard } from "@/app/inventory/actions";
@@ -9,15 +9,11 @@ import { dismissInventoryCard } from "@/app/inventory/actions";
 export function InventoryPromptCard() {
   const [pending, start] = useTransition();
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-3 p-4">
-        <div>
-          <div className="text-sm font-semibold">Set up your kitchen inventory</div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            Track stock so the app can warn you when ingredients run low.
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
+    <Banner
+      tone="info"
+      title="Set up your kitchen inventory"
+      action={
+        <div className="flex items-center justify-between gap-2">
           <Link
             href="/inventory/new?onboarding=1"
             className={cn(buttonVariants({ size: "sm" }))}
@@ -33,7 +29,9 @@ export function InventoryPromptCard() {
             Skip
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      }
+    >
+      Track stock so the app can warn you when ingredients run low.
+    </Banner>
   );
 }

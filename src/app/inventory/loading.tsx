@@ -1,13 +1,9 @@
-import { MainNav } from "@/components/site/main-nav";
+import { TopAppBar } from "@/components/ui/top-app-bar";
 
 export default function InventoryLoading() {
   return (
     <main className="mx-auto max-w-md">
-      <MainNav active="inventory" />
-      <header className="flex items-center justify-between px-4 py-3">
-        <div className="h-5 w-24 animate-pulse rounded bg-muted" />
-        <div className="h-7 w-20 animate-pulse rounded-md bg-muted" />
-      </header>
+      <TopAppBar title="Inventory" />
       <div className="flex flex-col gap-2 px-4 py-2">
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
