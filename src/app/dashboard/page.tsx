@@ -67,6 +67,9 @@ export default async function DashboardPage({
   const showHouseholdModeCard =
     ctx.membership.role === "owner" && ctx.household.maid_mode === "unset";
 
+  const isOwnerOrMaid =
+    ctx.membership.role === "owner" || ctx.membership.role === "maid";
+
   const supabase = await createClient();
 
   const profileRes = await supabase
@@ -77,19 +80,20 @@ export default async function DashboardPage({
   const profileExists = (profileRes.count ?? 0) > 0;
 
   const showProfilePromptCard =
-    ctx.household.maid_mode !== "unset" && !profileExists;
+    ctx.household.maid_mode !== "unset" && !profileExists && isOwnerOrMaid;
 
   const showTaskSetupPromptCard =
     ctx.household.maid_mode !== "unset" &&
     profileExists &&
-    !setupCompleted;
+    !setupCompleted &&
+    isOwnerOrMaid;
 
   // Recovery path: setup latched as complete but household has zero tasks
   // (e.g. wiped by a migration). The action is re-guarded server-side
-  // against the same zero-tasks condition. Role gate dropped — either
-  // owner or maid can recover.
+  // against the same zero-tasks condition. Role gate: owner or maid can
+  // recover, but family_member cannot.
   let showTaskSetupRerunCard = false;
-  if (setupCompleted) {
+  if (setupCompleted && isOwnerOrMaid) {
     const { count, error } = await supabase
       .from("tasks")
       .select("id", { count: "exact", head: true })
@@ -195,8 +199,6 @@ export default async function DashboardPage({
   const selectedYmd = resolveSelectedYmd(sp?.date, todayYmd);
   const isToday = selectedYmd === todayYmd;
 
-  const isOwnerOrMaid =
-    ctx.membership.role === "owner" || ctx.membership.role === "maid";
   const canAddTasks = isOwnerOrMaid || ctx.membership.role === "family_member";
   const taskActionsEnabled = isOwnerOrMaid;
 

@@ -122,3 +122,30 @@ Indirect coverage exists via `tests/db/household-profiles.test.ts` and `tests/db
 **When picking up:** create `tests/actions/finalize-picks.test.ts` that ports the CAS / rollback / lost-race / hide-upsert scenarios from the deleted wizard suite, adapted to the new function signature `finalizePicksAction(picks: string[])`.
 
 Why deferred: not blocking for merge — the logic exists, just untested. Risk is regression-on-future-edit rather than current correctness.
+
+---
+
+## Partial-failure rollback in finalizePicksAction
+
+`src/app/onboarding/tasks/actions.ts` `finalizePicksAction` wraps `tasks.insert`, `household_task_hides.upsert`, and `tasks_generate_occurrences` RPC in a single try/catch. On catch, it resets `task_setup_completed_at = null` but does NOT delete the already-inserted task rows. If the user retries (the prompt card will surface again because the gate is null), the same rows get inserted again — no uniqueness constraint on (household_id, title, recurrence) protects against duplicates.
+
+Realistic failure rate is low (the operations after the insert are simple Postgres ops, not external calls), but worth fixing when picking up. Options:
+- Add `delete from public.tasks where household_id = $1` to the catch block before resetting the gate.
+- Or add a uniqueness constraint `(household_id, title, recurrence_frequency, recurrence_interval, recurrence_byweekday, recurrence_bymonthday, due_time)` on `tasks` so duplicate inserts conflict instead of accumulating.
+- Or use a true Postgres transaction wrapping all three writes (currently they're separate Supabase client calls).
+
+---
+
+## `work:*` matching tags emitted but never consumed
+
+`src/lib/profile/matching-tags.ts` emits `work:wfh` / `work:office` / `work:mixed` / `work:retired` based on the work-hours answer, but no seeded task in `supabase/migrations/20260709_001_household_profile_v2.sql` carries a `work:*` tag. The question is asked, the answer is stored, but it has zero filtering effect on the picker today.
+
+To resolve: either (a) add work-relevant tags to specific tasks (e.g., "Receive packages" → `work:office` since WFH people are home for deliveries; "Prepare midday tea" → `work:wfh`), OR (b) drop the work_hours question from the form and the column from `household_profiles` and the emission from matching-tags. Until resolved, the user experiences a question that has no observable effect.
+
+---
+
+## `task_setup_drafts.tuned_json` is dead schema
+
+The `tune` step was deleted in this work. The `tuned_json jsonb null` column on `task_setup_drafts` (defined in `supabase/migrations/20260705_001_household_setup_gates.sql`) is no longer written to by any code path. Still referenced in `src/lib/db/types.ts` types.
+
+To resolve: future migration `alter table public.task_setup_drafts drop column tuned_json;` and regenerate `src/lib/db/types.ts`.
