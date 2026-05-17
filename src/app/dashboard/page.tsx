@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireHousehold } from "@/lib/auth/require";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site-url";
@@ -58,6 +59,17 @@ export default async function DashboardPage({
   searchParams: Promise<{ date?: string }>;
 }) {
   const ctx = await requireHousehold();
+
+  // Maid-only personal-profile gate. Owners and family members are NOT
+  // redirected, even if their onboarding_completed_at is NULL — they can
+  // optionally fill in their profile via Settings → My Profile.
+  if (
+    ctx.membership.role === "maid" &&
+    ctx.profile.onboarding_completed_at == null
+  ) {
+    redirect("/onboarding/personal");
+  }
+
   const origin = await siteUrl();
   const sp = await searchParams;
 
