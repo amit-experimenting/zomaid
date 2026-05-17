@@ -37,7 +37,7 @@ Maid clicks /join/{token}
   → /dashboard
 ```
 
-If `onboarding_completed_at` is already set, the onboarding page redirects to `/dashboard`. The dashboard, in turn, redirects any signed-in member with `onboarding_completed_at IS NULL` to `/onboarding/profile`. This gate covers users who land on `/dashboard` directly (bookmark, post-login fallback) without going through `/join/{token}`.
+If `onboarding_completed_at` is already set, the onboarding page redirects to `/dashboard`. The dashboard, in turn, redirects **maids only** with `onboarding_completed_at IS NULL` to `/onboarding/profile`. This gate covers maids who land on `/dashboard` directly (bookmark, post-login fallback) without going through `/join/{token}`, and ensures existing maids (who predate this feature) also pass through the form on next visit. Owners are never redirected.
 
 ## Schema
 
@@ -49,16 +49,11 @@ alter table public.profiles
   add column passport_expiry       date,
   add column preferred_language    text,
   add column onboarding_completed_at timestamptz;
-
--- Backfill: existing users predate this feature and should not be forced through
--- the form on next visit. Stamp them as already onboarded.
-update public.profiles
-  set onboarding_completed_at = coalesce(onboarding_completed_at, created_at);
 ```
 
 Notes:
-- All four new columns are nullable. `onboarding_completed_at = NULL` means "show onboarding"; setting it (even with all optional fields empty) means "user has been through the flow and continued."
-- The backfill is one-shot and only applies to rows that exist at migration time. Anyone who signs up after the migration starts with `onboarding_completed_at = NULL` and goes through the form.
+- All four new columns are nullable. `onboarding_completed_at = NULL` means "show onboarding when the gate fires"; setting it (even with all optional fields empty) means "user has been through the flow and continued."
+- **No backfill.** Existing maids will see the form on their next visit, by design. Existing owners are protected by the gate being role-scoped (see Component breakdown).
 - `preferred_language` is free text in the database, but the UI dropdown constrains values to the supported list (see below). Free text keeps the door open for future additions without another migration.
 - No new RLS policies needed: `profiles_self_read` and `profiles_self_update` already cover these columns. The `profiles_block_protected_columns` trigger does not need to guard the new fields — users may freely change them.
 
@@ -76,8 +71,8 @@ Stored as a stable short code (`en`, `hi`, `ta`, `te`, `kn`, `mr`, `bn`, `ml`, `
 - `src/app/household/settings/profile/page.tsx` — settings sub-route reusing `ProfileForm` with `redirect_to=/household/settings`.
 - `src/lib/profile/languages.ts` — language list, code↔label helpers.
 - Edit `src/app/join/[token]/page.tsx:32` — change final redirect from `/dashboard` to `/onboarding/profile`. The onboarding page handles the "already done" case, so this is safe for re-joiners.
-- Edit `src/app/dashboard/page.tsx` — add early check: `if (profile.onboarding_completed_at == null) redirect("/onboarding/profile")`. Applies to all roles. (Existing maids/owners who were created before this change will need to pass through the form once; since name is pre-filled and other fields are optional, this is one click.)
-- Edit `src/app/household/settings/page.tsx` — add a "My Profile" card linking to `/household/settings/profile` (mirrors the Household profile section pattern from commit 7bb3f5c).
+- Edit `src/app/dashboard/page.tsx` — add early check: `if (ctx.membership.role === "maid" && profile.onboarding_completed_at == null) redirect("/onboarding/profile")`. **Maid-only gate** — owners and family members are never redirected, even if their `onboarding_completed_at` is NULL. They can still optionally fill in the form via Settings → Profile.
+- Edit `src/app/household/settings/page.tsx` — add a "My Profile" card linking to `/household/settings/profile` (mirrors the Household profile section pattern from commit 7bb3f5c). Available to all roles.
 
 ## Data validation
 
@@ -97,7 +92,7 @@ Empty optional fields are normalized to `null` before write.
 ## Edge cases
 
 - **Maid already onboarded re-clicks a new invite (multi-household, future):** out of scope. The current redeem flow already short-circuits if she's in a household (`actions.ts:148`); v1 doesn't support multi-household.
-- **Owner with `onboarding_completed_at IS NULL`:** the dashboard gate sends owners through the same form. Pre-existing owners are pre-stamped by the migration backfill and skip it. New owners (post-change) see the form once — name is the only required field and is pre-filled from Clerk, so it's effectively a one-click pass.
+- **Owner with `onboarding_completed_at IS NULL`:** never redirected — the dashboard gate is maid-only. Owners may optionally fill in their own passport/language details via Settings → Profile; otherwise their `onboarding_completed_at` stays NULL forever, which is harmless.
 - **Clerk has no name on the Google account:** the field shows empty and the maid must type one. Submit is disabled until non-empty.
 - **Mid-form navigation away:** no draft persistence. She'll see the form again next time. Acceptable for beta.
 - **`saveProfile` fails (DB error):** form re-renders with error banner; `onboarding_completed_at` is not stamped, so she's still gated.
