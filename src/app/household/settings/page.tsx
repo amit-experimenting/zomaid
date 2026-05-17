@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import type { Diet, Privilege } from "@/lib/db/types";
 
 const DIET_LABELS: Record<Diet, string> = {
@@ -128,6 +129,23 @@ export default async function HouseholdSettingsPage() {
           Who lives here, pets, work hours, and home features — used to filter task suggestions.
         </Banner>
       </section>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>My Profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-text-muted">
+            Your name, passport, and language preferences.
+          </p>
+          <Link
+            href="/household/settings/me"
+            className={cn(buttonVariants({ variant: "secondary", size: "sm" }), "mt-3")}
+          >
+            Edit my profile
+          </Link>
+        </CardContent>
+      </Card>
 
       {(isOwner || isMaid) && (
         <Card>
