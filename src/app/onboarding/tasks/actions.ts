@@ -14,6 +14,22 @@ import { createServiceClient } from "@/lib/supabase/server";
 
 const draftIdsSchema = z.array(z.string().uuid());
 
+// "HH:MM" 24-hour. PG `time` accepts this directly.
+const timeOverridesSchema = z.record(
+  z.string().uuid(),
+  z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+);
+
+const cadenceOverridesSchema = z.record(
+  z.string().uuid(),
+  z.object({
+    frequency: z.enum(["daily", "weekly", "monthly"]),
+    interval: z.number().int().positive(),
+    byweekday: z.array(z.number().int().min(0).max(6)).nullable(),
+    bymonthday: z.number().int().min(1).max(31).nullable(),
+  }),
+);
+
 export async function saveDraftAction(pickedTaskIds: string[]): Promise<void> {
   const parsed = draftIdsSchema.safeParse(pickedTaskIds);
   if (!parsed.success) return;
@@ -47,10 +63,21 @@ export async function saveDraftAction(pickedTaskIds: string[]): Promise<void> {
 
 export async function finalizePicksAction(
   pickedTaskIds: string[],
+  timeOverrides: Record<string, string> = {},
+  cadenceOverrides: Record<string, {
+    frequency: "daily" | "weekly" | "monthly";
+    interval: number;
+    byweekday: number[] | null;
+    bymonthday: number | null;
+  }> = {},
 ): Promise<{ error: string } | void> {
   const parsed = draftIdsSchema.safeParse(pickedTaskIds);
   if (!parsed.success) return { error: "invalid picks" };
   if (parsed.data.length === 0) return { error: "pick at least one task" };
+  const parsedTimes = timeOverridesSchema.safeParse(timeOverrides);
+  if (!parsedTimes.success) return { error: "invalid time" };
+  const parsedCadences = cadenceOverridesSchema.safeParse(cadenceOverrides);
+  if (!parsedCadences.success) return { error: "invalid cadence" };
 
   const ctx = await getCurrentHousehold();
   if (!ctx) return { error: "no active household" };
@@ -97,16 +124,17 @@ export async function finalizePicksAction(
   const todayYmd = new Date().toISOString().slice(0, 10);
   const inserts = standardIds.map((id) => {
     const std = stdById.get(id)!;
+    const cad = parsedCadences.data[id];
     return {
       household_id: ctx.household.id,
       title: std.title,
       notes: std.notes ?? null,
       assigned_to_profile_id: null as string | null,
-      recurrence_frequency: std.recurrence_frequency,
-      recurrence_interval: std.recurrence_interval,
-      recurrence_byweekday: std.recurrence_byweekday ?? null,
-      recurrence_bymonthday: std.recurrence_bymonthday ?? null,
-      due_time: std.due_time,
+      recurrence_frequency: cad?.frequency ?? std.recurrence_frequency,
+      recurrence_interval: cad?.interval ?? std.recurrence_interval,
+      recurrence_byweekday: cad ? cad.byweekday : (std.recurrence_byweekday ?? null),
+      recurrence_bymonthday: cad ? cad.bymonthday : (std.recurrence_bymonthday ?? null),
+      due_time: parsedTimes.data[id] ?? std.due_time,
       created_by_profile_id: ctx.profile.id,
       recurrence_starts_on: todayYmd,
     };
