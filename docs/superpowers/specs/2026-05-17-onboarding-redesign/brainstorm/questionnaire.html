@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — questionnaire</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#FAF7F2;color:#111;}.archive-note{background:#fff;border-bottom:1px solid #EFE9E1;padding:10px 16px;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;}</style>
+</head><body>
+<div class="archive-note">Brainstorm artifact · questionnaire.html · 2026-05-17</div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+  body { background: #FAF7F2; font-family: 'IBM Plex Sans', sans-serif; padding: 0; margin: 0; }
+  .page { max-width: 480px; margin: 0 auto; padding: 0 0 80px; min-height: 100vh; background: #FAF7F2; }
+
+  .topbar { background: #fff; border-bottom: 1px solid #EFE9E1; padding: 16px 16px 12px; position: sticky; top: 0; z-index: 10; }
+  .topbar .title { font-size: 17px; font-weight: 600; color: #111; }
+  .topbar .sub { font-size: 13px; color: #6F6F6F; margin-top: 2px; }
+
+  .progress { height: 4px; background: #EFE9E1; }
+  .progress .fill { height: 100%; background: #3949AB; transition: width 0.3s; }
+
+  .content { padding: 24px 16px; }
+
+  .qsec { margin-bottom: 28px; }
+  .qhead { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+  .qhead .qnum { display: inline-flex; width: 22px; height: 22px; align-items: center; justify-content: center; background: #E8EAF6; color: #3949AB; font-size: 11.5px; font-weight: 600; border-radius: 4px; }
+  .qhead .qtitle { font-size: 15px; font-weight: 600; color: #111; }
+  .qhead .qhint { font-size: 12px; color: #6F6F6F; margin-left: 30px; }
+
+  .opt-stack { background: #fff; border: 1px solid #EFE9E1; border-radius: 8px; overflow: hidden; }
+  .opt-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #EFE9E1; min-height: 44px; cursor: pointer; transition: background 0.1s; }
+  .opt-row:last-child { border-bottom: none; }
+  .opt-row:hover { background: #FAF7F2; }
+  .opt-row.selected { background: #E8EAF6; }
+  .opt-row .lbl { flex: 1; font-size: 14px; color: #111; }
+  .opt-row.selected .lbl { font-weight: 500; }
+
+  /* Radio */
+  .radio { width: 18px; height: 18px; border: 1.5px solid #B0AFAA; border-radius: 9999px; flex-shrink: 0; position: relative; }
+  .opt-row.selected .radio { border-color: #3949AB; }
+  .opt-row.selected .radio::after { content: ''; position: absolute; width: 9px; height: 9px; background: #3949AB; border-radius: 9999px; top: 2.5px; left: 2.5px; }
+
+  /* Checkbox */
+  .check { width: 18px; height: 18px; border: 1.5px solid #B0AFAA; border-radius: 4px; flex-shrink: 0; position: relative; }
+  .opt-row.selected .check { background: #3949AB; border-color: #3949AB; }
+  .opt-row.selected .check::after { content: '✓'; position: absolute; color: #fff; font-size: 13px; font-weight: 700; top: -3px; left: 2.5px; }
+
+  /* Submit bar */
+  .submit-bar { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #EFE9E1; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+  .submit-btn { width: 100%; min-height: 44px; background: #3949AB; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .submit-help { font-size: 12px; color: #6F6F6F; text-align: center; margin-top: 6px; }
+</style>
+
+<div class="page">
+
+  <div class="topbar">
+    <div class="title">Set up your household</div>
+    <div class="sub">Step 1 of 2 — about your home (~30 seconds)</div>
+  </div>
+  <div class="progress"><div class="fill" style="width: 50%"></div></div>
+
+  <div class="content">
+
+    <div class="qsec">
+      <div class="qhead">
+        <span class="qnum">1</span>
+        <span class="qtitle">Who lives in your home?</span>
+      </div>
+      <div class="qhint">Select all that apply</div>
+      <div style="height: 8px;"></div>
+      <div class="opt-stack">
+        <div class="opt-row"><span class="check"></span><span class="lbl">Infants / toddlers (0–3 years)</span></div>
+        <div class="opt-row selected"><span class="check"></span><span class="lbl">Young children (4–12 years)</span></div>
+        <div class="opt-row"><span class="check"></span><span class="lbl">Teenagers (13–17 years)</span></div>
+        <div class="opt-row selected"><span class="check"></span><span class="lbl">Adults (18–60 years)</span></div>
+        <div class="opt-row"><span class="check"></span><span class="lbl">Senior citizens (60+)</span></div>
+      </div>
+    </div>
+
+    <div class="qsec">
+      <div class="qhead">
+        <span class="qnum">2</span>
+        <span class="qtitle">Do you have pets?</span>
+      </div>
+      <div style="height: 8px;"></div>
+      <div class="opt-stack">
+        <div class="opt-row"><span class="radio"></span><span class="lbl">No pets</span></div>
+        <div class="opt-row selected"><span class="radio"></span><span class="lbl">Dog(s)</span></div>
+        <div class="opt-row"><span class="radio"></span><span class="lbl">Cat(s)</span></div>
+        <div class="opt-row"><span class="radio"></span><span class="lbl">Other pets</span></div>
+        <div class="opt-row"><span class="radio"></span><span class="lbl">Multiple types</span></div>
+      </div>
+    </div>
+
+    <div class="qsec">
+      <div class="qhead">
+        <span class="qnum">3</span>
+        <span class="qtitle">Working hours of adults</span>
+      </div>
+      <div style="height: 8px;"></div>
+      <div class="opt-stack">
+        <div class="opt-row"><span class="radio"></span><span class="lbl">All work from home</span></div>
+        <div class="opt-row"><span class="radio"></span><span class="lbl">All work outside (office / business)</span></div>
+        <div class="opt-row selected"><span class="radio"></span><span class="lbl">Mixed (some home, some office)</span></div>
+        <div class="opt-row"><span class="radio"></span><span class="lbl">Retired / not working</span></div>
+      </div>
+    </div>
+
+    <div class="qsec">
+      <div class="qhead">
+        <span class="qnum">4</span>
+        <span class="qtitle">School-age children?</span>
+      </div>
+      <div style="height: 8px;"></div>
+      <div class="opt-stack">
+        <div class="opt-row selected"><span class="radio"></span><span class="lbl">Yes, all school-age kids attend</span></div>
+        <div class="opt-row"><span class="radio"></span><span class="lbl">Some attend, some don't</span></div>
+        <div class="opt-row"><span class="radio"></span><span class="lbl">Homeschooled</span></div>
+        <div class="opt-row"><span class="radio"></span><span class="lbl">No school-age children</span></div>
+      </div>
+    </div>
+
+    <div class="qsec">
+      <div class="qhead">
+        <span class="qnum">5</span>
+        <span class="qtitle">What features does your home have?</span>
+      </div>
+      <div class="qhint">Select all that apply</div>
+      <div style="height: 8px;"></div>
+      <div class="opt-stack">
+        <div class="opt-row selected"><span class="check"></span><span class="lbl">Indoor plants</span></div>
+        <div class="opt-row selected"><span class="check"></span><span class="lbl">Balcony / terrace</span></div>
+        <div class="opt-row selected"><span class="check"></span><span class="lbl">A/C units</span></div>
+        <div class="opt-row"><span class="check"></span><span class="lbl">Wooden / silverware / brass items to polish</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="submit-bar">
+    <button class="submit-btn">Continue to task picker →</button>
+    <div class="submit-help">You can change these later in Household settings.</div>
+  </div>
+
+</div>
+</body></html>

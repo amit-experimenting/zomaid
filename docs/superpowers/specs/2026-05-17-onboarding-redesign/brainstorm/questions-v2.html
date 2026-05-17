@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Brainstorm — questions-v2</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#FAF7F2;color:#111;}.archive-note{background:#fff;border-bottom:1px solid #EFE9E1;padding:10px 16px;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.08em;}</style>
+</head><body>
+<div class="archive-note">Brainstorm artifact · questions-v2.html · 2026-05-17</div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+  body { font-family: 'IBM Plex Sans', sans-serif; }
+  h2 { font-size: 22px; font-weight: 600; margin: 8px 0 6px; }
+  .sub { color: #555; font-size: 13px; margin: 0 0 18px; }
+  h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin: 22px 0 8px; }
+
+  .qbox { background: #fff; border: 1px solid #EFE9E1; border-radius: 8px; padding: 4px 0; margin-bottom: 8px; }
+  .qbox table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .qbox td { padding: 9px 14px; border-bottom: 1px solid #EFE9E1; vertical-align: top; }
+  .qbox tr:last-child td { border: none; }
+  .qbox td.q { width: 32%; font-weight: 500; color: #111; }
+  .qbox td.filt { width: 28%; color: #555; }
+  .qbox td.tasks { color: #444; font-size: 12.5px; line-height: 1.5; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .badge-strong { background: #E9F8EE; color: #1F7A3B; }
+  .badge-medium { background: #FFF1E0; color: #5C4400; }
+  .badge-weak { background: #FEEAEA; color: #8B0000; }
+  .badge-store { background: #E8EAF6; color: #3949AB; }
+
+  .opt-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 22px; }
+  .opt { background: #fff; border: 2px solid #EFE9E1; border-radius: 10px; padding: 16px; cursor: pointer; }
+  .opt:hover { border-color: #3949AB; }
+  .opt h4 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+  .opt .label { font-size: 10.5px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 4px; }
+  .opt ul { margin: 8px 0 0; padding-left: 18px; font-size: 12.5px; color: #444; }
+  .opt li { margin: 3px 0; }
+  .opt .verdict { margin-top: 10px; font-size: 12px; color: #555; padding-top: 10px; border-top: 1px dashed #EFE9E1; }
+  .recommended { border-color: #3949AB; box-shadow: 0 0 0 4px rgba(57,73,171,0.10); }
+  .recommended .label { color: #3949AB; }
+</style>
+
+<h2>Question 5 — pick the 8-10 questions</h2>
+<p class="sub">Your original 8 vs two alternatives. Same library (~85 tasks); the difference is how much of it the answers actually filter.</p>
+
+<h3>Your proposed 8 questions, scored against the new library</h3>
+<div class="qbox">
+  <table>
+    <thead><tr><td class="q" style="font-size:10.5px;color:#888;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;">Question</td><td class="filt" style="font-size:10.5px;color:#888;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;">Filter strength</td><td class="tasks" style="font-size:10.5px;color:#888;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;">What it filters in the new library</td></tr></thead>
+    <tbody>
+      <tr><td class="q">1. Household type</td><td class="filt"><span class="badge badge-weak">Weak</span></td><td class="tasks">Overlaps with Q3+Q7. Doesn't add unique filtering on the new list.</td></tr>
+      <tr><td class="q">2. # family members</td><td class="filt"><span class="badge badge-store">Store-only</span></td><td class="tasks">A quantity multiplier (more dishes, more laundry) — doesn't add/remove tasks. Useful metadata but not a filter.</td></tr>
+      <tr><td class="q">3. Age groups present</td><td class="filt"><span class="badge badge-strong">Strong</span></td><td class="tasks">Infant tasks (sterilize bottles, formula), school-age (homework, lunch boxes), senior care (mobility, meds). Drives ~8 tasks.</td></tr>
+      <tr><td class="q">4. # bedrooms</td><td class="filt"><span class="badge badge-store">Store-only</span></td><td class="tasks">"Make beds" / "Mop bedrooms" apply to any household with bedrooms. Multiplier, not filter.</td></tr>
+      <tr><td class="q">5. # bathrooms</td><td class="filt"><span class="badge badge-store">Store-only</span></td><td class="tasks">Same — bathroom tasks apply to all. Quantity hint.</td></tr>
+      <tr><td class="q">6. Pets</td><td class="filt"><span class="badge badge-strong">Strong</span></td><td class="tasks">Feed, walk, litter, grooming, vet. Drives ~5 tasks.</td></tr>
+      <tr><td class="q">7. Work hours</td><td class="filt"><span class="badge badge-medium">Medium</span></td><td class="tasks">Meal-prep timing (WFH = lunch at home), package collection (office = need someone home).</td></tr>
+      <tr><td class="q">8. Children attend school</td><td class="filt"><span class="badge badge-strong">Strong</span></td><td class="tasks">School lunch prep, drop-off/pickup, uniform laundry, homework. Drives ~4 tasks.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="sub" style="font-size:12px;">Tally: 3 strong, 1 medium, 4 store-only. The questionnaire still works — 4/8 questions actively filter, the rest become household profile metadata.</p>
+
+<h3>What's missing — "home features" questions that would filter strongly</h3>
+<div class="qbox">
+  <table>
+    <tbody>
+      <tr><td class="q">Do you have a balcony / terrace?</td><td class="filt"><span class="badge badge-strong">Strong</span></td><td class="tasks">"Clean balcony/terrace area" (weekly Wed)</td></tr>
+      <tr><td class="q">Do you have indoor plants?</td><td class="filt"><span class="badge badge-strong">Strong</span></td><td class="tasks">"Water indoor plants" (every 2 days)</td></tr>
+      <tr><td class="q">Do you have A/C units?</td><td class="filt"><span class="badge badge-strong">Strong</span></td><td class="tasks">"Clean A/C filters" (bi-weekly)</td></tr>
+      <tr><td class="q">Do you have wooden furniture / silverware / brass?</td><td class="filt"><span class="badge badge-medium">Medium</span></td><td class="tasks">"Polish wooden furniture" (weekly Sat), "Polish silverware/brass" (monthly week 4)</td></tr>
+      <tr><td class="q">Do you have curtains?</td><td class="filt"><span class="badge badge-medium">Medium</span></td><td class="tasks">"Wash curtains" (weekly Sat, rotate rooms)</td></tr>
+      <tr><td class="q">Do you have a car / car porch?</td><td class="filt"><span class="badge badge-medium">Medium</span></td><td class="tasks">"Clean garage or car porch" (monthly week 3)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 style="margin-top:30px;">Three sets to choose from</h2>
+
+<div class="opt-grid">
+
+  <div class="opt" onclick="toggleSelect(this)" data-choice="a">
+    <div class="label">Option a</div>
+    <h4>Your original 8 — as-is</h4>
+    <ul>
+      <li>1. Household type</li>
+      <li>2. # family members</li>
+      <li>3. Age groups</li>
+      <li>4. # bedrooms</li>
+      <li>5. # bathrooms</li>
+      <li>6. Pets</li>
+      <li>7. Work hours</li>
+      <li>8. School-age children</li>
+    </ul>
+    <div class="verdict"><strong>3 strong, 1 medium, 4 store-only.</strong> Honest household profile; 4/8 actively filter.</div>
+  </div>
+
+  <div class="opt" onclick="toggleSelect(this)" data-choice="b">
+    <div class="label">Option b</div>
+    <h4>Trim to 5 high-signal demographics</h4>
+    <ul>
+      <li>1. Age groups (Q3)</li>
+      <li>2. Pets (Q6)</li>
+      <li>3. Work hours (Q7)</li>
+      <li>4. School-age children (Q8)</li>
+      <li>5. Household size (Q2, store-only context)</li>
+    </ul>
+    <div class="verdict"><strong>4 strong + 1 store-only.</strong> Faster wizard (~30s), drops the multipliers (bedrooms/bathrooms). Less profile depth.</div>
+  </div>
+
+  <div class="opt recommended" onclick="toggleSelect(this)" data-choice="c">
+    <div class="label">Option c (recommended)</div>
+    <h4>Blend: 4 demographic + 4 home features</h4>
+    <ul>
+      <li>1. Age groups present</li>
+      <li>2. Pets</li>
+      <li>3. Work hours</li>
+      <li>4. School-age children</li>
+      <li>5. Indoor plants?</li>
+      <li>6. Balcony / terrace?</li>
+      <li>7. A/C units?</li>
+      <li>8. Items needing polishing (wood/silverware/brass)?</li>
+    </ul>
+    <div class="verdict"><strong>All 8 actively filter.</strong> Same length as your original but every answer changes what the user sees in the picker. Maximum signal-per-question.</div>
+  </div>
+
+</div>
+
+<div style="background:#FFFBE6;border:1px solid #F5E6A3;border-radius:8px;padding:14px;margin-top:18px;font-size:13px;color:#5C4400;">
+  <strong>My recommendation: c.</strong> Same 8 questions you asked for, but each one cuts the list. The user gets immediate "ah, makes sense why I'm not seeing curtain washing — I said I don't have curtains" feedback. (a) preserves your intent but wastes 4 question-screens on data that doesn't change anything visible. (b) is faster but loses house-shape signal. (c) is the sweet spot for the new library.
+</div>
+
+<p style="font-size:12px;color:#888;margin-top:18px;">Note: with (c), bedrooms/bathrooms/household type don't get asked — they can still be edited later in <code>/household/settings</code> as optional metadata if useful for future personalization.</p>
+</body></html>
