@@ -109,7 +109,7 @@ create table public.household_profiles (
 
   -- Demographics
   age_groups        text[] not null check (
-    array_length(age_groups, 1) >= 1
+    cardinality(age_groups) >= 1  -- NOT array_length(): that returns NULL for '{}' and CHECK passes silently
     and age_groups <@ array['infants','school_age','teens','adults','seniors']
   ),
   pets              text not null check (pets in ('none','dog','cat','other','multiple')),
