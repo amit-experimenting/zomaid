@@ -54,6 +54,36 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["households"]["Row"]>;
         Relationships: [];
       };
+      household_profiles: {
+        Row: {
+          household_id: string;
+          age_groups: string[];
+          pets: "none" | "dog" | "cat" | "other" | "multiple";
+          work_hours: "wfh" | "office" | "mixed" | "retired";
+          school_children: "all" | "some" | "homeschool" | "none_school_age";
+          has_indoor_plants: boolean;
+          has_balcony: boolean;
+          has_ac: boolean;
+          has_polishables: boolean;
+          completed_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          household_id: string;
+          age_groups: string[];
+          pets: "none" | "dog" | "cat" | "other" | "multiple";
+          work_hours: "wfh" | "office" | "mixed" | "retired";
+          school_children: "all" | "some" | "homeschool" | "none_school_age";
+          has_indoor_plants: boolean;
+          has_balcony: boolean;
+          has_ac: boolean;
+          has_polishables: boolean;
+          completed_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["household_profiles"]["Row"]>;
+        Relationships: [];
+      };
       household_memberships: {
         Row: {
           id: string;
@@ -407,6 +437,7 @@ export type Database = {
           due_time: string;
           created_by_profile_id: string | null;
           archived_at: string | null;
+          relevance_tags: string[];
           created_at: string;
           updated_at: string;
         };
@@ -425,6 +456,7 @@ export type Database = {
           due_time?: string;
           created_by_profile_id?: string | null;
           archived_at?: string | null;
+          relevance_tags?: string[];
           created_at?: string;
           updated_at?: string;
         };
